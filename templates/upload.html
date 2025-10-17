@@ -1,0 +1,41 @@
+{% extends "base_campanha.html" %}
+
+{% block title %}Upload de Planilha{% endblock %}
+
+{% block content %}
+    <h1>Processar Planilha de Campanha</h1>
+    <p>Selecione a campanha, arraste o arquivo Excel para a área abaixo e clique em processar.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="post" enctype="multipart/form-data">
+        <div class="filter-container" style="padding-bottom: 30px;">
+            <div class="filter-form">
+                <div class="form-group" style="flex: 1;">
+                    <label for="campanha">1. Selecione a Campanha:</label>
+                    <select name="campanha" id="campanha" required>
+                        <option value="">Selecione...</option>
+                        {% for c in campanhas %}
+                        <option value="{{ c.id }}">{{ c.nome }} ({{ c.data_inicio.strftime('%d/%m/%Y') }} a {{ c.data_fim.strftime('%d/%m/%Y') }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 25px; margin-bottom: 10px; font-size: 1.2em; color: #333;">2. Arraste a Planilha Aqui</h2>
+            
+            <div class="drop-zone">
+                <span class="drop-zone__prompt">Arraste o arquivo Excel aqui ou clique para selecionar</span>
+                <input type="file" name="file" class="drop-zone__input" required accept=".xlsx, .xls">
+            </div>
+        </div>
+
+        <button type="submit" style="margin-top: -10px;">Processar Planilha</button>
+    </form>
+{% endblock %}

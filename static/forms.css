@@ -1,0 +1,154 @@
+/* Estilos para todos os elementos de formulário */
+input, select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #219150;
+}
+
+.button-danger {
+    display: block;
+    width: 50%;
+    max-width: 250px;
+    margin: 15px auto 0;
+    padding: 9px;
+    background-color: #e74c3c;
+    font-size: 14px;
+}
+
+.button-danger:hover {
+    background-color: #c0392b;
+}
+
+/* --- CONTAINER DE FILTROS --- */
+.filter-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border: 1px solid #e0e0e0;
+}
+
+.filter-container h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.2em;
+    border-bottom: 2px solid #e8ecf1;
+    padding-bottom: 10px;
+}
+
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 150px;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.button-filter {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border-radius: 5px;
+    font-size: 14px;
+    height: 38px;
+}
+
+.button-filter:hover {
+    background-color: #2980b9;
+}
+
+/* --- CONTAINER DE CHECKLIST (PÁGINA MASSA) --- */
+.lojas-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: 1px solid #e0e0e0;
+}
+
+.lojas-container h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.2em;
+    border-bottom: 2px solid #e8ecf1;
+    padding-bottom: 10px;
+}
+
+.lojas-actions {
+    margin-bottom: 15px;
+}
+
+.lojas-actions label {
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.lojas-checklist {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+.loja-item {
+    display: block;
+    margin-bottom: 0;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.lojas-checklist input[type="checkbox"],
+.lojas-actions input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.loja-item:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.loja-item:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.loja-item:hover {
+    background-color: #e9ecef;
+    transition: background-color 0.2s ease-in-out;
+}

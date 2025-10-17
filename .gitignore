@@ -1,0 +1,16 @@
+# 1. Ambiente Virtual
+# Contém as bibliotecas instaladas. Pode ser recriado com 'pip install -r requirements.txt'.
+venv/
+
+# 2. Ficheiros Compilados do Python
+# Gerados automaticamente pelo Python para performance. Não são código-fonte.
+__pycache__/
+*.pyc
+
+# 3. Ficheiros de Configuração com Segredos
+# NUNCA envie senhas ou chaves secretas para o Git.
+config.py
+
+# 4. (Opcional) Ficheiros de configuração do Editor de Código
+.vscode/
+.idea/

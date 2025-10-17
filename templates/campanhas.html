@@ -1,0 +1,64 @@
+{% extends "base_campanha.html" %}
+
+{% block title %}Gerenciar Campanhas{% endblock %}
+
+{% block content %}
+    <h1>Gerenciar Campanhas</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="filter-container">
+        <h2>Nova Campanha</h2>
+        <form action="{{ url_for('gestao_campanhas') }}" method="post" class="filter-form">
+            <div class="form-group">
+                <label for="nome">Nome da Campanha:</label>
+                <input type="text" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="data_inicio">Data de Início:</label>
+                <input type="date" name="data_inicio" required>
+            </div>
+            <div class="form-group">
+                <label for="data_fim">Data de Fim:</label>
+                <input type="date" name="data_fim" required>
+            </div>
+            <div class="form-group">
+                 <button type="submit">Criar Campanha</button>
+            </div>
+        </form>
+    </div>
+
+    <h2>Campanhas Cadastradas</h2>
+    {% if campanhas %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Data de Início</th>
+                <th>Data de Fim</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in campanhas %}
+            <tr>
+                <td>{{ c.nome }}</td>
+                <td>{{ c.data_inicio.strftime('%d/%m/%Y') }}</td>
+                <td>{{ c.data_fim.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    <a href="{{ url_for('produtos_por_campanha', campanha_id=c.id) }}" class="button-filter" style="width: 100%; text-align: center; text-decoration: none;">Ver Produtos</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Nenhuma campanha cadastrada ainda.</p>
+    {% endif %}
+{% endblock %}

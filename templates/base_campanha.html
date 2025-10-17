@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestão de Campanhas{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='forms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='drag_and_drop.css') }}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="dropdown">
+                <button class="dropbtn">Menu</button>
+                <div id="myDropdown" class="dropdown-content">
+                    <a href="{{ url_for('upload_page') }}" class="{{ 'active' if active_page == 'upload' else '' }}">Upload de Planilha</a>
+                    <a href="{{ url_for('gestao_campanhas') }}" class="{{ 'active' if active_page == 'campanhas' else '' }}">Gerenciar Campanhas</a>
+                </div>
+            </div>
+        </nav>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block scripts %}
+    <script src="{{ url_for('static', filename='js/drag_and_drop.js') }}"></script>
+    {% endblock %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.App && App.main && App.main.init) {
+                App.main.init();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -79,6 +79,39 @@ def get_campaign_by_id(campanha_id):
     cursor.execute("SELECT * FROM campanhas WHERE id = %s", (campanha_id,))
     return cursor.fetchone()
 
+def update_campaign(campaign_id, nome, data_inicio, data_fim):
+    """Atualiza os dados de uma campanha existente."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sql = """
+        UPDATE campanhas SET nome = %s, data_inicio = %s, data_fim = %s
+        WHERE id = %s
+    """
+    try:
+        cursor.execute(sql, (nome, data_inicio, data_fim, campaign_id))
+        conn.commit()
+        return cursor.rowcount, None
+    except Error as e:
+        conn.rollback()
+        return 0, str(e)
+    finally:
+        cursor.close()
+
+def delete_campaign(campaign_id):
+    """Deleta uma campanha e todos os produtos associados (devido ao ON DELETE CASCADE)."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sql = "DELETE FROM campanhas WHERE id = %s"
+    try:
+        cursor.execute(sql, (campaign_id,))
+        conn.commit()
+        return cursor.rowcount, None
+    except Error as e:
+        conn.rollback()
+        return 0, str(e)
+    finally:
+        cursor.close()
+
 def add_products_bulk(produtos):
     conn = get_db_connection()
     cursor = conn.cursor()

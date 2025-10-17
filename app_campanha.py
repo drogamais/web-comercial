@@ -122,6 +122,34 @@ def gestao_campanhas():
     campanhas = db.get_all_campaigns()
     return render_template('campanhas.html', active_page='campanhas', campanhas=campanhas)
 
+@app.route('/campanhas/editar/<int:campaign_id>', methods=['POST'])
+def editar_campanha(campaign_id):
+    nome = request.form.get('nome_edit')
+    data_inicio = request.form.get('data_inicio_edit')
+    data_fim = request.form.get('data_fim_edit')
+
+    if not all([nome, data_inicio, data_fim]):
+        flash('Todos os campos são obrigatórios para a edição.', 'danger')
+    else:
+        _, error = db.update_campaign(campaign_id, nome, data_inicio, data_fim)
+        if error:
+            flash(f'Erro ao atualizar campanha: {error}', 'danger')
+        else:
+            flash('Campanha atualizada com sucesso!', 'success')
+            
+    return redirect(url_for('gestao_campanhas'))
+
+
+@app.route('/campanhas/deletar/<int:campaign_id>', methods=['POST'])
+def deletar_campanha(campaign_id):
+    _, error = db.delete_campaign(campaign_id)
+    if error:
+        flash(f'Erro ao deletar campanha: {error}', 'danger')
+    else:
+        flash('Campanha deletada com sucesso!', 'success')
+        
+    return redirect(url_for('gestao_campanhas'))
+
 
 @app.route('/campanha/<int:campanha_id>/produtos')
 def produtos_por_campanha(campanha_id):
@@ -200,3 +228,4 @@ def deletar_produtos(campanha_id):
         flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
         
     return redirect(url_for('produtos_por_campanha', campanha_id=campanha_id))
+

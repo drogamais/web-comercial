@@ -16,21 +16,10 @@
     <div class="filter-container">
         <h2>Nova Campanha</h2>
         <form action="{{ url_for('gestao_campanhas') }}" method="post" class="filter-form">
-            <div class="form-group">
-                <label for="nome">Nome da Campanha:</label>
-                <input type="text" name="nome" required>
-            </div>
-            <div class="form-group">
-                <label for="data_inicio">Data de Início:</label>
-                <input type="date" name="data_inicio" required>
-            </div>
-            <div class="form-group">
-                <label for="data_fim">Data de Fim:</label>
-                <input type="date" name="data_fim" required>
-            </div>
-            <div class="form-group">
-                 <button type="submit">Criar Campanha</button>
-            </div>
+            <div class="form-group"><label for="nome">Nome:</label><input type="text" name="nome" required></div>
+            <div class="form-group"><label for="data_inicio">Início:</label><input type="date" name="data_inicio" required></div>
+            <div class="form-group"><label for="data_fim">Fim:</label><input type="date" name="data_fim" required></div>
+            <button type="submit">Criar Campanha</button>
         </form>
     </div>
 
@@ -40,9 +29,9 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Data de Início</th>
-                <th>Data de Fim</th>
-                <th>Ações</th>
+                <th style="width: 15%;">Data de Início</th>
+                <th style="width: 15%;">Data de Fim</th>
+                <th style="width: 25%;">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -52,7 +41,21 @@
                 <td>{{ c.data_inicio.strftime('%d/%m/%Y') }}</td>
                 <td>{{ c.data_fim.strftime('%d/%m/%Y') }}</td>
                 <td>
-                    <a href="{{ url_for('produtos_por_campanha', campanha_id=c.id) }}" class="button-filter" style="width: 100%; text-align: center; text-decoration: none;">Ver Produtos</a>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{{ url_for('produtos_por_campanha', campanha_id=c.id) }}" class="button-filter" style="flex: 1; text-align: center; text-decoration: none; padding: 8px;">Ver Produtos</a>
+                        
+                        <button type="button" class="btn-edit button-filter" style="flex: 1; background-color: #f39c12;"
+                                data-id="{{ c.id }}"
+                                data-nome="{{ c.nome }}"
+                                data-inicio="{{ c.data_inicio.strftime('%Y-%m-%d') }}"
+                                data-fim="{{ c.data_fim.strftime('%Y-%m-%d') }}">
+                            Editar
+                        </button>
+                        
+                        <form action="{{ url_for('deletar_campanha', campaign_id=c.id) }}" method="post" style="flex: 1;" onsubmit="return confirm('Atenção: Deletar uma campanha também removerá TODOS os produtos associados a ela. Deseja continuar?');">
+                            <button type="submit" class="button-danger" style="width: 100%; margin: 0; max-width: none; padding: 8px;">Deletar</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -61,4 +64,35 @@
     {% else %}
     <p>Nenhuma campanha cadastrada ainda.</p>
     {% endif %}
+
+
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="margin-top: 0;">Editar Campanha</h2>
+            <form id="edit-form" method="post">
+                <div class="form-group" style="text-align: left;">
+                    <label for="nome_edit">Nome da Campanha:</label>
+                    <input type="text" id="nome_edit" name="nome_edit" required>
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label for="data_inicio_edit">Data de Início:</label>
+                    <input type="date" id="data_inicio_edit" name="data_inicio_edit" required>
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label for="data_fim_edit">Data de Fim:</label>
+                    <input type="date" id="data_fim_edit" name="data_fim_edit" required>
+                </div>
+                <div class="modal-actions" style="margin-top: 25px;">
+                    <button id="modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
+                    <button type="submit" class="modal-button-confirm">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/campanhasPage.js') }}"></script>
 {% endblock %}

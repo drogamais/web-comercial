@@ -60,7 +60,7 @@ def upload_page():
             return redirect(url_for('campanha.upload_page'))
 
     campanhas = db.get_active_campaigns_for_upload()
-    return render_template('campanha/upload.html', active_page='upload', campanhas=campanhas)
+    return render_template('campanha/upload_campanha.html', active_page='upload', campanhas=campanhas)
 
 @campanha_bp.route('/gerenciar', methods=['GET', 'POST'])
 def gestao_campanhas():

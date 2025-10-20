@@ -1,0 +1,79 @@
+/* static/page-tabloides.css */
+/* (Conteúdo copiado de page-campanhas.css) */
+
+/* --- Tabela de Campanhas --- */
+.th-campanha-inicio,
+.th-campanha-fim {
+    width: 15%;
+}
+.th-campanha-acoes {
+    width: 30%;
+}
+.action-buttons-container {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+.btn-ver-produtos {
+    min-width: 150px;
+    min-height: 50px;
+    font-size: 17.5px;
+    text-decoration: none;
+    font-weight: bold;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-editar-campanha {
+    min-width: 100px;
+    background-color: #f39c12;
+    box-sizing: border-box;
+}
+.form-deletar-campanha {
+    min-width: 100px;
+    display: grid;
+}
+.btn-deletar-campanha {
+    width: 100%;
+    margin: 0;
+    max-width: none;
+    height: 38px;
+    box-sizing: border-box;
+}
+#edit-modal .modal-content h2 {
+    margin-top: 0;
+}
+#edit-modal .form-group {
+    text-align: left;
+}
+#edit-modal .modal-actions {
+    margin-top: 25px;
+}
+.delete-modal-campaign-name-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+}
+#delete-modal-campaign-name {
+    color: #c0392b;
+    font-weight: bold;
+}
+.delete-modal-info-text {
+    font-size: 14px; 
+    color: #555;
+    margin-top: 15px;
+}
+.modal-button-danger:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
+.modal-button-danger:disabled:hover {
+    background-color: #cccccc;
+}

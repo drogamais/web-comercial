@@ -1,4 +1,4 @@
-// aplicacao_web_campanhas/static/js/campanhaPage.js
+// aplicacao_web_campanhas/static/js/tabloidePage.js
 
 document.addEventListener('DOMContentLoaded', () => {
     const editModal = document.getElementById('edit-modal');
@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const campaignInicio = button.dataset.inicio;
         const campaignFim = button.dataset.fim;
 
-        // CORRIGIDO: Adicionado prefixo /campanha
-        editForm.action = `/campanha/editar/${campaignId}`;
+        // Modificado: aponta para a rota de tabloide
+        editForm.action = `/tabloide/editar/${campaignId}`;
 
         // Preenche os campos do formulário
         nomeInput.value = campaignName;
@@ -68,8 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const campaignId = button.dataset.id;
             correctCampaignName = button.dataset.nome; 
 
-            // CORRIGIDO: Adicionado prefixo /campanha
-            deleteForm.action = `/campanha/deletar/${campaignId}`;
+            // Modificado: aponta para a rota de tabloide
+            deleteForm.action = `/tabloide/deletar/${campaignId}`;
 
             campaignNameSpan.textContent = correctCampaignName;
 

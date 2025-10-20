@@ -1,13 +1,13 @@
-{% extends "base_campanha.html" %}
+{% extends "base_tabloide.html" %}
 
-{% block title %}Gerenciar Campanhas{% endblock %}
+{% block title %}Gerenciar Tabloides{% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/page-campanhas.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/page-tabloides.css') }}">
 {% endblock %}
 
 {% block content %}
-    <h1>Gerenciar Campanhas</h1>
+    <h1>Gerenciar Tabloides</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -18,17 +18,17 @@
     {% endwith %}
 
     <div class="filter-container">
-        <h2>Nova Campanha</h2>
-        <form action="{{ url_for('campanha.gestao_campanhas') }}" method="post" class="filter-form">
+        <h2>Novo Tabloide</h2>
+        <form action="{{ url_for('tabloide.gestao_tabloides') }}" method="post" class="filter-form">
             <div class="form-group"><label for="nome">Nome:</label><input type="text" name="nome" required></div>
             <div class="form-group"><label for="data_inicio">Início:</label><input type="date" name="data_inicio" required></div>
             <div class="form-group"><label for="data_fim">Fim:</label><input type="date" name="data_fim" required></div>
-            <button type="submit">Criar Campanha</button>
+            <button type="submit">Criar Tabloide</button>
         </form>
     </div>
 
-    <h2>Campanhas Cadastradas</h2>
-    {% if campanhas %}
+    <h2>Tabloides Cadastrados</h2>
+    {% if tabloides %}
     <table>
         <thead>
             <tr>
@@ -39,28 +39,28 @@
             </tr>
         </thead>
         <tbody>
-            {% for c in campanhas %}
+            {% for t in tabloides %}
             <tr>
-                <td>{{ c.nome }}</td>
-                <td>{{ c.data_inicio.strftime('%d/%m/%Y') }}</td>
-                <td>{{ c.data_fim.strftime('%d/%m/%Y') }}</td>
+                <td>{{ t.nome }}</td>
+                <td>{{ t.data_inicio.strftime('%d/%m/%Y') }}</td>
+                <td>{{ t.data_fim.strftime('%d/%m/%Y') }}</td>
                 <td>
                     <div class="action-buttons-container">
-                        <a href="{{ url_for('campanha.produtos_por_campanha', campanha_id=c.id) }}" class="button-filter btn-ver-produtos">
+                        <a href="{{ url_for('tabloide.produtos_por_tabloide', campanha_id=t.id) }}" class="button-filter btn-ver-produtos">
                            Ver Produtos
                         </a>
                         
                         <button type="button" class="btn-edit button-filter btn-editar-campanha"
-                                data-id="{{ c.id }}"
-                                data-nome="{{ c.nome }}"
-                                data-inicio="{{ c.data_inicio.strftime('%Y-%m-%d') }}"
-                                data-fim="{{ c.data_fim.strftime('%Y-%m-%d') }}">
+                                data-id="{{ t.id }}"
+                                data-nome="{{ t.nome }}"
+                                data-inicio="{{ t.data_inicio.strftime('%Y-%m-%d') }}"
+                                data-fim="{{ t.data_fim.strftime('%Y-%m-%d') }}">
                             Editar
                         </button>
                         
                         <button type="button" class="button-danger btn-delete btn-deletar-campanha" 
-                                data-id="{{ c.id }}"
-                                data-nome="{{ c.nome }}">
+                                data-id="{{ t.id }}"
+                                data-nome="{{ t.nome }}">
                             Deletar
                         </button>
                     </div>
@@ -70,16 +70,16 @@
         </tbody>
     </table>
     {% else %}
-    <p>Nenhuma campanha cadastrada ainda.</p>
+    <p>Nenhum tabloide cadastrado ainda.</p>
     {% endif %}
 
 
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2>Editar Campanha</h2>
+            <h2>Editar Tabloide</h2>
             <form id="edit-form" method="post">
                 <div class="form-group">
-                    <label for="nome_edit">Nome da Campanha:</label>
+                    <label for="nome_edit">Nome do Tabloide:</label>
                     <input type="text" id="nome_edit" name="nome_edit" required>
                 </div>
                 <div class="form-group">
@@ -101,7 +101,7 @@
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Confirmar Desativação</h2>
-            <p>Para confirmar a desativação, por favor digite o nome da campanha no campo abaixo:</p>
+            <p>Para confirmar a desativação, por favor digite o nome do tabloide no campo abaixo:</p>
             
             <p class="delete-modal-campaign-name-label">Nome: <strong id="delete-modal-campaign-name"></strong></p>
             
@@ -109,7 +109,7 @@
                 <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
             </div>
 
-            <p class="delete-modal-info-text">(Isso irá aplicar um "soft delete", a campanha ficará inativa e oculta da lista de uploads)</p>
+            <p class="delete-modal-info-text">(Isso irá aplicar um "soft delete", o tabloide ficará inativo e oculto da lista de uploads)</p>
             
             <form id="delete-form" method="post" action="">
                 <div class="modal-actions" style="margin-top: 25px;">
@@ -124,5 +124,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='js/campanhaPage.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tabloidePage.js') }}"></script>
 {% endblock %}

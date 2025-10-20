@@ -2,7 +2,7 @@
 
 import sys
 from waitress import serve
-from app_campanha import app
+from app import app  # MODIFICADO: Importa do nosso novo app.py
 
 # Verifica se o argumento "--dev" foi passado na linha de comandos
 # Ex: python run.py --dev

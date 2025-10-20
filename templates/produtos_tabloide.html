@@ -1,10 +1,10 @@
-{% extends "base_campanha.html" %}
+{% extends "base_tabloide.html" %}
 
-{% block title %}Produtos da Campanha{% endblock %}
+{% block title %}Produtos do Tabloide{% endblock %}
 
 {% block content %}
-    <h1>Gerenciar Produtos da Campanha: {{ campanha.nome }}</h1>
-    <a href="{{ url_for('campanha.gestao_campanhas') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Campanhas</a>
+    <h1>Gerenciar Produtos do Tabloide: {{ tabloide.nome }}</h1>
+    <a href="{{ url_for('tabloide.gestao_tabloides') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Tabloides</a>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -48,19 +48,19 @@
             </tbody>
         </table>
         <div style="display: flex; gap: 15px; margin-top: 20px;">
-            <button type="submit" formaction="{{ url_for('campanha.atualizar_produtos', campanha_id=campanha.id) }}" style="flex: 1;">Salvar Alterações</button>
-            <button type="submit" formaction="{{ url_for('campanha.deletar_produtos', campanha_id=campanha.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none;" onclick="return confirm('Tem certeza que deseja deletar os produtos selecionados?');">Deletar Selecionados</button>
+            <button type="submit" formaction="{{ url_for('tabloide.atualizar_produtos', campanha_id=tabloide.id) }}" style="flex: 1;">Salvar Alterações</button>
+            <button type="submit" formaction="{{ url_for('tabloide.deletar_produtos', campanha_id=tabloide.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none;" onclick="return confirm('Tem certeza que deseja deletar os produtos selecionados?');">Deletar Selecionados</button>
         </div>
     </form>
     {% else %}
-    <p>Nenhum produto foi cadastrado para esta campanha ainda.</p>
+    <p>Nenhum produto foi cadastrado para este tabloide ainda.</p>
     {% endif %}
 
     <hr style="margin: 40px 0;">
 
     <h2>Adicionar Novo Produto</h2>
     <div class="filter-container">
-        <form action="{{ url_for('campanha.adicionar_produto', campanha_id=campanha.id) }}" method="post" class="filter-form">
+        <form action="{{ url_for('tabloide.adicionar_produto', campanha_id=tabloide.id) }}" method="post" class="filter-form">
             <div class="form-group" style="flex: 1.5;">
                 <label>Cód. Barras:</label>
                 <input type="text" name="codigo_barras">

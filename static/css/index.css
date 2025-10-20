@@ -1,0 +1,58 @@
+/* static/index.css */
+body {
+    background-color: #f4f7f6;
+}
+.container h1 {
+    text-align: center;
+}
+.container p {
+    text-align: center;
+    font-size: 1.1em;
+    margin-bottom: 30px;
+}
+.index-button-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+}
+.index-button {
+    flex-basis: 300px;
+    padding: 30px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+.index-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+.index-button .button-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.index-button .button-description {
+    font-size: 0.95em;
+    opacity: 0.9;
+}
+.button-campanha {
+    background-color: #3498db;
+}
+.button-campanha:hover {
+    background-color: #2980b9;
+}
+.button-tabloide {
+    background-color: #27ae60;
+}
+.button-tabloide:hover {
+    background-color: #219150;
+}

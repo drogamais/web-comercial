@@ -4,6 +4,7 @@ import mysql.connector
 from mysql.connector import Error
 from flask import g
 from config import DB_CONFIG
+import datetime # Adicionado para comparar datas
 
 def get_db_connection():
     try:
@@ -30,6 +31,7 @@ def create_tables():
                 nome VARCHAR(255) NOT NULL,
                 data_inicio DATE NOT NULL,
                 data_fim DATE NOT NULL,
+                status INT DEFAULT 1,  -- 1 = Ativo, 0 = Inativo (Soft Delete)
                 UNIQUE(nome)
             )
         """)
@@ -57,7 +59,8 @@ def add_campaign(nome, data_inicio, data_fim):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO campanhas (nome, data_inicio, data_fim) VALUES (%s, %s, %s)",
+        # Garante que novas campanhas sejam criadas como ativas (status=1)
+        cursor.execute("INSERT INTO campanhas (nome, data_inicio, data_fim, status) VALUES (%s, %s, %s, 1)",
                        (nome, data_inicio, data_fim))
         conn.commit()
         return None
@@ -68,14 +71,39 @@ def add_campaign(nome, data_inicio, data_fim):
         cursor.close()
 
 def get_all_campaigns():
+    """Busca todas as campanhas ATIVAS (status=1)."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM campanhas ORDER BY data_inicio DESC")
+    # Modificado para buscar apenas campanhas com status = 1
+    cursor.execute("SELECT * FROM campanhas WHERE status = 1 ORDER BY data_inicio DESC")
     return cursor.fetchall()
+
+def get_active_campaigns_for_upload():
+    """
+    Busca campanhas ativas (status=1) e que ainda não expiraram (data_fim >= hoje).
+    Usado na página de Upload.
+    """
+    conn = get_db_connection()
+    if conn is None: return []
+    cursor = conn.cursor(dictionary=True)
+    today = datetime.date.today()
+    try:
+        cursor.execute(
+            "SELECT * FROM campanhas WHERE status = 1 AND data_fim >= %s ORDER BY data_inicio DESC",
+            (today,)
+        )
+        return cursor.fetchall()
+    except Error as e:
+        print(f"Erro ao buscar campanhas ativas para upload: {e}")
+        return []
+    finally:
+        cursor.close()
+
 
 def get_campaign_by_id(campanha_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+    # Busca mesmo se estiver inativa, para permitir visualização de produtos antigos
     cursor.execute("SELECT * FROM campanhas WHERE id = %s", (campanha_id,))
     return cursor.fetchone()
 
@@ -98,10 +126,11 @@ def update_campaign(campaign_id, nome, data_inicio, data_fim):
         cursor.close()
 
 def delete_campaign(campaign_id):
-    """Deleta uma campanha e todos os produtos associados (devido ao ON DELETE CASCADE)."""
+    """Realiza um soft delete de uma campanha (define status = 0)."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    sql = "DELETE FROM campanhas WHERE id = %s"
+    # Alterado de DELETE para UPDATE (Soft Delete)
+    sql = "UPDATE campanhas SET status = 0 WHERE id = %s"
     try:
         cursor.execute(sql, (campaign_id,))
         conn.commit()

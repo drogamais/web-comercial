@@ -31,7 +31,7 @@
                 <th>Nome</th>
                 <th style="width: 15%;">Data de Início</th>
                 <th style="width: 15%;">Data de Fim</th>
-                <th style="width: 25%;">Ações</th>
+                <th style="width: 30%;">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -42,9 +42,9 @@
                 <td>{{ c.data_fim.strftime('%d/%m/%Y') }}</td>
                 <td>
                     <div style="display: flex; gap: 10px;">
-                        <a href="{{ url_for('produtos_por_campanha', campanha_id=c.id) }}" class="button-filter" style="flex: 1; text-align: center; text-decoration: none; padding: 8px;">Ver Produtos</a>
+                        <a href="{{ url_for('produtos_por_campanha', campanha_id=c.id) }}" class="button-filter" style="min-width: 100px; font-size: 17.5px; text-align: center; text-decoration: none; font-weight: bold;">Ver Produtos</a>
                         
-                        <button type="button" class="btn-edit button-filter" style="flex: 1; background-color: #f39c12;"
+                        <button type="button" class="btn-edit button-filter" style="min-width: 100px; background-color: #f39c12;"
                                 data-id="{{ c.id }}"
                                 data-nome="{{ c.nome }}"
                                 data-inicio="{{ c.data_inicio.strftime('%Y-%m-%d') }}"
@@ -52,8 +52,8 @@
                             Editar
                         </button>
                         
-                        <form action="{{ url_for('deletar_campanha', campaign_id=c.id) }}" method="post" style="flex: 1;" onsubmit="return confirm('Atenção: Deletar uma campanha também removerá TODOS os produtos associados a ela. Deseja continuar?');">
-                            <button type="submit" class="button-danger" style="width: 100%; margin: 0; max-width: none; padding: 8px;">Deletar</button>
+                        <form action="{{ url_for('deletar_campanha', campaign_id=c.id) }}" method="post" style="min-width: 100px; display: grid;" onsubmit="return confirm('Tem certeza que deseja DELETAR esta campanha?');">
+                            <button type="submit" class="button-danger" style="width: 100%; margin: 0; max-width: none; height: 38px; box-sizing: border-box;">Deletar</button>
                         </form>
                     </div>
                 </td>
@@ -94,5 +94,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='js/campanhaPage.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/campanhaPage.js') }}</script>
 {% endblock %}

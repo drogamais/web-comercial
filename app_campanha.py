@@ -97,7 +97,8 @@ def upload_page():
             
             return redirect(url_for('upload_page'))
 
-    campanhas = db.get_all_campaigns()
+    # MODIFICADO: Busca apenas campanhas ativas e que não expiraram
+    campanhas = db.get_active_campaigns_for_upload()
     return render_template('upload.html', active_page='upload', campanhas=campanhas)
 
 
@@ -119,6 +120,7 @@ def gestao_campanhas():
         
         return redirect(url_for('gestao_campanhas'))
 
+    # Esta rota agora só mostra campanhas ativas (status=1)
     campanhas = db.get_all_campaigns()
     return render_template('campanhas.html', active_page='campanhas', campanhas=campanhas)
 
@@ -144,9 +146,9 @@ def editar_campanha(campaign_id):
 def deletar_campanha(campaign_id):
     _, error = db.delete_campaign(campaign_id)
     if error:
-        flash(f'Erro ao deletar campanha: {error}', 'danger')
+        flash(f'Erro ao desativar campanha: {error}', 'danger')
     else:
-        flash('Campanha deletada com sucesso!', 'success')
+        flash('Campanha desativada com sucesso!', 'success') # Mensagem atualizada
         
     return redirect(url_for('gestao_campanhas'))
 
@@ -228,4 +230,3 @@ def deletar_produtos(campanha_id):
         flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
         
     return redirect(url_for('produtos_por_campanha', campanha_id=campanha_id))
-

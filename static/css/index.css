@@ -56,3 +56,10 @@ body {
 .button-tabloide:hover {
     background-color: #219150;
 }
+
+.button-parceiro {
+    background-color: #8e44ad; /* Roxo */
+}
+.button-parceiro:hover {
+    background-color: #732d91;
+}

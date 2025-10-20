@@ -1,0 +1,108 @@
+{% extends "parceiro/base_parceiros.html" %}
+
+{% block title %}Gerenciar Parceiros{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/page-parceiros.css') }}">
+{% endblock %}
+
+{% block content %}
+    <h1>Gerenciar Parceiros</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="filter-container">
+        <h2>Novo Parceiro</h2>
+        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form">
+            <div class="form-group" style="flex: 3;"><label for="nome">Nome:</label><input type="text" name="nome" required></div>
+            <button type="submit" style="flex: 1;">Criar Parceiro</button>
+        </form>
+    </div>
+
+    <h2>Parceiros Cadastrados</h2>
+    {% if parceiros %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th class="th-parceiro-acoes">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in parceiros %}
+            <tr>
+                <td>{{ p.nome }}</td>
+                <td>
+                    <div class="action-buttons-container">
+                        <button type="button" class="btn-edit button-filter btn-editar-parceiro"
+                                data-id="{{ p.id }}"
+                                data-nome="{{ p.nome }}">
+                            Editar
+                        </button>
+
+                        <button type="button" class="button-danger btn-delete btn-deletar-parceiro"
+                                data-id="{{ p.id }}"
+                                data-nome="{{ p.nome }}">
+                            Deletar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Nenhum parceiro cadastrado ainda.</p>
+    {% endif %}
+
+
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Editar Parceiro</h2>
+            <form id="edit-form" method="post">
+                <div class="form-group">
+                    <label for="nome_edit">Nome do Parceiro:</label>
+                    <input type="text" id="nome_edit" name="nome_edit" required>
+                </div>
+                <div class="modal-actions">
+                    <button id="modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
+                    <button type="submit" class="modal-button-confirm">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Confirmar Desativação</h2>
+            <p>Para confirmar a desativação, por favor digite o nome do parceiro no campo abaixo:</p>
+
+            <p class="delete-modal-parceiro-name-label">Nome: <strong id="delete-modal-parceiro-name"></strong></p>
+
+            <div class="form-group" style="text-align: left; margin-top: 15px;">
+                <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
+            </div>
+
+            <p class="delete-modal-info-text">(Isso irá aplicar um "soft delete", o parceiro ficará inativo)</p>
+
+            <form id="delete-form" method="post" action="">
+                <div class="modal-actions" style="margin-top: 25px;">
+                    <button id="delete-modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
+                    <button id="delete-modal-btn-confirm" type="submit" class="modal-button-danger" disabled>Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/parceirosPage.js') }}"></script>
+{% endblock %}

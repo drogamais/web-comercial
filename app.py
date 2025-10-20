@@ -5,10 +5,12 @@ from config import SECRET_KEY
 # Importa os módulos de banco de dados
 import database_campanha
 import database_tabloide
+import database_parceiros # NOVO
 
 # Importa os blueprints (nossos arquivos de rotas)
 from app_campanha import campanha_bp
 from app_tabloide import tabloide_bp
+from app_parceiros import parceiro_bp # NOVO
 
 # Cria a aplicação Flask
 app = Flask(__name__)
@@ -21,6 +23,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Registra os blueprints (módulos) na aplicação principal
 app.register_blueprint(campanha_bp)
 app.register_blueprint(tabloide_bp)
+app.register_blueprint(parceiro_bp) # NOVO
 
 
 # --- Rota Principal (Home Page) ---
@@ -32,15 +35,17 @@ def index():
 # --- Funções de Banco de Dados Globais ---
 @app.before_request
 def before_first_request():
-    # Garante que as tabelas de ambos os módulos sejam criadas
+    # Garante que as tabelas de todos os módulos sejam criadas
     database_campanha.create_tables()
     database_tabloide.create_tables()
+    database_parceiros.create_tables() # NOVO
 
 @app.teardown_appcontext
 def teardown_db(exception):
-    # Fecha ambas as conexões de banco de dados
+    # Fecha todas as conexões de banco de dados
     database_campanha.close_db_connection(exception)
     database_tabloide.close_db_connection(exception)
+    database_parceiros.close_db_connection(exception) # NOVO
 
 if __name__ == '__main__':
     # Isso permite rodar 'python app.py' diretamente para testes

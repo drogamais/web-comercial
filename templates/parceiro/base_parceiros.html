@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestão de Parceiros{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
+
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="dropdown">
+                <button class="dropbtn">Menu</button>
+                <div id="myDropdown" class="dropdown-content">
+                    <a href="{{ url_for('parceiro.gestao_parceiros') }}" class="{{ 'active' if active_page == 'parceiros' else '' }}">Gerenciar Parceiros</a>
+                    <a href="{{ url_for('index') }}" style="border-top: 1px solid #ddd; background-color: #f0f0f0;">&larr; Voltar ao Menu Principal</a>
+                </div>
+            </div>
+        </nav>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.App && App.main && App.main.init) {
+                App.main.init();
+            }
+        });
+    </script>
+</body>
+</html>

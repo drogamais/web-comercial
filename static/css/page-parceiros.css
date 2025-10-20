@@ -1,0 +1,73 @@
+/* static/css/page-parceiros.css */
+
+/* Largura da coluna de ações */
+.th-parceiro-acoes {
+    width: 25%; /* Ajuste conforme necessário */
+}
+
+/* Container dos Botões de Ação */
+.action-buttons-container {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+/* Botões específicos */
+.btn-editar-parceiro {
+    min-width: 100px;
+    background-color: #f39c12; /* Laranja */
+    box-sizing: border-box;
+}
+
+.btn-deletar-parceiro {
+    width: 100%;
+    min-width: 100px;
+    margin: 0;
+    max-width: none;
+    height: 38px; /* Mesma altura dos outros botões */
+    box-sizing: border-box;
+    display: inline-flex; /* Para alinhar o texto verticalmente */
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* --- Estilos do Modal de Edição --- */
+#edit-modal .modal-content h2 {
+    margin-top: 0;
+}
+#edit-modal .form-group {
+    text-align: left;
+}
+#edit-modal .modal-actions {
+    margin-top: 25px;
+}
+
+/* --- Estilos do Modal de Deleção --- */
+.delete-modal-parceiro-name-label { /* Nome da classe atualizado */
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+}
+#delete-modal-parceiro-name { /* ID atualizado */
+    color: #c0392b;
+    font-weight: bold;
+}
+.delete-modal-info-text {
+    font-size: 14px;
+    color: #555;
+    margin-top: 15px;
+}
+.modal-button-danger:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
+.modal-button-danger:disabled:hover {
+    background-color: #cccccc;
+}

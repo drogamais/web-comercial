@@ -30,22 +30,58 @@ def upload_page():
 
         if file and allowed_file(file.filename):
             try:
+                # ----------------- MAPA DE COLUNAS -----------------
                 column_map = {
-                    'CÓDIGO DE BARRAS': 'codigo_barras', 'DESCRIÇÃO': 'descricao', 'PONTUAÇÃO': 'pontuacao',
-                    'PREÇO NORMAL': 'preco_normal', 'PREÇO COM DESCONTO': 'preco_desconto',
-                    'REBAIXE': 'rebaixe', 'QTD LIMITE': 'qtd_limite'
+                    'GTIN': 'codigo_barras', 
+                    'DESCRIÇÃO': 'descricao', 
+                    'LABORATÓRIO': 'laboratorio',
+                    'PREÇO NORMAL': 'preco_normal', 
+                    'PREÇO DESCONTO GERAL': 'preco_desconto',
+                    'PREÇO DESCONTO CLIENTE+': 'preco_desconto_cliente', # Chave sem espaço antes do +
+                    'TIPO DE REGRA': 'tipo_regra'
+                    # A coluna "TIPO DE PREÇO" não é necessária, então é ignorada.
                 }
-                df = pd.read_excel(file).rename(columns=column_map)
+                
+                # Lê o Excel
+                df = pd.read_excel(file)
+                
+                # --- LÓGICA DE LIMPEZA ATUALIZADA (FINAL) ---
+                df.columns = (
+                    df.columns.astype(str)
+                    .str.replace(r'\s+', ' ', regex=True)   # Consolida TODOS os tipos de whitespace
+                    .str.replace(r'\s\+', '+', regex=True) # Remove espaço antes do +
+                    .str.strip()                          # Limpa as bordas
+                    .str.upper()                          # (NOVO) Força tudo para MAIÚSCULO
+                )
+                
+                # Agora faz o rename com os nomes limpos
+                df = df.rename(columns=column_map)
+                
+                # Substitui NaN por None (NULL para o banco)
                 df = df.replace({np.nan: None})
                 
-                required_cols = column_map.values()
+                # Converte colunas numéricas que podem ter vindo como texto (ex: ' - ')
+                cols_to_numeric = ['preco_normal', 'preco_desconto', 'preco_desconto_cliente']
+                for col in cols_to_numeric:
+                    if col in df.columns:
+                        df[col] = pd.to_numeric(df[col], errors='coerce').replace({np.nan: None})
+
+                required_cols = list(column_map.values()) 
+                
+                # Verifica se todas as colunas renomeadas existem
                 if not all(col in df.columns for col in required_cols):
-                    flash('A planilha não contém todas as colunas esperadas.', 'danger')
+                    missing = [col for col in required_cols if col not in df.columns]
+                    # Esta é a mensagem de erro que você está vendo
+                    flash(f'A planilha não contém todas as colunas esperadas. Faltando: {", ".join(missing)}', 'danger')
                     return redirect(url_for('tabloide.upload_page'))
 
+                # ----------------- INSERÇÃO DE PRODUTOS ATUALIZADA -----------------
                 produtos_para_inserir = [
-                    (tabloide_id, row.get('codigo_barras'), row.get('descricao'), row.get('pontuacao'),
-                     row.get('preco_normal'), row.get('preco_desconto'), row.get('rebaixe'), row.get('qtd_limite'))
+                    (tabloide_id, 
+                     row.get('codigo_barras'), row.get('descricao'), row.get('laboratorio'),
+                     row.get('preco_normal'), row.get('preco_desconto'), 
+                     row.get('preco_desconto_cliente'), row.get('tipo_regra')
+                    )
                     for _, row in df.iterrows()
                 ]
                 
@@ -110,11 +146,16 @@ def produtos_por_tabloide(campanha_id): # Modificado
 @tabloide_bp.route('/<int:campanha_id>/produtos/adicionar', methods=['POST'])
 def adicionar_produto(campanha_id): # Modificado
     try:
+        # ----------------- DADOS DO PRODUTO ATUALIZADOS -----------------
         dados_produto = (
-            campanha_id, request.form.get('codigo_barras'), request.form.get('descricao'),
-            request.form.get('pontuacao') or None, request.form.get('preco_normal') or None,
-            request.form.get('preco_desconto') or None, request.form.get('rebaixe') or None,
-            request.form.get('qtd_limite') or None
+            campanha_id, 
+            request.form.get('codigo_barras'), 
+            request.form.get('descricao'),
+            request.form.get('laboratorio') or None,
+            request.form.get('preco_normal') or None,
+            request.form.get('preco_desconto') or None,
+            request.form.get('preco_desconto_cliente') or None,
+            request.form.get('tipo_regra') or None
         )
         _, error = db.add_single_product(dados_produto) # Modificado
         if error: flash(f'Erro ao adicionar produto: {error}', 'danger')
@@ -129,11 +170,17 @@ def atualizar_produtos(campanha_id): # Modificado
     if not selecionados:
         flash('Nenhum produto selecionado para atualizar.', 'warning')
         return redirect(url_for('tabloide.produtos_por_tabloide', campanha_id=campanha_id))
+    
+    # ----------------- CAMPOS DE ATUALIZAÇÃO ATUALIZADOS -----------------
     produtos_para_atualizar = [
-        (request.form.get(f'codigo_barras_{pid}'), request.form.get(f'descricao_{pid}'),
-         request.form.get(f'pontuacao_{pid}') or None, request.form.get(f'preco_normal_{pid}') or None,
-         request.form.get(f'preco_desconto_{pid}') or None, request.form.get(f'rebaixe_{pid}') or None,
-         request.form.get(f'qtd_limite_{pid}') or None, pid)
+        (request.form.get(f'codigo_barras_{pid}'), 
+         request.form.get(f'descricao_{pid}'),
+         request.form.get(f'laboratorio_{pid}') or None,
+         request.form.get(f'preco_normal_{pid}') or None,
+         request.form.get(f'preco_desconto_{pid}') or None,
+         request.form.get(f'preco_desconto_cliente_{pid}') or None,
+         request.form.get(f'tipo_regra_{pid}') or None, 
+         pid)
         for pid in selecionados
     ]
     rowcount, error = db.update_products_in_bulk(produtos_para_atualizar) # Modificado

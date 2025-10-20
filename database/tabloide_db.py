@@ -36,18 +36,26 @@ def create_tables():
                 UNIQUE(nome)
             )
         """)
-        # Tabela 'produtos_tabloide'
+        # Tabela 'produtos_tabloide' (Schema ATUALIZADO)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS produtos_tabloide (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 campanha_id INT NOT NULL,
                 codigo_barras VARCHAR(50),
                 descricao VARCHAR(255),
-                pontuacao INT,
+                
+                -- Colunas da planilha
+                laboratorio VARCHAR(255),
                 preco_normal DECIMAL(10, 2),
-                preco_desconto DECIMAL(10, 2),
+                preco_desconto DECIMAL(10, 2),      -- (PREÇO DESCONTO GERAL)
+                preco_desconto_cliente DECIMAL(10, 2),
+                tipo_regra VARCHAR(100),
+                
+                -- Colunas antigas (mantidas como NULLable, mas não usadas)
+                pontuacao INT,
                 rebaixe DECIMAL(10, 2),
                 qtd_limite INT,
+
                 FOREIGN KEY (campanha_id) REFERENCES tabloides(id) ON DELETE CASCADE
             )
         """)
@@ -135,8 +143,12 @@ def delete_campaign(campaign_id):
 def add_products_bulk(produtos):
     conn = get_db_connection()
     cursor = conn.cursor()
+    # SQL ATUALIZADO
     sql = """
-        INSERT INTO produtos_tabloide (campanha_id, codigo_barras, descricao, pontuacao, preco_normal, preco_desconto, rebaixe, qtd_limite)
+        INSERT INTO produtos_tabloide (
+            campanha_id, codigo_barras, descricao, laboratorio, 
+            preco_normal, preco_desconto, preco_desconto_cliente, tipo_regra
+        )
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
@@ -158,8 +170,12 @@ def get_products_by_campaign_id(campanha_id):
 def add_single_product(dados_produto):
     conn = get_db_connection()
     cursor = conn.cursor()
+    # SQL ATUALIZADO
     sql = """
-        INSERT INTO produtos_tabloide (campanha_id, codigo_barras, descricao, pontuacao, preco_normal, preco_desconto, rebaixe, qtd_limite)
+        INSERT INTO produtos_tabloide (
+            campanha_id, codigo_barras, descricao, laboratorio, 
+            preco_normal, preco_desconto, preco_desconto_cliente, tipo_regra
+        )
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
@@ -175,10 +191,11 @@ def add_single_product(dados_produto):
 def update_products_in_bulk(produtos_para_atualizar):
     conn = get_db_connection()
     cursor = conn.cursor()
+    # SQL ATUALIZADO
     sql = """
         UPDATE produtos_tabloide SET
-            codigo_barras = %s, descricao = %s, pontuacao = %s,
-            preco_normal = %s, preco_desconto = %s, rebaixe = %s, qtd_limite = %s
+            codigo_barras = %s, descricao = %s, laboratorio = %s, preco_normal = %s, 
+            preco_desconto = %s, preco_desconto_cliente = %s, tipo_regra = %s
         WHERE id = %s
     """
     try:

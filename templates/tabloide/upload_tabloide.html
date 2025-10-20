@@ -1,10 +1,10 @@
-{% extends "base_campanha.html" %}
+{% extends "tabloide/base_tabloide.html" %}
 
-{% block title %}Upload de Planilha{% endblock %}
+{% block title %}Upload de Planilha de Tabloide{% endblock %}
 
 {% block content %}
-    <h1>Processar Planilha de Campanha</h1>
-    <p>Selecione a campanha, arraste o arquivo Excel para a área abaixo e clique em processar.</p>
+    <h1>Processar Planilha de Tabloide</h1>
+    <p>Selecione o tabloide, arraste o arquivo Excel para a área abaixo e clique em processar.</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -18,11 +18,11 @@
         <div class="filter-container" style="padding-bottom: 30px;">
             <div class="filter-form">
                 <div class="form-group" style="flex: 1;">
-                    <label for="campanha">1. Selecione a Campanha:</label>
-                    <select name="campanha" id="campanha" required>
+                    <label for="tabloide">1. Selecione o Tabloide:</label>
+                    <select name="tabloide" id="tabloide" required>
                         <option value="">Selecione...</option>
-                        {% for c in campanhas %}
-                        <option value="{{ c.id }}">{{ c.nome }} ({{ c.data_inicio.strftime('%d/%m/%Y') }} a {{ c.data_fim.strftime('%d/%m/%Y') }})</option>
+                        {% for t in tabloides %}
+                        <option value="{{ t.id }}">{{ t.nome }} ({{ t.data_inicio.strftime('%d/%m/%Y') }} a {{ t.data_fim.strftime('%d/%m/%Y') }})</option>
                         {% endfor %}
                     </select>
                 </div>

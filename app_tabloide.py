@@ -60,7 +60,7 @@ def upload_page():
             return redirect(url_for('tabloide.upload_page'))
 
     tabloides = db.get_active_campaigns_for_upload() # Modificado
-    return render_template('upload_tabloide.html', active_page='upload', tabloides=tabloides) # Modificado
+    return render_template('tabloide/upload_tabloide.html', active_page='upload', tabloides=tabloides) # Modificado
 
 @tabloide_bp.route('/gerenciar', methods=['GET', 'POST'])
 def gestao_tabloides(): # Modificado
@@ -76,7 +76,7 @@ def gestao_tabloides(): # Modificado
             else: flash('Tabloide criado com sucesso!', 'success')
         return redirect(url_for('tabloide.gestao_tabloides')) # Modificado
     tabloides = db.get_all_campaigns() # Modificado
-    return render_template('tabloides.html', active_page='tabloides', tabloides=tabloides) # Modificado
+    return render_template('tabloide/tabloides.html', active_page='tabloides', tabloides=tabloides) # Modificado
 
 @tabloide_bp.route('/editar/<int:campaign_id>', methods=['POST'])
 def editar_tabloide(campaign_id): # Modificado
@@ -105,7 +105,7 @@ def produtos_por_tabloide(campanha_id): # Modificado
         flash('Tabloide não encontrado.', 'danger')
         return redirect(url_for('tabloide.gestao_tabloides')) # Modificado
     produtos = db.get_products_by_campaign_id(campanha_id) # Modificado
-    return render_template('produtos_tabloide.html', active_page='tabloides', tabloide=tabloide, produtos=produtos) # Modificado
+    return render_template('tabloide/produtos_tabloide.html', active_page='tabloides', tabloide=tabloide, produtos=produtos) # Modificado
 
 @tabloide_bp.route('/<int:campanha_id>/produtos/adicionar', methods=['POST'])
 def adicionar_produto(campanha_id): # Modificado

@@ -60,7 +60,7 @@ def upload_page():
             return redirect(url_for('campanha.upload_page'))
 
     campanhas = db.get_active_campaigns_for_upload()
-    return render_template('upload.html', active_page='upload', campanhas=campanhas)
+    return render_template('campanha/upload.html', active_page='upload', campanhas=campanhas)
 
 @campanha_bp.route('/gerenciar', methods=['GET', 'POST'])
 def gestao_campanhas():
@@ -76,7 +76,7 @@ def gestao_campanhas():
             else: flash('Campanha criada com sucesso!', 'success')
         return redirect(url_for('campanha.gestao_campanhas'))
     campanhas = db.get_all_campaigns()
-    return render_template('campanhas.html', active_page='campanhas', campanhas=campanhas)
+    return render_template('campanha/campanhas.html', active_page='campanhas', campanhas=campanhas)
 
 @campanha_bp.route('/editar/<int:campaign_id>', methods=['POST'])
 def editar_campanha(campaign_id):
@@ -105,7 +105,7 @@ def produtos_por_campanha(campanha_id):
         flash('Campanha não encontrada.', 'danger')
         return redirect(url_for('campanha.gestao_campanhas'))
     produtos = db.get_products_by_campaign_id(campanha_id)
-    return render_template('produtos_campanha.html', active_page='campanhas', campanha=campanha, produtos=produtos)
+    return render_template('campanha/produtos_campanha.html', active_page='campanhas', campanha=campanha, produtos=produtos)
 
 @campanha_bp.route('/<int:campanha_id>/produtos/adicionar', methods=['POST'])
 def adicionar_produto(campanha_id):

@@ -192,3 +192,13 @@
 .modal-button-confirm:hover {
     background-color: #2980b9;
 }
+
+/* --- NOVO ESTILO ADICIONADO --- */
+/* Para o botão de confirmação vermelho no modal */
+.modal-button-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+.modal-button-danger:hover {
+    background-color: #c0392b;
+}

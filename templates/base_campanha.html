@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='forms.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='tables.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='drag_and_drop.css') }}">
+    
+    {% block styles %}{% endblock %}
 </head>
 <body>
     <div class="container">

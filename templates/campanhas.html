@@ -2,6 +2,10 @@
 
 {% block title %}Gerenciar Campanhas{% endblock %}
 
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='page-campanhas.css') }}">
+{% endblock %}
+
 {% block content %}
     <h1>Gerenciar Campanhas</h1>
 
@@ -29,9 +33,9 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                <th style="width: 15%;">Data de Início</th>
-                <th style="width: 15%;">Data de Fim</th>
-                <th style="width: 30%;">Ações</th>
+                <th class="th-campanha-inicio">Data de Início</th>
+                <th class="th-campanha-fim">Data de Fim</th>
+                <th class="th-campanha-acoes">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -41,10 +45,12 @@
                 <td>{{ c.data_inicio.strftime('%d/%m/%Y') }}</td>
                 <td>{{ c.data_fim.strftime('%d/%m/%Y') }}</td>
                 <td>
-                    <div style="display: flex; gap: 10px;">
-                        <a href="{{ url_for('produtos_por_campanha', campanha_id=c.id) }}" class="button-filter" style="min-width: 100px; font-size: 17.5px; text-align: center; text-decoration: none; font-weight: bold;">Ver Produtos</a>
+                    <div class="action-buttons-container">
+                        <a href="{{ url_for('produtos_por_campanha', campanha_id=c.id) }}" class="button-filter btn-ver-produtos">
+                           Ver Produtos
+                        </a>
                         
-                        <button type="button" class="btn-edit button-filter" style="min-width: 100px; background-color: #f39c12;"
+                        <button type="button" class="btn-edit button-filter btn-editar-campanha"
                                 data-id="{{ c.id }}"
                                 data-nome="{{ c.nome }}"
                                 data-inicio="{{ c.data_inicio.strftime('%Y-%m-%d') }}"
@@ -52,9 +58,11 @@
                             Editar
                         </button>
                         
-                        <form action="{{ url_for('deletar_campanha', campaign_id=c.id) }}" method="post" style="min-width: 100px; display: grid;" onsubmit="return confirm('Tem certeza que deseja DELETAR esta campanha?');">
-                            <button type="submit" class="button-danger" style="width: 100%; margin: 0; max-width: none; height: 38px; box-sizing: border-box;">Deletar</button>
-                        </form>
+                        <button type="button" class="button-danger btn-delete btn-deletar-campanha" 
+                                data-id="{{ c.id }}"
+                                data-nome="{{ c.nome }}">
+                            Deletar
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -68,23 +76,45 @@
 
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2 style="margin-top: 0;">Editar Campanha</h2>
+            <h2>Editar Campanha</h2>
             <form id="edit-form" method="post">
-                <div class="form-group" style="text-align: left;">
+                <div class="form-group">
                     <label for="nome_edit">Nome da Campanha:</label>
                     <input type="text" id="nome_edit" name="nome_edit" required>
                 </div>
-                <div class="form-group" style="text-align: left;">
+                <div class="form-group">
                     <label for="data_inicio_edit">Data de Início:</label>
                     <input type="date" id="data_inicio_edit" name="data_inicio_edit" required>
                 </div>
-                <div class="form-group" style="text-align: left;">
+                <div class="form-group">
                     <label for="data_fim_edit">Data de Fim:</label>
                     <input type="date" id="data_fim_edit" name="data_fim_edit" required>
                 </div>
-                <div class="modal-actions" style="margin-top: 25px;">
+                <div class="modal-actions">
                     <button id="modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
                     <button type="submit" class="modal-button-confirm">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Confirmar Desativação</h2>
+            <p>Para confirmar a desativação, por favor digite o nome da campanha no campo abaixo:</p>
+            
+            <p class="delete-modal-campaign-name-label">Nome: <strong id="delete-modal-campaign-name"></strong></p>
+            
+            <div class="form-group" style="text-align: left; margin-top: 15px;">
+                <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
+            </div>
+
+            <p class="delete-modal-info-text">(Isso irá aplicar um "soft delete", a campanha ficará inativa e oculta da lista de uploads)</p>
+            
+            <form id="delete-form" method="post" action="">
+                <div class="modal-actions" style="margin-top: 25px;">
+                    <button id="delete-modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
+                    <button id="delete-modal-btn-confirm" type="submit" class="modal-button-danger" disabled>Confirmar</button>
                 </div>
             </form>
         </div>
@@ -94,5 +124,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='js/campanhaPage.js') }}</script>
+    <script src="{{ url_for('static', filename='js/campanhaPage.js') }}"></script>
 {% endblock %}

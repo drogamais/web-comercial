@@ -1,7 +1,7 @@
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash
 )
-import database_parceiros as db # Banco de dados de parceiros
+import database.parceiro_db as db # Banco de dados de parceiros
 
 # Cria o Blueprint de Parceiros
 parceiro_bp = Blueprint(

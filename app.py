@@ -3,14 +3,14 @@ from flask import Flask, render_template
 from config import SECRET_KEY
 
 # Importa os módulos de banco de dados
-import database_campanha
-import database_tabloide
-import database_parceiros # NOVO
+import database.campanha_db as database_campanha
+import database.tabloide_db as database_tabloide
+import database.parceiro_db as database_parceiros
 
 # Importa os blueprints (nossos arquivos de rotas)
-from app_campanha import campanha_bp
-from app_tabloide import tabloide_bp
-from app_parceiros import parceiro_bp # NOVO
+from routes.campanha_routes import campanha_bp
+from routes.tabloide_routes import tabloide_bp
+from routes.parceiro_routes import parceiro_bp
 
 # Cria a aplicação Flask
 app = Flask(__name__)

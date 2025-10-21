@@ -111,27 +111,23 @@ document.addEventListener('DOMContentLoaded', () => {
  * @param {HTMLElement} input - O elemento input do código de barras.
  */
 function validarLinhaProduto(input) {
-    const valor = input.value.trim(); // Pega o valor sem espaços
-    const row = input.closest('tr');  // Encontra a linha (<tr>) pai
+    const valor = input.value.trim();
+    const row = input.closest('tr');
     
-    if (!row) return; // Segurança: sai se não encontrar a linha
+    if (!row) return;
 
-    // Se o campo estiver vazio, não marca como erro (opcional)
     if (valor === "") {
-        row.classList.remove('row-error');
+        row.classList.remove('row-error-length'); // MUDADO
         return;
     }
-
-    // REGRA DE VALIDAÇÃO:
-    // O valor deve começar com '7', '8', '12', ou '13'
+    
     const len = valor.length;
     const eValido = (len === 7) || (len === 8) || (len === 12) || (len === 13);
 
-    // Aplica ou remove a classe de erro
     if (eValido) {
-        row.classList.remove('row-error');
+        row.classList.remove('row-error-length'); // MUDADO
     } else {
-        row.classList.add('row-error');
+        row.classList.add('row-error-length'); // MUDADO
     }
 }
 
@@ -142,6 +138,50 @@ function validarTodosCodigos() {
     const todosBarcodes = document.querySelectorAll('.barcode-input');
     todosBarcodes.forEach(input => {
         validarLinhaProduto(input);
+    });
+}
+
+/**
+ * Valida os preços (desconto < normal) em uma linha.
+ * @param {HTMLElement} input - O elemento input que acionou o evento.
+ */
+function validarLinhaPreco(input) {
+    const row = input.closest('tr');
+    if (!row) return;
+
+    // Acessa os inputs pelos seus nomes (usando 'contém')
+    const normalInput = row.querySelector('input[name*="preco_normal_"]');
+    const descontoInput = row.querySelector('input[name*="preco_desconto_"]');
+
+    if (!normalInput || !descontoInput) return;
+
+    const precoNormal = parseFloat(normalInput.value);
+    const precoDesconto = parseFloat(descontoInput.value);
+
+    // Só valida se ambos forem números válidos
+    if (!isNaN(precoNormal) && !isNaN(precoDesconto)) {
+        // A regra: se o desconto for MAIOR que o normal, é um erro
+        if (precoDesconto > precoNormal) {
+            row.classList.add('row-error-price');
+        } else {
+            row.classList.remove('row-error-price');
+        }
+    } else {
+        // Se um dos campos estiver vazio ou inválido, remove o erro
+        row.classList.remove('row-error-price');
+    }
+}
+
+/**
+ * Valida todos os preços na tabela (chamada no load).
+ */
+function validarTodosPrecos() {
+    // Pega um dos inputs de preço de cada linha (ex: preco_normal)
+    const todosPrecosNormais = document.querySelectorAll('input[name*="preco_normal_"]');
+    todosPrecosNormais.forEach(input => {
+        // A função 'validarLinhaPreco' vai pegar a linha
+        // e encontrar os dois campos de preço
+        validarLinhaPreco(input);
     });
 }
 
@@ -167,20 +207,35 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 2. Validação inicial de todos os códigos ao carregar a página
-    validarTodosCodigos();
-
     // 3. Adiciona validação "ao vivo" (quando o usuário digita)
-    //    Usamos "event delegation" para performance.
+    // Adiciona validação "ao vivo" (quando o usuário digita)
     const tableBody = document.querySelector('table tbody');
     if (tableBody) {
         tableBody.addEventListener('input', function(event) {
-            // Verifica se o evento ocorreu em um campo de código de barras
-            if (event.target.classList.contains('barcode-input')) {
-                validarLinhaProduto(event.target);
+            const target = event.target;
+            
+            // Validação de Código de Barras (Comprimento)
+            if (target.classList.contains('barcode-input')) {
+                validarLinhaProduto(target);
             }
-        });
+            
+            // NOVO - Validação de Preços (Desconto vs Normal)
+            // Procura por inputs de preco_normal ou preco_desconto
+            if (target.matches('input[name*="preco_normal_"]') || 
+                target.matches('input[name*="preco_desconto_"]')) {
+                validarLinhaPreco(target);
+            }
+        })
     }
+    
+    // --- NOVA LÓGICA PARA O BOTÃO DE VALIDAR FORMATO ---
+    const validateFormatoBtn = document.getElementById('btn-validar-formato');
+    if (validateFormatoBtn) {
+        validateFormatoBtn.addEventListener('click', () => {
+            // Simplesmente chama as duas funções de validação
+            validarTodosCodigos();
+            validarTodosPrecos();
+        });
 
     // 4. LÓGICA DO NOVO BOTÃO DE VALIDAÇÃO (dbDrogamais)
     const validateGtinBtn = document.getElementById('btn-validar-gtins');
@@ -270,5 +325,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-});
+}});

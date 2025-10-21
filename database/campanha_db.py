@@ -253,8 +253,10 @@ def close_drogamais_db_connection(e=None):
 
 def validate_gtins_in_external_db(gtin_list):
     """
-    Verifica uma lista de GTINs contra a tabela tb_codigos_de_barras no dbDrogamais.
+    Verifica uma lista de GTINs contra as tabelas bronze (vendas e estoque) no dbDrogamais.
     Retorna um SET contendo apenas os GTINs que FORAM ENCONTRADOS (válidos).
+    
+    (Query ATUALIZADA para usar bronze_plugpharma_vendas e bronze_plugpharma_estoque)
     """
     if not gtin_list:
         return set(), None
@@ -268,14 +270,27 @@ def validate_gtins_in_external_db(gtin_list):
         # Cria placeholders (%s) para a lista de GTINs
         format_strings = ','.join(['%s'] * len(gtin_list))
         
-        # IMPORTANTE: Ajuste o nome da coluna se 'codigo_de_barras' estiver errado
+        # SQL CORRIGIDO:
+        # 1. Usa UNION para combinar os resultados das duas tabelas.
+        # 2. Usa um alias (AS gtin) para que as colunas de nomes diferentes
+        #    sejam tratadas como uma só no resultado.
+        # 3. Adiciona backticks (`) em 'código_de_barras' por causa do acento.
         sql = f"""
-            SELECT DISTINCT ean_unico 
-            FROM tb_codigos_de_barras 
-            WHERE ean_unico IN ({format_strings})
+            (
+                SELECT codigo_de_barras_normalizado_produto AS gtin
+                FROM bronze_plugpharma_vendas
+                WHERE codigo_de_barras_normalizado_produto IN ({format_strings})
+            )
+            UNION
+            (
+                SELECT `código_de_barras` AS gtin
+                FROM bronze_plugpharma_estoque
+                WHERE `código_de_barras` IN ({format_strings})
+            )
         """
         
-        cursor.execute(sql, tuple(gtin_list))
+        params = tuple(gtin_list) + tuple(gtin_list)        
+        cursor.execute(sql, params)
         
         # Retorna um set (ex: {'789...', '789...'}) dos GTINs encontrados
         validos = {row[0] for row in cursor.fetchall()}

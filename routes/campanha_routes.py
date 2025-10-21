@@ -36,7 +36,7 @@ def upload_page():
                     'PREÇO NORMAL': 'preco_normal', 'PREÇO COM DESCONTO': 'preco_desconto',
                     'REBAIXE': 'rebaixe', 'QTD LIMITE': 'qtd_limite'
                 }
-                df = pd.read_excel(file).rename(columns=column_map)
+                df = pd.read_excel(file, dtype={'CÓDIGO DE BARRAS': str}).rename(columns=column_map)
                 df = df.replace({np.nan: None})
                 
                 required_cols = column_map.values()

@@ -237,6 +237,27 @@ document.addEventListener('DOMContentLoaded', function() {
             validarTodosPrecos();
         });
 
+    
+    // --- LÓGICA DO NOVO BOTÃO DE LIMPAR VALIDAÇÕES ---
+    const clearValidationBtn = document.getElementById('btn-limpar-validacoes');
+    
+    if (clearValidationBtn) {
+        clearValidationBtn.addEventListener('click', () => {
+            // 1. Seleciona todas as linhas da tabela
+            const allRows = document.querySelectorAll('table tbody tr');
+            
+            // 2. Itera por cada linha e remove todas as classes de validação
+            allRows.forEach(row => {
+                row.classList.remove(
+                    'row-error-length', // Erro de formato (comprimento GTIN)
+                    'row-error-price',  // Erro de preço (desconto > normal)
+                    'row-valid',        // Válido no DB (verde)
+                    'row-invalid'       // Inválido no DB (vermelho)
+                );
+            });
+        });
+    }
+
     // 4. LÓGICA DO NOVO BOTÃO DE VALIDAÇÃO (dbDrogamais)
     const validateGtinBtn = document.getElementById('btn-validar-gtins');
     const formEditDelete = document.getElementById('form-edit-delete');

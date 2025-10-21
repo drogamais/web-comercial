@@ -64,7 +64,11 @@
             </button>
 
             <button type="button" id="btn-validar-gtins" class="button-filter" style="flex: 1; background-color: #f39c12;">
-                Validar GTINs (dbDrogamais)
+                Validar GTINs
+            </button>
+
+            <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #d1f312;">
+                Limpar Validações
             </button>
             
             <button type="submit" formaction="{{ url_for('campanha.deletar_produtos', campanha_id=campanha.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none;" onclick="return confirm('Tem certeza que deseja deletar os produtos selecionados?');">Deletar Selecionados</button>

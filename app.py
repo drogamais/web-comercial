@@ -45,7 +45,8 @@ def teardown_db(exception):
     # Fecha todas as conexões de banco de dados
     database_campanha.close_db_connection(exception)
     database_tabloide.close_db_connection(exception)
-    database_parceiros.close_db_connection(exception) # NOVO
+    database_parceiros.close_db_connection(exception)
+    database_campanha.close_drogamais_db_connection(exception)
 
 if __name__ == '__main__':
     # Isso permite rodar 'python app.py' diretamente para testes

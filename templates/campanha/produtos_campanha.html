@@ -2,6 +2,10 @@
 
 {% block title %}Produtos da Campanha{% endblock %}
 
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/page-campanhas.css') }}">
+{% endblock %}
+
 {% block content %}
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>Gerenciar Produtos da Campanha: {{ campanha.nome }}</h1>
@@ -54,6 +58,11 @@
         </table>
         <div style="display: flex; gap: 15px; margin-top: 20px;">
             <button type="submit" formaction="{{ url_for('campanha.atualizar_produtos', campanha_id=campanha.id) }}" style="flex: 1;">Salvar Alterações</button>
+
+            <button type="button" id="btn-validar-gtins" class="button-filter" style="flex: 1; background-color: #f39c12;">
+                Validar GTINs (dbDrogamais)
+            </button>
+
             <button type="submit" formaction="{{ url_for('campanha.deletar_produtos', campanha_id=campanha.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none;" onclick="return confirm('Tem certeza que deseja deletar os produtos selecionados?');">Deletar Selecionados</button>
         </div>
     </form>
@@ -102,5 +111,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='js/produtosPage.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/campanhaPage.js') }}"></script> 
 {% endblock %}

@@ -124,10 +124,8 @@ function validarLinhaProduto(input) {
 
     // REGRA DE VALIDAÇÃO:
     // O valor deve começar com '7', '8', '12', ou '13'
-    const eValido = valor.startsWith('7') || 
-                  valor.startsWith('8') || 
-                  valor.startsWith('12') || 
-                  valor.startsWith('13');
+    const len = valor.length;
+    const eValido = (len === 7) || (len === 8) || (len === 12) || (len === 13);
 
     // Aplica ou remove a classe de erro
     if (eValido) {
@@ -183,4 +181,94 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // 4. LÓGICA DO NOVO BOTÃO DE VALIDAÇÃO (dbDrogamais)
+    const validateGtinBtn = document.getElementById('btn-validar-gtins');
+    const formEditDelete = document.getElementById('form-edit-delete');
+    
+    if (validateGtinBtn && formEditDelete) {
+        
+        // Pega o ID da campanha pela URL do botão 'Salvar'
+        const saveButton = formEditDelete.querySelector('button[formaction*="atualizar"]');
+        let campanhaId = null;
+        if (saveButton) {
+            try {
+                // Tenta extrair o ID da URL (ex: /campanha/123/produtos/atualizar)
+                const match = saveButton.formAction.match(/\/campanha\/(\d+)\/produtos/);
+                if (match) {
+                    campanhaId = match[1];
+                }
+            } catch (e) {
+                console.error("Não foi possível extrair o ID da campanha da URL do formulário.", e);
+            }
+        }
+
+        if (!campanhaId) {
+            console.error("Botão de validação não conseguiu encontrar o ID da campanha.");
+            validateGtinBtn.disabled = true;
+            validateGtinBtn.textContent = "Erro: ID da Campanha não encontrado";
+        }
+
+        validateGtinBtn.addEventListener('click', async () => {
+            if (!campanhaId) return;
+            
+            const originalText = validateGtinBtn.textContent;
+            validateGtinBtn.textContent = 'Validando...';
+            validateGtinBtn.disabled = true;
+
+            const allBarcodeInputs = document.querySelectorAll('.barcode-input');
+            const allRows = document.querySelectorAll('table tbody tr');
+            const gtins = Array.from(allBarcodeInputs).map(input => input.value);
+
+            try {
+                const response = await fetch(`/campanha/${campanhaId}/produtos/validar_gtins`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ gtins: gtins })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro do servidor: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                // Cria um Set (lista rápida) de GTINs válidos
+                const validGtinSet = new Set(result.valid_gtins);
+
+                // Aplica os estilos
+                allBarcodeInputs.forEach(input => {
+                    const gtin = input.value.trim();
+                    const row = input.closest('tr');
+                    
+                    // Limpa estilos antigos de validação
+                    row.classList.remove('row-valid', 'row-invalid');
+
+                    if (gtin === "") {
+                        // Se estiver vazio, não faz nada
+                        return;
+                    }
+                    
+                    // Aplica o estilo (Válido ou Inválido)
+                    if (validGtinSet.has(gtin)) {
+                        row.classList.add('row-valid');
+                    } else {
+                        row.classList.add('row-invalid');
+                    }
+                });
+
+            } catch (error) {
+                console.error("Falha ao validar GTINs:", error);
+                alert("Ocorreu um erro ao validar os GTINs. Verifique o console.");
+            } finally {
+                // Restaura o botão
+                validateGtinBtn.textContent = originalText;
+                validateGtinBtn.disabled = false;
+            }
+        });
+    }
+
 });

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, send_from_directory
+    Blueprint, render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 )
 import os
 import database.campanha_db as db # Usamos 'db' para simplificar
@@ -172,3 +172,47 @@ def deletar_produtos(campanha_id):
     if error: flash(f'Erro ao deletar produtos: {error}', 'danger')
     else: flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
     return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
+
+# ADICIONE ESTA NOVA ROTA NO FINAL DO ARQUIVO
+@campanha_bp.route('/<int:campanha_id>/produtos/validar_gtins', methods=['POST'])
+def validar_gtins(campanha_id):
+    """
+    Recebe uma lista de GTINs do frontend, normaliza (zfill(14)),
+    verifica no dbDrogamais e retorna a lista dos GTINs ORIGINAIS que são válidos.
+    """
+    data = request.get_json()
+    gtins_raw = data.get('gtins', []) # Ex: ['736532824844', '']
+
+    if not gtins_raw:
+        return jsonify({"error": "Nenhum GTIN enviado"}), 400
+
+    # 1. Filtra GTINs não vazios (mantém os originais)
+    gtins_para_validar_raw = [gtin for gtin in gtins_raw if gtin and gtin.strip()]
+    
+    if not gtins_para_validar_raw:
+        return jsonify({"valid_gtins": []}) # Retorna sucesso com lista vazia
+
+    # 2. Cria a lista normalizada (com padding de 0) para enviar ao banco
+    #    usando str.zfill(14)
+    gtins_padded = [g.zfill(14) for g in gtins_para_validar_raw] 
+    #    Ex: ['736532824844'] -> ['00736532824844']
+    
+    # 3. Cria um mapa para traduzir a resposta do banco de volta para o original
+    #    Ex: {'00736532824844': '736532824844'}
+    map_padded_to_raw = {padded: raw for padded, raw in zip(gtins_padded, gtins_para_validar_raw)}
+
+    # 4. Envia a lista PADDED (com zeros) para o banco
+    #    (Assumindo que as correções de 'ean_unico' e 'collation' da etapa anterior foram feitas)
+    validos_padded, error = db.validate_gtins_in_external_db(gtins_padded)
+    
+    if error:
+        return jsonify({"error": error}), 500
+    
+    # 5. Converte o resultado PADDED (do banco) de volta para a lista RAW (original)
+    #    Ex: validos_padded = {'00736532824844'}
+    #        validos_raw (convertido) = {'736532824844'}
+    validos_raw = {map_padded_to_raw[padded_gtin] for padded_gtin in validos_padded if padded_gtin in map_padded_to_raw}
+
+    # 6. Retorna a lista de GTINs ORIGINAIS para o JavaScript
+    #    O JavaScript poderá comparar '736532824844' (do Set) com '736532824844' (do input.value)
+    return jsonify({"valid_gtins": list(validos_raw)})

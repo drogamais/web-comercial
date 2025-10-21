@@ -105,3 +105,23 @@ tr.row-error input {
     background-color: #fff0f0 !important; 
     border-color: #ff9999;
 }
+
+/* --- Estilos para Validação de GTIN (dbDrogamais) --- */
+
+/* Vermelho para GTIN inválido (Não existe no dbDrogamais) */
+tr.row-invalid {
+    background-color: #fdd !important; /* Vermelho mais claro que o 'row-error' */
+}
+tr.row-invalid input {
+    background-color: #fff0f0 !important;
+    border-color: #ff9999;
+}
+
+/* Verde para GTIN válido (Existe no dbDrogamais) */
+tr.row-valid {
+    background-color: #dff0d8 !important; /* Verde claro */
+}
+tr.row-valid input {
+    background-color: #f0fff0 !important;
+    border-color: #a3d9a5;
+}

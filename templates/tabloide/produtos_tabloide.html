@@ -3,7 +3,12 @@
 {% block title %}Produtos do Tabloide{% endblock %}
 
 {% block content %}
-    <h1>Gerenciar Produtos do Tabloide: {{ tabloide.nome }}</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Gerenciar Produtos do Tabloide: {{ tabloide.nome }}</h1>
+        <a href="{{ url_for('tabloide.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
+            &#x2B07; Baixar Modelo da Planilha
+        </a>
+    </div>
     <a href="{{ url_for('tabloide.gestao_tabloides') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Tabloides</a>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

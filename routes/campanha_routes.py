@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, current_app
+    Blueprint, render_template, request, redirect, url_for, flash, send_from_directory
 )
+import os
 import database.campanha_db as db # Usamos 'db' para simplificar
-from utils import allowed_file # (Criaremos este arquivo no Passo 4)
+from utils import allowed_file # 
 
 # Cria o Blueprint de Campanha com prefixo de URL
 campanha_bp = Blueprint(
@@ -61,6 +62,26 @@ def upload_page():
 
     campanhas = db.get_active_campaigns_for_upload()
     return render_template('campanha/upload_campanha.html', active_page='upload', campanhas=campanhas)
+
+@campanha_bp.route('/download_modelo')
+def download_modelo():
+    """
+    Rota para baixar o arquivo .xlsx modelo para upload.
+    """
+    # O campanha_bp.root_path aponta para a pasta 'routes'
+    # '..' sobe um nível para a raiz do projeto
+    try:
+        static_dir = os.path.join(campanha_bp.root_path, '..', 'static', 'models')
+        filename = 'modelo_campanha.xlsx'
+        return send_from_directory(
+            static_dir,
+            filename,
+            as_attachment=True
+        )
+    except FileNotFoundError:
+        flash('Arquivo modelo não encontrado no servidor.', 'danger')
+        # Redireciona de volta para a página anterior ou uma página padrão
+        return redirect(request.referrer or url_for('tabloide.gestao_tabloides'))
 
 @campanha_bp.route('/gerenciar', methods=['GET', 'POST'])
 def gestao_campanhas():

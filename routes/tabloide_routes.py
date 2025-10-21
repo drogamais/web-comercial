@@ -10,8 +10,9 @@ Inclui rotas para:
 import pandas as pd
 import numpy as np
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash
+    Blueprint, render_template, request, redirect, url_for, flash, send_from_directory
 )
+import os
 import database.tabloide_db as db  # Importa o banco de dados de tabloide
 from utils import allowed_file      # Reutiliza a função de utils
 
@@ -142,6 +143,26 @@ def upload_page():
     # Lógica para o método GET (carregar a página de upload)
     tabloides = db.get_active_campaigns_for_upload()
     return render_template('tabloide/upload_tabloide.html', active_page='upload', tabloides=tabloides)
+
+@tabloide_bp.route('/download_modelo')
+def download_modelo():
+    """
+    Rota para baixar o arquivo .xlsx modelo para upload.
+    """
+    # O tabloide_bp.root_path aponta para a pasta 'routes'
+    # '..' sobe um nível para a raiz do projeto
+    try:
+        static_dir = os.path.join(tabloide_bp.root_path, '..', 'static', 'models')
+        filename = 'modelo_tabloide.xlsx'
+        return send_from_directory(
+            static_dir,
+            filename,
+            as_attachment=True
+        )
+    except FileNotFoundError:
+        flash('Arquivo modelo não encontrado no servidor.', 'danger')
+        # Redireciona de volta para a página anterior ou uma página padrão
+        return redirect(request.referrer or url_for('tabloide.gestao_tabloides'))
 
 # -----------------------------------------------------
 # ROTAS DE GERENCIAMENTO DE TABLOIDES (CAMPANHAS)

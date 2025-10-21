@@ -12,6 +12,12 @@
         <a href="{{ url_for('campanha.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
             &#x2B07; Baixar Modelo da Planilha
         </a>
+
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60;">
+                Exportar Excel (.xlsx)
+            </button>   
+        </div>
     </div>
     <a href="{{ url_for('campanha.gestao_campanhas') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Campanhas</a>
 
@@ -119,5 +125,6 @@
 
 {% block scripts %}
     {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="{{ url_for('static', filename='js/campanhaPage.js') }}"></script> 
 {% endblock %}

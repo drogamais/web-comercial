@@ -307,6 +307,90 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- LÓGICA DO NOVO BOTÃO DE EXPORTAR EXCEL (.xlsx) USANDO SheetJS ---
+    const exportXlsxBtn = document.getElementById('btn-export-excel'); // Confirma o ID
+
+    if (exportXlsxBtn) {
+        exportXlsxBtn.addEventListener('click', () => {
+            const table = document.querySelector('#form-edit-delete table');
+            if (!table) {
+                alert('Tabela de produtos não encontrada!');
+                return;
+            }
+
+            // Seleciona apenas o corpo da tabela (tbody) para extrair os dados
+            const tbody = table.querySelector('tbody');
+            if (!tbody || tbody.rows.length === 0) {
+                alert('Nenhum produto para exportar.');
+                return;
+            }
+
+            // --- Extração de Dados ---
+            const data = [];
+            // Adiciona o Cabeçalho manualmente (melhor do que pegar do thead, pois podemos formatar)
+            const headers = [
+                "Codigo Barras", "Descricao", "Pontos", 
+                "Preco Normal", "Preco Desconto", "Rebaixe", "Qtd Limite"
+            ];
+            data.push(headers);
+
+            // Itera sobre cada linha do tbody
+            Array.from(tbody.rows).forEach(row => {
+                const inputs = row.querySelectorAll('input[type="text"], input[type="number"]');
+                const rowData = [];
+                
+                // Coleta os valores dos inputs
+                const codigoBarras = inputs[0]?.value || '';
+                const descricao = inputs[1]?.value || '';
+                const pontuacao = inputs[2]?.value || '';
+                const precoNormal = inputs[3]?.value || '';
+                const precoDesconto = inputs[4]?.value || '';
+                const rebaixe = inputs[5]?.value || '';
+                const qtdLimite = inputs[6]?.value || '';
+
+                // Tenta converter colunas numéricas, se falhar, mantém como texto
+                const tryParseFloat = (value) => {
+                    const num = parseFloat(value);
+                    return isNaN(num) ? value : num;
+                };
+                 const tryParseInt = (value) => {
+                    const num = parseInt(value, 10);
+                    return isNaN(num) ? value : num;
+                };
+
+                rowData.push(codigoBarras); // Mantém como texto
+                rowData.push(descricao);
+                rowData.push(tryParseInt(pontuacao));
+                rowData.push(tryParseFloat(precoNormal));
+                rowData.push(tryParseFloat(precoDesconto));
+                rowData.push(tryParseFloat(rebaixe));
+                rowData.push(tryParseInt(qtdLimite));
+                
+                data.push(rowData);
+            });
+
+            // --- Geração do XLSX com SheetJS ---
+            try {
+                // 1. Cria uma nova planilha a partir do array de dados (cabeçalho + linhas)
+                const worksheet = XLSX.utils.aoa_to_sheet(data);
+                
+                // 2. Cria um novo workbook (arquivo Excel)
+                const workbook = XLSX.utils.book_new();
+                
+                // 3. Adiciona a planilha ao workbook com um nome ("Produtos")
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Produtos");
+                
+                // 4. Gera o arquivo XLSX e força o download
+                //    O nome do arquivo é definido aqui.
+                XLSX.writeFile(workbook, "produtos_campanha_export.xlsx"); 
+
+            } catch (error) {
+                console.error("Erro ao gerar o arquivo XLSX:", error);
+                alert("Ocorreu um erro ao gerar o arquivo Excel. Verifique o console.");
+            }
+        });
+    }
+
     // 4. LÓGICA DO NOVO BOTÃO DE VALIDAÇÃO (dbDrogamais)
     const validateGtinBtn = document.getElementById('btn-validar-gtins');
     const formEditDelete = document.getElementById('form-edit-delete');

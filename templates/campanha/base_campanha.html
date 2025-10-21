@@ -14,6 +14,16 @@
     {% block styles %}{% endblock %}
 </head>
 <body>
+
+    <div id="assunto-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="margin-top: 0;">Descrição Completa</h2> 
+            <p id="assunto-modal-content" style="text-align: left; white-space: pre-wrap;"></p>
+            <div class="modal-actions">
+                <button id="assunto-modal-btn-close" class="modal-button-confirm">Fechar</button>
+            </div>
+        </div>
+    </div>
     <div class="container">
         <nav class="navbar">
             <div class="dropdown">
@@ -28,6 +38,8 @@
 
         {% block content %}{% endblock %}
     </div>
+
+    
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     

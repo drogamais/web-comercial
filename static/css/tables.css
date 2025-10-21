@@ -47,3 +47,8 @@ th {
 .assunto-cell input[disabled] {
     pointer-events: none;
 }
+
+/* Garante que a célula é clicável */
+.assunto-cell {
+    cursor: pointer;
+}

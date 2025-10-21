@@ -104,53 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // --- LÓGICA DO MODAL DE DESCRIÇÃO (REUSANDO O 'assunto-modal') ---
-    // Seleciona os mesmos elementos do seu outro projeto
-    const assuntoModal = document.getElementById('assunto-modal');
-
-    // Só executa se o modal existir na página
-    if (assuntoModal) {
-        const assuntoCells = document.querySelectorAll('.assunto-cell');
-        const assuntoModalContent = document.getElementById('assunto-modal-content');
-        const assuntoModalBtnClose = document.getElementById('assunto-modal-btn-close');
-
-        // Função para mostrar o modal
-        const showDescriptionModal = (e) => {
-            // *** ESTA É A MUDANÇA PRINCIPAL ***
-            // Pega o texto completo do atributo "data-full-description"
-            const fullText = e.currentTarget.dataset.fullDescription;
-            
-            if (fullText) {
-                // Coloca o texto dentro do parágrafo do modal
-                assuntoModalContent.textContent = fullText;
-                
-                // Mostra o modal (reusa a classe 'show-modal' do seu CSS)
-                assuntoModal.classList.add('show-modal');
-            }
-        };
-
-        // Função para fechar o modal
-        const closeDescriptionModal = () => {
-            assuntoModal.classList.remove('show-modal');
-            assuntoModalContent.textContent = ''; // Limpa o texto
-        };
-
-        // Adiciona o evento de clique em CADA célula com a classe
-        assuntoCells.forEach(cell => {
-            cell.addEventListener('click', showDescriptionModal);
-        });
-
-        // Evento para fechar no botão 'Fechar'
-        assuntoModalBtnClose.addEventListener('click', closeDescriptionModal);
-
-        // Evento para fechar ao clicar fora (no overlay)
-        assuntoModal.addEventListener('click', function(event) {
-            if (event.target === this) {
-                closeDescriptionModal();
-            }
-        });
-    }
 });
 
 /**
@@ -235,6 +188,55 @@ function validarTodosPrecos() {
 // --- Lógica Principal ---
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    // --- LÓGICA DO MODAL DE DESCRIÇÃO (REUSANDO O 'assunto-modal') ---
+    // Seleciona os mesmos elementos do seu outro projeto
+    const assuntoModal = document.getElementById('assunto-modal');
+    
+    // Só executa se o modal existir na página
+    if (assuntoModal) {
+        const assuntoCells = document.querySelectorAll('.assunto-cell');
+        const assuntoModalContent = document.getElementById('assunto-modal-content');
+        const assuntoModalBtnClose = document.getElementById('assunto-modal-btn-close');
+
+        // Função para mostrar o modal
+        const showDescriptionModal = (e) => {
+            // Pega o <input> que está DENTRO da célula clicada
+            const input = e.currentTarget.querySelector('input');
+            
+            // Pega o texto do atributo 'value' do input
+            const fullText = input ? input.value : null;
+
+            if (fullText) {
+                // Coloca o texto dentro do parágrafo do modal
+                assuntoModalContent.textContent = fullText;
+                
+                // Mostra o modal
+                assuntoModal.classList.add('show-modal');
+            }
+        };
+
+        // Função para fechar o modal
+        const closeDescriptionModal = () => {
+            assuntoModal.classList.remove('show-modal');
+            assuntoModalContent.textContent = ''; // Limpa o texto
+        };
+
+        // Adiciona o evento de clique em CADA célula com a classe
+        assuntoCells.forEach(cell => {
+            cell.addEventListener('click', showDescriptionModal);
+        });
+
+        // Evento para fechar no botão 'Fechar'
+        assuntoModalBtnClose.addEventListener('click', closeDescriptionModal);
+
+        // Evento para fechar ao clicar fora (no overlay)
+        assuntoModal.addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeDescriptionModal();
+            }
+        });
+    }
     
     // 1. Lógica para habilitar/desabilitar edição ao clicar no checkbox
     //    (Baseado no seu 'produtosPage.js')

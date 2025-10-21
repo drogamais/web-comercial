@@ -95,3 +95,13 @@
 .modal-button-danger:disabled:hover {
     background-color: #cccccc; /* Mantém a cor cinza no hover */
 }
+
+tr.row-error {
+    background-color: #ffe0e0 !important; /* Um vermelho bem claro */
+    border: 1px solid #ff9999;
+}
+
+tr.row-error input {
+    background-color: #fff0f0 !important; 
+    border-color: #ff9999;
+}

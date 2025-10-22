@@ -38,12 +38,7 @@ def close_drogamais_db_connection(e=None):
         db.close()
 
 def validate_gtins_in_external_db(gtin_list):
-    """
-    Verifica uma lista de GTINs contra as tabelas bronze (vendas e estoque) no dbDrogamais.
-    Retorna um SET contendo apenas os GTINs que FORAM ENCONTRADOS (válidos).
-    
-    (Query ATUALIZADA para usar bronze_plugpharma_vendas e bronze_plugpharma_estoque)
-    """
+
     if not gtin_list:
         return set(), None
 
@@ -56,28 +51,9 @@ def validate_gtins_in_external_db(gtin_list):
         # Cria placeholders (%s) para a lista de GTINs
         format_strings = ','.join(['%s'] * len(gtin_list))
         
-        # SQL CORRIGIDO:
-        # 1. Usa UNION para combinar os resultados das duas tabelas.
-        # 2. Usa um alias (AS gtin) para que as colunas de nomes diferentes
-        #    sejam tratadas como uma só no resultado.
-        # 3. Adiciona backticks (`) em 'código_de_barras' por causa do acento.
-
-        # sql = f"""
-        #     (
-        #         SELECT codigo_de_barras_normalizado_produto AS gtin
-        #         FROM bronze_plugpharma_vendas
-        #         WHERE codigo_de_barras_normalizado_produto IN ({format_strings})
-        #     )
-        #     UNION
-        #     (
-        #         SELECT `código_de_barras` AS gtin
-        #         FROM bronze_plugpharma_estoque
-        #         WHERE `código_de_barras` IN ({format_strings})
-        #     )
-        # """
         sql = f"""
             SELECT codigo_barras AS gtin
-            FROM tb_produtos_teste
+            FROM bronze_plugpharma_produtos
             WHERE `codigo_barras` IN ({format_strings})
         """
         

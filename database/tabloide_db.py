@@ -4,7 +4,10 @@ import mysql.connector
 from mysql.connector import Error
 from flask import g
 from config import DB_CONFIG
-import datetime 
+import datetime
+
+DIM_TABLOIDE_TABLE = "dim_tabloide"
+FAT_PRODUTO_TABLE = "fact_tabloide_produto"
 
 def get_db_connection():
     try:
@@ -26,8 +29,8 @@ def create_tables():
     cursor = conn.cursor()
     try:
         # Tabela 'tabloides'
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS tabloides (
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS {DIM_TABLOIDE_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nome VARCHAR(255) NOT NULL,
                 data_inicio DATE NOT NULL,
@@ -37,8 +40,8 @@ def create_tables():
             )
         """)
         # Tabela 'produtos_tabloide' (Schema ATUALIZADO)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS produtos_tabloide (
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS {FAT_PRODUTO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 campanha_id INT NOT NULL,
                 codigo_barras VARCHAR(50),
@@ -56,7 +59,7 @@ def create_tables():
                 rebaixe DECIMAL(10, 2),
                 qtd_limite INT,
 
-                FOREIGN KEY (campanha_id) REFERENCES tabloides(id) ON DELETE CASCADE
+                FOREIGN KEY (campanha_id) REFERENCES {DIM_TABLOIDE_TABLE}(id) ON DELETE CASCADE
             )
         """)
         conn.commit()
@@ -65,13 +68,15 @@ def create_tables():
     finally:
         cursor.close()
 
-# --- Funções de Campanha (adaptadas para Tabloide) ---
+#####################################
+#            TABLOIDE
+#####################################
 
 def add_campaign(nome, data_inicio, data_fim):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO tabloides (nome, data_inicio, data_fim, status) VALUES (%s, %s, %s, 1)",
+        cursor.execute(f"""INSERT INTO {DIM_TABLOIDE_TABLE} (nome, data_inicio, data_fim, status) VALUES (%s, %s, %s, 1)""",
                        (nome, data_inicio, data_fim))
         conn.commit()
         return None
@@ -84,7 +89,7 @@ def add_campaign(nome, data_inicio, data_fim):
 def get_all_campaigns():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM tabloides WHERE status = 1 ORDER BY data_inicio DESC")
+    cursor.execute(f"""SELECT * FROM {DIM_TABLOIDE_TABLE} WHERE status = 1 ORDER BY data_inicio DESC""")
     return cursor.fetchall()
 
 def get_active_campaigns_for_upload():
@@ -94,12 +99,12 @@ def get_active_campaigns_for_upload():
     today = datetime.date.today()
     try:
         cursor.execute(
-            "SELECT * FROM tabloides WHERE status = 1 AND data_fim >= %s ORDER BY data_inicio DESC",
+            f"""SELECT * FROM {DIM_TABLOIDE_TABLE} WHERE status = 1 AND data_fim >= %s ORDER BY data_inicio DESC""",
             (today,)
         )
         return cursor.fetchall()
     except Error as e:
-        print(f"Erro ao buscar tabloides ativos para upload: {e}")
+        print(f"""Erro ao buscar {DIM_TABLOIDE_TABLE} ativos para upload: {e}""")
         return []
     finally:
         cursor.close()
@@ -107,13 +112,13 @@ def get_active_campaigns_for_upload():
 def get_campaign_by_id(campanha_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM tabloides WHERE id = %s", (campanha_id,))
+    cursor.execute(f"""SELECT * FROM {DIM_TABLOIDE_TABLE} WHERE id = %s""", (campanha_id,))
     return cursor.fetchone()
 
 def update_campaign(campaign_id, nome, data_inicio, data_fim):
     conn = get_db_connection()
     cursor = conn.cursor()
-    sql = "UPDATE tabloides SET nome = %s, data_inicio = %s, data_fim = %s WHERE id = %s"
+    sql = f"""UPDATE {DIM_TABLOIDE_TABLE} SET nome = %s, data_inicio = %s, data_fim = %s WHERE id = %s"""
     try:
         cursor.execute(sql, (nome, data_inicio, data_fim, campaign_id))
         conn.commit()
@@ -127,7 +132,7 @@ def update_campaign(campaign_id, nome, data_inicio, data_fim):
 def delete_campaign(campaign_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    sql = "UPDATE tabloides SET status = 0 WHERE id = %s"
+    sql = f"""UPDATE {DIM_TABLOIDE_TABLE} SET status = 0 WHERE id = %s"""
     try:
         cursor.execute(sql, (campaign_id,))
         conn.commit()
@@ -138,14 +143,16 @@ def delete_campaign(campaign_id):
     finally:
         cursor.close()
 
-# --- Funções de Produto (adaptadas para Produto de Tabloide) ---
 
+#####################################
+#       TABLOIDE PRODUTOS
+#####################################
 def add_products_bulk(produtos):
     conn = get_db_connection()
     cursor = conn.cursor()
     # SQL ATUALIZADO
-    sql = """
-        INSERT INTO produtos_tabloide (
+    sql = f"""
+        INSERT INTO {FAT_PRODUTO_TABLE} (
             campanha_id, codigo_barras, descricao, laboratorio, 
             preco_normal, preco_desconto, preco_desconto_cliente, tipo_regra
         )
@@ -164,15 +171,15 @@ def add_products_bulk(produtos):
 def get_products_by_campaign_id(campanha_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM produtos_tabloide WHERE campanha_id = %s", (campanha_id,))
+    cursor.execute(f"""SELECT * FROM {FAT_PRODUTO_TABLE} WHERE campanha_id = %s""", (campanha_id,))
     return cursor.fetchall()
 
 def add_single_product(dados_produto):
     conn = get_db_connection()
     cursor = conn.cursor()
     # SQL ATUALIZADO
-    sql = """
-        INSERT INTO produtos_tabloide (
+    sql = f"""
+        INSERT INTO {FAT_PRODUTO_TABLE} (
             campanha_id, codigo_barras, descricao, laboratorio, 
             preco_normal, preco_desconto, preco_desconto_cliente, tipo_regra
         )
@@ -192,8 +199,8 @@ def update_products_in_bulk(produtos_para_atualizar):
     conn = get_db_connection()
     cursor = conn.cursor()
     # SQL ATUALIZADO
-    sql = """
-        UPDATE produtos_tabloide SET
+    sql = f"""
+        UPDATE {FAT_PRODUTO_TABLE} SET
             codigo_barras = %s, descricao = %s, laboratorio = %s, preco_normal = %s, 
             preco_desconto = %s, preco_desconto_cliente = %s, tipo_regra = %s
         WHERE id = %s
@@ -212,7 +219,7 @@ def delete_products_in_bulk(ids_para_deletar):
     conn = get_db_connection()
     cursor = conn.cursor()
     format_strings = ','.join(['%s'] * len(ids_para_deletar))
-    sql = f"DELETE FROM produtos_tabloide WHERE id IN ({format_strings})"
+    sql = f"""DELETE FROM {FAT_PRODUTO_TABLE} WHERE id IN ({format_strings})"""
     try:
         cursor.execute(sql, tuple(ids_para_deletar))
         conn.commit()

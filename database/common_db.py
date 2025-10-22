@@ -17,7 +17,8 @@ def get_drogamais_db_connection():
             "password": DB_CONFIG.get("password"),
             "host": DB_CONFIG.get("host"),
             "port": DB_CONFIG.get("port", 3306), # Usa 3306 como padrão
-            "database": "dbDrogamais", # Define o banco de dados
+            #"database": "dbDrogamais", # Define o banco de dados
+            "database": "dbSults",
             "collation": "utf8mb4_general_ci"
         }
 
@@ -60,21 +61,28 @@ def validate_gtins_in_external_db(gtin_list):
         # 2. Usa um alias (AS gtin) para que as colunas de nomes diferentes
         #    sejam tratadas como uma só no resultado.
         # 3. Adiciona backticks (`) em 'código_de_barras' por causa do acento.
+
+        # sql = f"""
+        #     (
+        #         SELECT codigo_de_barras_normalizado_produto AS gtin
+        #         FROM bronze_plugpharma_vendas
+        #         WHERE codigo_de_barras_normalizado_produto IN ({format_strings})
+        #     )
+        #     UNION
+        #     (
+        #         SELECT `código_de_barras` AS gtin
+        #         FROM bronze_plugpharma_estoque
+        #         WHERE `código_de_barras` IN ({format_strings})
+        #     )
+        # """
         sql = f"""
-            (
-                SELECT codigo_de_barras_normalizado_produto AS gtin
-                FROM bronze_plugpharma_vendas
-                WHERE codigo_de_barras_normalizado_produto IN ({format_strings})
-            )
-            UNION
-            (
-                SELECT `código_de_barras` AS gtin
-                FROM bronze_plugpharma_estoque
-                WHERE `código_de_barras` IN ({format_strings})
-            )
+            SELECT codigo_barras AS gtin
+            FROM tb_produtos_teste
+            WHERE `codigo_barras` IN ({format_strings})
         """
         
-        params = tuple(gtin_list) + tuple(gtin_list)        
+        #params = tuple(gtin_list) + tuple(gtin_list)
+        params = tuple(gtin_list)
         cursor.execute(sql, params)
         
         # Retorna um set (ex: {'789...', '789...'}) dos GTINs encontrados

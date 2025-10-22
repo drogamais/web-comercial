@@ -3,6 +3,7 @@ from flask import Flask, render_template
 from config import SECRET_KEY
 
 # Importa os módulos de banco de dados
+import database.common_db as database_common
 import database.campanha_db as database_campanha
 import database.tabloide_db as database_tabloide
 import database.parceiro_db as database_parceiros
@@ -43,10 +44,10 @@ def before_first_request():
 @app.teardown_appcontext
 def teardown_db(exception):
     # Fecha todas as conexões de banco de dados
+    database_common.close_drogamais_db_connection(exception)
     database_campanha.close_db_connection(exception)
     database_tabloide.close_db_connection(exception)
     database_parceiros.close_db_connection(exception)
-    database_campanha.close_drogamais_db_connection(exception)
 
 if __name__ == '__main__':
     # Isso permite rodar 'python app.py' diretamente para testes

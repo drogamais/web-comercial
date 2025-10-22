@@ -8,6 +8,12 @@
         <a href="{{ url_for('tabloide.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
             &#x2B07; Baixar Modelo da Planilha
         </a>
+
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60; min-width: 150px;">
+                Exportar Excel
+            </button>
+        </div>
     </div>
     <a href="{{ url_for('tabloide.gestao_tabloides') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Tabloides</a>
 
@@ -58,7 +64,6 @@
             <button type="button" id="btn-validar-formato" class="button-filter" style="flex: 1; min-width: 150px;">Validar Formato</button>
             <button type="button" id="btn-validar-gtins" class="button-filter" style="flex: 1; background-color: #f39c12; min-width: 150px;">Validar GTINs</button>
             <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #d1f312; min-width: 150px;">Limpar Validações</button>
-            <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60; min-width: 150px;">Exportar Excel</button>
             <button type="submit" formaction="{{ url_for('tabloide.deletar_produtos', campanha_id=tabloide.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none; min-width: 150px;" onclick="return confirm('Tem certeza?');">Deletar</button>
         </div>
     </form>
@@ -109,6 +114,6 @@
     {{ super() }} {# Mantém drag_and_drop.js se precisar #}
     {# SheetJS precisa estar carregado ANTES de productTableUtils #}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="{{ url_for('static', filename='js/productTableUtils.js') }}"></script> {# <-- Módulo compartilhado #}
-    <script src="{{ url_for('static', filename='js/produtosTabloidePage.js') }}"></script> {# <-- Inicializador específico #}
+    <script src="{{ url_for('static', filename='js/productTableUtils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/produtosTabloidePage.js') }}"></script>
 {% endblock %}

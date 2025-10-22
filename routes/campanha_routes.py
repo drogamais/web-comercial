@@ -4,7 +4,8 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 )
 import os
-import database.campanha_db as db # Usamos 'db' para simplificar
+import database.campanha_db as db_campanha # Usamos 'db_campanha' para simplificar
+import database.common_db as db_common # Importa o módulo comum
 from utils import allowed_file # 
 
 # Cria o Blueprint de Campanha com prefixo de URL
@@ -51,7 +52,7 @@ def upload_page():
                 ]
                 
                 if produtos_para_inserir:
-                    rowcount, error = db.add_products_bulk(produtos_para_inserir)
+                    rowcount, error = db_campanha.add_products_bulk(produtos_para_inserir)
                     if error: flash(f'Erro ao salvar produtos: {error}', 'danger')
                     else: flash(f'{rowcount} produtos processados e salvos com sucesso!', 'success')
                 else:
@@ -60,7 +61,7 @@ def upload_page():
                 flash(f'Ocorreu um erro ao processar o arquivo: {e}', 'danger')
             return redirect(url_for('campanha.upload_page'))
 
-    campanhas = db.get_active_campaigns_for_upload()
+    campanhas = db_campanha.get_active_campaigns_for_upload()
     return render_template('campanha/upload_campanha.html', active_page='upload', campanhas=campanhas)
 
 @campanha_bp.route('/download_modelo')
@@ -92,11 +93,11 @@ def gestao_campanhas():
         if not all([nome, data_inicio, data_fim]):
             flash('Todos os campos são obrigatórios.', 'danger')
         else:
-            error = db.add_campaign(nome, data_inicio, data_fim)
+            error = db_campanha.add_campaign(nome, data_inicio, data_fim)
             if error: flash(f'Erro ao criar campanha: {error}', 'danger')
             else: flash('Campanha criada com sucesso!', 'success')
         return redirect(url_for('campanha.gestao_campanhas'))
-    campanhas = db.get_all_campaigns()
+    campanhas = db_campanha.get_all_campaigns()
     return render_template('campanha/campanhas.html', active_page='campanhas', campanhas=campanhas)
 
 @campanha_bp.route('/editar/<int:campaign_id>', methods=['POST'])
@@ -107,25 +108,25 @@ def editar_campanha(campaign_id):
     if not all([nome, data_inicio, data_fim]):
         flash('Todos os campos são obrigatórios para a edição.', 'danger')
     else:
-        _, error = db.update_campaign(campaign_id, nome, data_inicio, data_fim)
+        _, error = db_campanha.update_campaign(campaign_id, nome, data_inicio, data_fim)
         if error: flash(f'Erro ao atualizar campanha: {error}', 'danger')
         else: flash('Campanha atualizada com sucesso!', 'success')
     return redirect(url_for('campanha.gestao_campanhas'))
 
 @campanha_bp.route('/deletar/<int:campaign_id>', methods=['POST'])
 def deletar_campanha(campaign_id):
-    _, error = db.delete_campaign(campaign_id)
+    _, error = db_campanha.delete_campaign(campaign_id)
     if error: flash(f'Erro ao desativar campanha: {error}', 'danger')
     else: flash('Campanha desativada com sucesso!', 'success')
     return redirect(url_for('campanha.gestao_campanhas'))
 
 @campanha_bp.route('/<int:campanha_id>/produtos')
 def produtos_por_campanha(campanha_id):
-    campanha = db.get_campaign_by_id(campanha_id)
+    campanha = db_campanha.get_campaign_by_id(campanha_id)
     if not campanha:
         flash('Campanha não encontrada.', 'danger')
         return redirect(url_for('campanha.gestao_campanhas'))
-    produtos = db.get_products_by_campaign_id(campanha_id)
+    produtos = db_campanha.get_products_by_campaign_id(campanha_id)
     return render_template('campanha/produtos_campanha.html', active_page='campanhas', campanha=campanha, produtos=produtos)
 
 @campanha_bp.route('/<int:campanha_id>/produtos/adicionar', methods=['POST'])
@@ -137,7 +138,7 @@ def adicionar_produto(campanha_id):
             request.form.get('preco_desconto') or None, request.form.get('rebaixe') or None,
             request.form.get('qtd_limite') or None
         )
-        _, error = db.add_single_product(dados_produto)
+        _, error = db_campanha.add_single_product(dados_produto)
         if error: flash(f'Erro ao adicionar produto: {error}', 'danger')
         else: flash('Novo produto adicionado com sucesso!', 'success')
     except Exception as e:
@@ -157,7 +158,7 @@ def atualizar_produtos(campanha_id):
          request.form.get(f'qtd_limite_{pid}') or None, pid)
         for pid in selecionados
     ]
-    rowcount, error = db.update_products_in_bulk(produtos_para_atualizar)
+    rowcount, error = db_campanha.update_products_in_bulk(produtos_para_atualizar)
     if error: flash(f'Erro ao atualizar produtos: {error}', 'danger')
     else: flash(f'{rowcount} produto(s) atualizado(s) com sucesso!', 'success')
     return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
@@ -168,7 +169,7 @@ def deletar_produtos(campanha_id):
     if not selecionados:
         flash('Nenhum produto selecionado para deletar.', 'warning')
         return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
-    rowcount, error = db.delete_products_in_bulk(selecionados)
+    rowcount, error = db_campanha.delete_products_in_bulk(selecionados)
     if error: flash(f'Erro ao deletar produtos: {error}', 'danger')
     else: flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
     return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
@@ -203,7 +204,7 @@ def validar_gtins(campanha_id):
 
     # 4. Envia a lista PADDED (com zeros) para o banco
     #    (Assumindo que as correções de 'ean_unico' e 'collation' da etapa anterior foram feitas)
-    validos_padded, error = db.validate_gtins_in_external_db(gtins_padded)
+    validos_padded, error = db_common.validate_gtins_in_external_db(gtins_padded)
     
     if error:
         return jsonify({"error": error}), 500

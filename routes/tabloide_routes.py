@@ -13,8 +13,8 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 )
 import os
-import database.tabloide_db as db  # Importa o banco de dados de tabloide
-import database.campanha_db as db_campanha
+import database.tabloide_db as db_tabloide  # Importa o banco de dados de tabloide
+import database.common_db as db_common
 from utils import allowed_file      # Reutiliza a função de utils
 
 # Cria o Blueprint de Tabloide
@@ -128,7 +128,7 @@ def upload_page():
 
                 # 5.5. Insere no banco de dados
                 if produtos_para_inserir:
-                    rowcount, error = db.add_products_bulk(produtos_para_inserir)
+                    rowcount, error = db_tabloide.add_products_bulk(produtos_para_inserir)
                     if error:
                         flash(f'Erro ao salvar produtos: {error}', 'danger')
                     else:
@@ -142,7 +142,7 @@ def upload_page():
             return redirect(url_for('tabloide.upload_page'))
 
     # Lógica para o método GET (carregar a página de upload)
-    tabloides = db.get_active_campaigns_for_upload()
+    tabloides = db_tabloide.get_active_campaigns_for_upload()
     return render_template('tabloide/upload_tabloide.html', active_page='upload', tabloides=tabloides)
 
 @tabloide_bp.route('/download_modelo')
@@ -184,7 +184,7 @@ def gestao_tabloides():
         if not all([nome, data_inicio, data_fim]):
             flash('Todos os campos são obrigatórios.', 'danger')
         else:
-            error = db.add_campaign(nome, data_inicio, data_fim)
+            error = db_tabloide.add_campaign(nome, data_inicio, data_fim)
             if error:
                 flash(f'Erro ao criar tabloide: {error}', 'danger')
             else:
@@ -192,7 +192,7 @@ def gestao_tabloides():
         return redirect(url_for('tabloide.gestao_tabloides'))
 
     # GET: Exibe a página de gerenciamento
-    tabloides = db.get_all_campaigns()
+    tabloides = db_tabloide.get_all_campaigns()
     return render_template('tabloide/tabloides.html', active_page='tabloides', tabloides=tabloides)
 
 
@@ -208,7 +208,7 @@ def editar_tabloide(campaign_id):
     if not all([nome, data_inicio, data_fim]):
         flash('Todos os campos são obrigatórios para a edição.', 'danger')
     else:
-        _, error = db.update_campaign(campaign_id, nome, data_inicio, data_fim)
+        _, error = db_tabloide.update_campaign(campaign_id, nome, data_inicio, data_fim)
         if error:
             flash(f'Erro ao atualizar tabloide: {error}', 'danger')
         else:
@@ -221,7 +221,7 @@ def deletar_tabloide(campaign_id):
     """
     Rota para desativar (deletar) um tabloide (campanha).
     """
-    _, error = db.delete_campaign(campaign_id)
+    _, error = db_tabloide.delete_campaign(campaign_id)
     if error:
         flash(f'Erro ao desativar tabloide: {error}', 'danger')
     else:
@@ -238,12 +238,12 @@ def produtos_por_tabloide(campanha_id):
     """
     Rota para listar todos os produtos de um tabloide específico.
     """
-    tabloide = db.get_campaign_by_id(campanha_id)
+    tabloide = db_tabloide.get_campaign_by_id(campanha_id)
     if not tabloide:
         flash('Tabloide não encontrado.', 'danger')
         return redirect(url_for('tabloide.gestao_tabloides'))
 
-    produtos = db.get_products_by_campaign_id(campanha_id)
+    produtos = db_tabloide.get_products_by_campaign_id(campanha_id)
     return render_template('tabloide/produtos_tabloide.html', active_page='tabloides', tabloide=tabloide, produtos=produtos)
 
 
@@ -263,7 +263,7 @@ def adicionar_produto(campanha_id):
             request.form.get('preco_desconto_cliente') or None,
             request.form.get('tipo_regra') or None
         )
-        _, error = db.add_single_product(dados_produto)
+        _, error = db_tabloide.add_single_product(dados_produto)
         if error:
             flash(f'Erro ao adicionar produto: {error}', 'danger')
         else:
@@ -295,7 +295,7 @@ def atualizar_produtos(campanha_id):
         for pid in selecionados
     ]
 
-    rowcount, error = db.update_products_in_bulk(produtos_para_atualizar)
+    rowcount, error = db_tabloide.update_products_in_bulk(produtos_para_atualizar)
     if error:
         flash(f'Erro ao atualizar produtos: {error}', 'danger')
     else:
@@ -313,7 +313,7 @@ def deletar_produtos(campanha_id):
         flash('Nenhum produto selecionado para deletar.', 'warning')
         return redirect(url_for('tabloide.produtos_por_tabloide', campanha_id=campanha_id))
 
-    rowcount, error = db.delete_products_in_bulk(selecionados)
+    rowcount, error = db_tabloide.delete_products_in_bulk(selecionados)
     if error:
         flash(f'Erro ao deletar produtos: {error}', 'danger')
     else:
@@ -325,7 +325,7 @@ def deletar_produtos(campanha_id):
 def validar_gtins_tabloide(tabloide_id):
     """
     Recebe GTINs, valida no dbDrogamais e retorna os válidos.
-    Usa a função de validação do módulo de campanha_db.
+    Usa a função de validação do módulo common_db.
     """
     data = request.get_json()
     gtins_raw = data.get('gtins', [])
@@ -340,16 +340,14 @@ def validar_gtins_tabloide(tabloide_id):
     gtins_padded = [g.zfill(14) for g in gtins_para_validar_raw]
     map_padded_to_raw = {padded: raw for padded, raw in zip(gtins_padded, gtins_para_validar_raw)}
 
-    # Chama a função de validação do database_campanha
-    validos_padded, error = db_campanha.validate_gtins_in_external_db(gtins_padded)
+    # Chama a função do módulo comum
+    validos_padded, error = db_common.validate_gtins_in_external_db(gtins_padded) # <-- Atualizado aqui
 
     if error:
-        # Tenta fornecer uma mensagem de erro mais útil
         error_message = f"Erro ao validar GTINs no banco externo: {error}"
-        print(f"Erro na rota validar_gtins_tabloide: {error_message}") # Log no servidor
+        print(f"Erro na rota validar_gtins_tabloide: {error_message}")
         return jsonify({"error": error_message}), 500
 
     validos_raw = {map_padded_to_raw[padded_gtin] for padded_gtin in validos_padded if padded_gtin in map_padded_to_raw}
 
     return jsonify({"valid_gtins": list(validos_raw)})
-# --- FIM DA NOVA ROTA ---

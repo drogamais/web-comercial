@@ -68,10 +68,10 @@ def upload_page():
                 # múltiplas abas (Todos, Excluídos, Tabelas).
                 # Se a aba principal tiver outro nome, altere o valor de 'sheet_name' aqui.
                 try:
-                    df = pd.read_excel(file, sheet_name='Todos')
+                    # Adiciona dtype={'GTIN': str} para forçar a leitura como texto
+                    df = pd.read_excel(file, sheet_name='Todos', dtype={'GTIN': str})
                 except Exception as e:
-                    # Se a aba "Todos" não existir, o pandas dará um erro.
-                    flash(f'Erro ao ler a planilha. Verifique se a aba "Todos" existe no arquivo. (Erro: {e})', 'danger')
+                    flash(f'Erro ao ler a planilha. Verifique se a aba "Todos" existe e se a coluna GTIN está presente. (Erro: {e})', 'danger')
                     return redirect(url_for('tabloide.upload_page'))
 
                 # --- 3. LÓGICA DE LIMPEZA DE COLUNAS ---

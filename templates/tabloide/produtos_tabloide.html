@@ -2,6 +2,11 @@
 
 {% block title %}Produtos do Tabloide{% endblock %}
 
+{% block styles %}
+    {{ super() }} {# Inclui estilos do base_tabloide.html se houver #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/page-tabloide.css') }}">
+{% endblock %}
+
 {% block content %}
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>Gerenciar Produtos do Tabloide: {{ tabloide.nome }}</h1>

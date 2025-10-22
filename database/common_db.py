@@ -52,9 +52,9 @@ def validate_gtins_in_external_db(gtin_list):
         format_strings = ','.join(['%s'] * len(gtin_list))
         
         sql = f"""
-            SELECT codigo_barras AS gtin
+            SELECT codigo_barras_normalizado AS gtin
             FROM bronze_plugpharma_produtos
-            WHERE `codigo_barras` IN ({format_strings})
+            WHERE `codigo_barras_normalizado` IN ({format_strings})
         """
         
         #params = tuple(gtin_list) + tuple(gtin_list)

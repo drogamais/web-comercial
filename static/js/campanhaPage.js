@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- LÓGICA DO NOVO BOTÃO DE EXPORTAR EXCEL (.xlsx) USANDO SheetJS ---
-    const exportXlsxBtn = document.getElementById('btn-export-excel'); // Confirma o ID
+    const exportXlsxBtn = document.getElementById('btn-export-excel'); 
 
     if (exportXlsxBtn) {
         exportXlsxBtn.addEventListener('click', () => {
@@ -318,7 +318,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Seleciona apenas o corpo da tabela (tbody) para extrair os dados
             const tbody = table.querySelector('tbody');
             if (!tbody || tbody.rows.length === 0) {
                 alert('Nenhum produto para exportar.');
@@ -327,61 +326,87 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // --- Extração de Dados ---
             const data = [];
-            // Adiciona o Cabeçalho manualmente (melhor do que pegar do thead, pois podemos formatar)
             const headers = [
                 "Codigo Barras", "Descricao", "Pontos", 
                 "Preco Normal", "Preco Desconto", "Rebaixe", "Qtd Limite"
             ];
             data.push(headers);
 
-            // Itera sobre cada linha do tbody
             Array.from(tbody.rows).forEach(row => {
                 const inputs = row.querySelectorAll('input[type="text"], input[type="number"]');
                 const rowData = [];
                 
-                // Coleta os valores dos inputs
                 const codigoBarras = inputs[0]?.value || '';
                 const descricao = inputs[1]?.value || '';
-                const pontuacao = inputs[2]?.value || '';
-                const precoNormal = inputs[3]?.value || '';
-                const precoDesconto = inputs[4]?.value || '';
-                const rebaixe = inputs[5]?.value || '';
-                const qtdLimite = inputs[6]?.value || '';
+                const pontuacaoStr = inputs[2]?.value || '';
+                const precoNormalStr = inputs[3]?.value || '';
+                const precoDescontoStr = inputs[4]?.value || '';
+                const rebaixeStr = inputs[5]?.value || '';
+                const qtdLimiteStr = inputs[6]?.value || '';
 
-                // Tenta converter colunas numéricas, se falhar, mantém como texto
-                const tryParseFloat = (value) => {
-                    const num = parseFloat(value);
-                    return isNaN(num) ? value : num;
+                // Função para converter para número, tratando vírgula como decimal
+                const parseNumeric = (valueStr) => {
+                    if (valueStr === null || valueStr === '') return null; 
+                    const correctedStr = valueStr.replace(',', '.'); // Troca vírgula por ponto ANTES de converter
+                    const num = parseFloat(correctedStr);
+                    return isNaN(num) ? valueStr : num; 
                 };
-                 const tryParseInt = (value) => {
-                    const num = parseInt(value, 10);
-                    return isNaN(num) ? value : num;
-                };
+                 const parseIntNumeric = (valueStr) => {
+                    if (valueStr === null || valueStr === '') return null;
+                    const correctedStr = valueStr.replace(',', '.'); 
+                    const num = parseInt(correctedStr, 10);
+                     return isNaN(num) ? valueStr : num; 
+                 };
 
-                rowData.push(codigoBarras); // Mantém como texto
-                rowData.push(descricao);
-                rowData.push(tryParseInt(pontuacao));
-                rowData.push(tryParseFloat(precoNormal));
-                rowData.push(tryParseFloat(precoDesconto));
-                rowData.push(tryParseFloat(rebaixe));
-                rowData.push(tryParseInt(qtdLimite));
+                rowData.push(codigoBarras); 
+                rowData.push(descricao);    
+                rowData.push(parseIntNumeric(pontuacaoStr)); // Inteiro
+                rowData.push(parseNumeric(precoNormalStr));  // Decimal
+                rowData.push(parseNumeric(precoDescontoStr));// Decimal
+                rowData.push(parseNumeric(rebaixeStr));      // Decimal
+                rowData.push(parseIntNumeric(qtdLimiteStr)); // Inteiro
                 
                 data.push(rowData);
             });
 
             // --- Geração do XLSX com SheetJS ---
             try {
-                // 1. Cria uma nova planilha a partir do array de dados (cabeçalho + linhas)
                 const worksheet = XLSX.utils.aoa_to_sheet(data);
                 
-                // 2. Cria um novo workbook (arquivo Excel)
-                const workbook = XLSX.utils.book_new();
+                // --- APLICAÇÃO DOS FORMATOS DE NÚMERO (COM VÍRGULA DECIMAL) ---
+                // Formato Brasileiro: #.##0,00 -> Milhar com ponto, decimal com vírgula, 2 casas
+                const formatDecimalBR = '#,##0.00'; // SheetJS usa ponto como decimal aqui, mas o Excel interpreta corretamente
+                const formatInteger = '0'; 
+
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
                 
-                // 3. Adiciona a planilha ao workbook com um nome ("Produtos")
+                for (let R = 1; R <= range.e.r; ++R) { // Começa da linha 1 (dados)
+                    // Coluna C (Pontos - Inteiro)
+                    const cellC = worksheet[XLSX.utils.encode_cell({c: 2, r: R})];
+                    if(cellC && cellC.t === 'n') cellC.z = formatInteger;
+                    
+                    // Coluna D (Preco Normal - Decimal BR)
+                    const cellD = worksheet[XLSX.utils.encode_cell({c: 3, r: R})];
+                    if(cellD && cellD.t === 'n') cellD.z = formatDecimalBR;
+                    
+                    // Coluna E (Preco Desconto - Decimal BR)
+                    const cellE = worksheet[XLSX.utils.encode_cell({c: 4, r: R})];
+                     if(cellE && cellE.t === 'n') cellE.z = formatDecimalBR;
+                    
+                    // Coluna F (Rebaixe - Decimal BR)
+                    const cellF = worksheet[XLSX.utils.encode_cell({c: 5, r: R})];
+                    if(cellF && cellF.t === 'n') cellF.z = formatDecimalBR;
+                    
+                     // Coluna G (Qtd Limite - Inteiro)
+                    const cellG = worksheet[XLSX.utils.encode_cell({c: 6, r: R})];
+                     if(cellG && cellG.t === 'n') cellG.z = formatInteger;
+                }
+                // --- FIM DA APLICAÇÃO DOS FORMATOS ---
+
+                const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Produtos");
                 
-                // 4. Gera o arquivo XLSX e força o download
-                //    O nome do arquivo é definido aqui.
+                // Gera o arquivo XLSX
                 XLSX.writeFile(workbook, "produtos_campanha_export.xlsx"); 
 
             } catch (error) {

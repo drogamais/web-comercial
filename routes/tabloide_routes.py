@@ -10,10 +10,11 @@ Inclui rotas para:
 import pandas as pd
 import numpy as np
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, send_from_directory
+    Blueprint, render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 )
 import os
 import database.tabloide_db as db  # Importa o banco de dados de tabloide
+import database.campanha_db as db_campanha
 from utils import allowed_file      # Reutiliza a função de utils
 
 # Cria o Blueprint de Tabloide
@@ -318,3 +319,37 @@ def deletar_produtos(campanha_id):
     else:
         flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
     return redirect(url_for('tabloide.produtos_por_tabloide', campanha_id=campanha_id))
+
+# --- NOVA ROTA PARA VALIDAR GTINS (TABLOIDE) ---
+@tabloide_bp.route('/<int:tabloide_id>/produtos/validar_gtins', methods=['POST'])
+def validar_gtins_tabloide(tabloide_id):
+    """
+    Recebe GTINs, valida no dbDrogamais e retorna os válidos.
+    Usa a função de validação do módulo de campanha_db.
+    """
+    data = request.get_json()
+    gtins_raw = data.get('gtins', [])
+
+    if not gtins_raw:
+        return jsonify({"error": "Nenhum GTIN enviado"}), 400
+
+    gtins_para_validar_raw = [gtin for gtin in gtins_raw if gtin and gtin.strip()]
+    if not gtins_para_validar_raw:
+        return jsonify({"valid_gtins": []})
+
+    gtins_padded = [g.zfill(14) for g in gtins_para_validar_raw]
+    map_padded_to_raw = {padded: raw for padded, raw in zip(gtins_padded, gtins_para_validar_raw)}
+
+    # Chama a função de validação do database_campanha
+    validos_padded, error = db_campanha.validate_gtins_in_external_db(gtins_padded)
+
+    if error:
+        # Tenta fornecer uma mensagem de erro mais útil
+        error_message = f"Erro ao validar GTINs no banco externo: {error}"
+        print(f"Erro na rota validar_gtins_tabloide: {error_message}") # Log no servidor
+        return jsonify({"error": error_message}), 500
+
+    validos_raw = {map_padded_to_raw[padded_gtin] for padded_gtin in validos_padded if padded_gtin in map_padded_to_raw}
+
+    return jsonify({"valid_gtins": list(validos_raw)})
+# --- FIM DA NOVA ROTA ---

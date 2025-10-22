@@ -21,7 +21,7 @@
 
     <h2>Produtos Cadastrados</h2>
     {% if produtos %}
-    <form method="post" id="form-edit-delete">
+    <form method="post" id="form-edit-delete"> {# ID do form é importante #}
         <table>
             <thead>
                 <tr>
@@ -39,26 +39,31 @@
                 {% for p in produtos %}
                 <tr>
                     <td style="text-align: center;">
-                        <input type="checkbox" name="selecionado" value="{{ p.id }}" class="edit-checkbox">
+                        <input type="checkbox" name="selecionado" value="{{ p.id }}" class="edit-checkbox"> {# Classe OK #}
                     </td>
-                    <td><input type="text" name="codigo_barras_{{ p.id }}" value="{{ p.codigo_barras or '' }}" disabled></td>
-                    <td><input type="text" name="descricao_{{ p.id }}" value="{{ p.descricao or '' }}" disabled></td>
+                    <td><input type="text" name="codigo_barras_{{ p.id }}" value="{{ p.codigo_barras or '' }}" disabled class="barcode-input"></td> {# <-- Classe adicionada #}
+                    <td class="assunto-cell"><input type="text" name="descricao_{{ p.id }}" value="{{ p.descricao or '' }}" disabled></td> {# <-- Classe adicionada ao TD #}
                     <td><input type="text" name="laboratorio_{{ p.id }}" value="{{ p.laboratorio or '' }}" disabled></td>
                     <td><input type="number" step="0.01" name="preco_normal_{{ p.id }}" value="{{ p.preco_normal or '' }}" disabled></td>
-                    <td><input type="number" step="0.01" name="preco_desconto_{{ p.id }}" value="{{ p.preco_desconto or '' }}" disabled></td>
-                    <td><input type="number" step="0.01" name="preco_desconto_cliente_{{ p.id }}" value="{{ p.preco_desconto_cliente or '' }}" disabled></td>
+                    <td><input type="number" step="0.01" name="preco_desconto_{{ p.id }}" value="{{ p.preco_desconto or '' }}" disabled></td> {# <- Usado como precoDesconto1 #}
+                    <td><input type="number" step="0.01" name="preco_desconto_cliente_{{ p.id }}" value="{{ p.preco_desconto_cliente or '' }}" disabled></td> {# <- Usado como precoDesconto2 #}
                     <td><input type="text" name="tipo_regra_{{ p.id }}" value="{{ p.tipo_regra or '' }}" disabled></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <div style="display: flex; gap: 15px; margin-top: 20px;">
-            <button type="submit" formaction="{{ url_for('tabloide.atualizar_produtos', campanha_id=tabloide.id) }}" style="flex: 1;">Salvar Alterações</button>
-            <button type="submit" formaction="{{ url_for('tabloide.deletar_produtos', campanha_id=tabloide.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none;" onclick="return confirm('Tem certeza que deseja deletar os produtos selecionados?');">Deletar Selecionados</button>
+        {# --- BOTÕES ATUALIZADOS --- #}
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;"> {# Use wrap para telas menores #}
+            <button type="submit" formaction="{{ url_for('tabloide.atualizar_produtos', campanha_id=tabloide.id) }}" style="flex: 1; min-width: 150px;">Salvar Alterações</button>
+            <button type="button" id="btn-validar-formato" class="button-filter" style="flex: 1; min-width: 150px;">Validar Formato</button>
+            <button type="button" id="btn-validar-gtins" class="button-filter" style="flex: 1; background-color: #f39c12; min-width: 150px;">Validar GTINs</button>
+            <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #d1f312; min-width: 150px;">Limpar Validações</button>
+            <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60; min-width: 150px;">Exportar Excel</button>
+            <button type="submit" formaction="{{ url_for('tabloide.deletar_produtos', campanha_id=tabloide.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none; min-width: 150px;" onclick="return confirm('Tem certeza?');">Deletar</button>
         </div>
     </form>
     {% else %}
-    <p>Nenhum produto foi cadastrado para este tabloide ainda.</p>
+    <p>Nenhum produto cadastrado.</p>
     {% endif %}
 
     <hr style="margin: 40px 0;">
@@ -101,6 +106,9 @@
 {% endblock %}
 
 {% block scripts %}
-    {{ super() }}
-    <script src="{{ url_for('static', filename='js/produtosPage.js') }}"></script>
+    {{ super() }} {# Mantém drag_and_drop.js se precisar #}
+    {# SheetJS precisa estar carregado ANTES de productTableUtils #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="{{ url_for('static', filename='js/productTableUtils.js') }}"></script> {# <-- Módulo compartilhado #}
+    <script src="{{ url_for('static', filename='js/produtosTabloidePage.js') }}"></script> {# <-- Inicializador específico #}
 {% endblock %}

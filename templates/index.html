@@ -12,23 +12,63 @@
     <div class="container">
         <h1>Escolha o Módulo</h1>
         <p>Selecione qual seção você deseja gerenciar.</p>
-        
+
         <div class="index-button-container">
-            <a href="{{ url_for('campanha_produtos.upload_page') }}" class="index-button button-campanha">
+            <a href="#" class="index-button button-campanha" data-modal-target="#campanha-modal">
                 <span class="button-title">Gerenciar Campanhas</span>
                 <span class="button-description">Upload e gestão de produtos de campanhas pontuais.</span>
             </a>
-            
-            <a href="{{ url_for('tabloide_produtos.upload_page') }}" class="index-button button-tabloide">
+
+            <a href="#" class="index-button button-tabloide" data-modal-target="#tabloide-modal">
                 <span class="button-title">Gerenciar Tabloides</span>
                 <span class="button-description">Upload e gestão de produtos para os tabloides vigentes.</span>
             </a>
 
-            <a href="{{ url_for('parceiro.gestao_parceiros') }}" class="index-button button-parceiro">
+            <a href="#" class="index-button button-parceiro" data-modal-target="#parceiro-modal">
                 <span class="button-title">Gerenciar Parceiros</span>
                 <span class="button-description">Cadastro e gestão de parceiros comerciais.</span>
             </a>
         </div>
     </div>
+
+    <div id="campanha-modal" class="modal-overlay">
+        <div class="modal-content index-modal-content">
+            <h2 style="margin-top: 0;">Opções de Campanha</h2>
+            <div class="modal-links">
+                <a href="{{ url_for('campanha_produtos.upload_page') }}" class="modal-link-button">Upload de Planilha</a>
+                <a href="{{ url_for('campanha.gestao_campanhas') }}" class="modal-link-button">Gerenciar Campanhas</a>
+            </div>
+            <div class="modal-actions" style="margin-top: 25px;">
+                <button type="button" class="modal-button-cancel">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tabloide-modal" class="modal-overlay">
+        <div class="modal-content index-modal-content">
+            <h2 style="margin-top: 0;">Opções de Tabloide</h2>
+            <div class="modal-links">
+                <a href="{{ url_for('tabloide_produtos.upload_page') }}" class="modal-link-button">Upload de Planilha</a>
+                <a href="{{ url_for('tabloide.gestao_tabloides') }}" class="modal-link-button">Gerenciar Tabloides</a>
+            </div>
+            <div class="modal-actions" style="margin-top: 25px;">
+                <button type="button" class="modal-button-cancel">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="parceiro-modal" class="modal-overlay">
+        <div class="modal-content index-modal-content">
+            <h2 style="margin-top: 0;">Opções de Parceiro</h2>
+            <div class="modal-links">
+                <a href="{{ url_for('parceiro.gestao_parceiros') }}" class="modal-link-button">Gerenciar Parceiros</a>
+            </div>
+            <div class="modal-actions" style="margin-top: 25px;">
+                <button type="button" class="modal-button-cancel">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/indexPage.js') }}"></script>
 </body>
 </html>

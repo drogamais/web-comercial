@@ -1,4 +1,4 @@
-/* static/index.css */
+/* static/css/index.css */
 body {
     background-color: #f4f7f6;
 }
@@ -16,6 +16,8 @@ body {
     justify-content: center;
     gap: 30px;
 }
+
+/* Estilo unificado para <a> e <button> na index */
 .index-button {
     flex-basis: 300px;
     padding: 30px;
@@ -30,6 +32,11 @@ body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
     text-align: center;
+    /* Adicionado para <button> */
+    border: none;
+    font-family: inherit; /* Herda a fonte do body */
+    cursor: pointer;
+    width: auto; /* Ajusta a largura do botão ao conteúdo se necessário */
 }
 .index-button:hover {
     transform: translateY(-5px);
@@ -56,10 +63,39 @@ body {
 .button-tabloide:hover {
     background-color: #219150;
 }
-
 .button-parceiro {
     background-color: #8e44ad; /* Roxo */
 }
 .button-parceiro:hover {
     background-color: #732d91;
+}
+
+/* NOVO: Estilos para os links dentro do modal da index */
+.modal-links {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espaçamento entre os links */
+    margin-top: 20px;
+}
+
+.modal-link-button {
+    display: block;
+    padding: 12px 20px;
+    background-color: #ecf0f1;
+    color: #34495e;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: center;
+    transition: background-color 0.2s ease;
+}
+
+.modal-link-button:hover {
+    background-color: #dce1e2;
+}
+
+/* NOVO: Ajuste opcional para o tamanho do modal na index */
+.index-modal-content {
+    max-width: 320px; /* Um pouco menor que o padrão */
 }

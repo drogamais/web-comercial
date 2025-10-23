@@ -99,3 +99,24 @@ body {
 .index-modal-content {
     max-width: 320px; /* Um pouco menor que o padrão */
 }
+
+/* NOVO: Estilos para o Bloco do Título */
+.header-title {
+    text-align: center;
+    margin-bottom: 30px; /* Espaço antes do container principal */
+    padding: 15px;
+    background-color: #f8f9fa; /* Um fundo suave */
+    border-bottom: 2px solid #e9ecef; /* Linha sutil abaixo */
+}
+
+.header-title .title-line-1 {
+    font-size: 1.8em; /* Tamanho maior para a primeira linha */
+    font-weight: bold;
+    color: #0056b3; /* Azul escuro, pode ajustar */
+    margin-bottom: 5px;
+}
+
+.header-title .title-line-2 {
+    font-size: 1.3em; /* Tamanho menor para a segunda linha */
+    color: #5a6268; /* Cinza escuro */
+}

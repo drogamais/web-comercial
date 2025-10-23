@@ -182,7 +182,8 @@
     color: #7f8c8d;
 }
 .modal-button-cancel:hover {
-    background-color: #dce1e2;
+    background-color: #e24424;
+    color: #ecf0f1;
 }
 
 .modal-button-confirm {

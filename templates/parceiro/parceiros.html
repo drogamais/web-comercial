@@ -19,37 +19,112 @@
 
     <div class="filter-container">
         <h2>Novo Parceiro</h2>
-        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form">
-            <div class="form-group" style="flex: 3;"><label for="nome">Nome:</label><input type="text" name="nome" required></div>
-            <button type="submit" style="flex: 1;">Criar Parceiro</button>
+        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;">
+            
+            <div class="form-group" style="flex: 1.5;">
+                <label for="nome">Nome Ajustado: <span style="color: red;">*</span></label>
+                <input type="text" id="nome" name="nome" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="cnpj">CNPJ: <span style="color: red;">*</span></label>
+                <input type="text" id="cnpj" name="cnpj" required>
+            </div>
+            <div class="form-group" style="flex: 1.5;">
+                <label for="nome_fantasia">Nome Fantasia:</label>
+                <input type="text" id="nome_fantasia" name="nome_fantasia">
+            </div>
+            
+            <div class="form-group" style="flex: 1.5;">
+                <label for="razao_social">Razão Social: <span style="color: red;">*</span></label>
+                <input type="text" id="razao_social" name="razao_social" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="tipo">Tipo: <span style="color: red;">*</span></label>
+                <select id="tipo" name="tipo" required>
+                    <option value="" disabled selected>Selecione...</option>
+                    <option value="INDUSTRIA">INDUSTRIA</option>
+                    <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="telefone">Telefone:</label>
+                <input type="text" id="telefone" name="telefone">
+            </div>
+            <div class="form-group" style="flex: 1.5;">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" name="email">
+            </div>
+
+            <div class="form-group" style="flex: 1;">
+                <label for="data_entrada">Data Entrada: <span style="color: red;">*</span></label>
+                <input type="date" id="data_entrada" name="data_entrada" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="data_saida">Data Saída: <span style="color: red;">*</span></label>
+                <input type="date" id="data_saida" name="data_saida" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="status">Status:</label>
+                <select id="status" name="status">
+                    <option value="" disabled selected>Selecione...</option>
+                    <option value="ativo" selected>ATIVO</option>
+                    <option value="inativo">INATIVO</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="flex: 1; justify-content: flex-end; align-self: flex-end;">
+                 <button type="submit" style="height: 38px;">Criar Parceiro</button>
+            </div>
         </form>
-    </div>
+        </div>
+
 
     <h2>Parceiros Cadastrados</h2>
     {% if parceiros %}
-    <table>
+    <table style="table-layout: auto;">
         <thead>
             <tr>
-                <th>Nome</th>
-                <th class="th-parceiro-acoes">Ações</th>
+                <th style="width: 25%;">Nome Ajustado</th>
+                <th style="width: 15%;">CNPJ</th>
+                <th style="width: 15%;">Tipo</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 20%;" class="th-parceiro-acoes">Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for p in parceiros %}
-            <tr>
+            <tr class="{{ 'row-inactive' if p.status == 0 }}">
                 <td>{{ p.nome }}</td>
+                <td>{{ p.cnpj }}</td>
+                <td>{{ p.tipo }}</td>
+                <td>
+                    {% if p.status == 1 %}
+                        <span style="color: green; font-weight: bold;">Ativo</span>
+                    {% else %}
+                        <span style="color: #e74c3c; font-weight: bold;">Inativo</span>
+                    {% endif %}
+                </td>
                 <td>
                     <div class="action-buttons-container">
                         <button type="button" class="btn-edit button-filter btn-editar-parceiro"
                                 data-id="{{ p.id }}"
-                                data-nome="{{ p.nome }}">
+                                data-nome-ajustado="{{ p.nome }}"
+                                data-cnpj="{{ p.cnpj }}"
+                                data-nome-fantasia="{{ p.nome_fantasia or '' }}"
+                                data-razao-social="{{ p.razao_social }}"
+                                data-tipo="{{ p.tipo }}"
+                                data-email="{{ p.email or '' }}"
+                                data-telefone="{{ p.telefone or '' }}"
+                                data-data-entrada="{{ p.data_entrada.strftime('%Y-%m-%d') if p.data_entrada else '' }}"
+                                data-data-saida="{{ p.data_saida.strftime('%Y-%m-%d') if p.data_saida else '' }}"
+                                data-status="{{ 'ativo' if p.status == 1 else 'inativo' }}">
                             Editar
                         </button>
 
                         <button type="button" class="button-danger btn-delete btn-deletar-parceiro"
                                 data-id="{{ p.id }}"
                                 data-nome="{{ p.nome }}">
-                            Deletar
+                            Desativar
                         </button>
                     </div>
                 </td>
@@ -63,27 +138,73 @@
 
 
     <div id="edit-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Editar Parceiro</h2>
-            <form id="edit-form" method="post">
-                <div class="form-group">
-                    <label for="nome_edit">Nome do Parceiro:</label>
-                    <input type="text" id="nome_edit" name="nome_edit" required>
+        <div class="modal-content" style="max-width: 1100px;"> <h2>Editar Parceiro</h2>
+            <form id="edit-form" method="post" class="filter-form" style="align-items: flex-start;">
+                
+                <div class="form-group" style="flex: 1.5;">
+                    <label for="nome_ajustado_edit">Nome Ajustado: <span style="color: red;">*</span></label>
+                    <input type="text" id="nome_ajustado_edit" name="nome_ajustado_edit" required>
                 </div>
-                <div class="modal-actions">
+                <div class="form-group" style="flex: 1;">
+                    <label for="cnpj_edit">CNPJ: <span style="color: red;">*</span></label>
+                    <input type="text" id="cnpj_edit" name="cnpj_edit" required>
+                </div>
+                <div class="form-group" style="flex: 1.5;">
+                    <label for="nome_fantasia_edit">Nome Fantasia:</label>
+                    <input type="text" id="nome_fantasia_edit" name="nome_fantasia_edit">
+                </div>
+                
+                <div class="form-group" style="flex: 1.5;">
+                    <label for="razao_social_edit">Razão Social: <span style="color: red;">*</span></label>
+                    <input type="text" id="razao_social_edit" name="razao_social_edit" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="tipo_edit">Tipo: <span style="color: red;">*</span></label>
+                    <select id="tipo_edit" name="tipo_edit" required>
+                        <option value="" disabled>Selecione...</option>
+                        <option value="INDUSTRIA">INDUSTRIA</option>
+                        <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="telefone_edit">Telefone:</label>
+                    <input type="text" id="telefone_edit" name="telefone_edit">
+                </div>
+                <div class="form-group" style="flex: 1.5;">
+                    <label for="email_edit">E-mail:</label>
+                    <input type="email" id="email_edit" name="email_edit">
+                </div>
+
+                <div class="form-group" style="flex: 1;">
+                    <label for="data_entrada_edit">Data Entrada: <span style="color: red;">*</span></label>
+                    <input type="date" id="data_entrada_edit" name="data_entrada_edit" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="data_saida_edit">Data Saída: <span style="color: red;">*</span></label>
+                    <input type="date" id="data_saida_edit" name="data_saida_edit" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="status_edit">Status:</label>
+                    <select id="status_edit" name="status_edit">
+                        <option value="" disabled>Selecione...</option>
+                        <option value="ativo">ATIVO</option>
+                        <option value="inativo">INATIVO</option>
+                    </select>
+                </div>
+                
+                <div class="modal-actions" style="flex-basis: 100%; margin-top: 25px;">
                     <button id="modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
                     <button type="submit" class="modal-button-confirm">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
-
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Confirmar Desativação</h2>
-            <p>Para confirmar a desativação, por favor digite o nome do parceiro no campo abaixo:</p>
+            <p>Para confirmar a desativação, por favor digite o nome ajustado do parceiro no campo abaixo:</p>
 
-            <p class="delete-modal-parceiro-name-label">Nome: <strong id="delete-modal-parceiro-name"></strong></p>
+            <p class="delete-modal-parceiro-name-label">Nome Ajustado: <strong id="delete-modal-parceiro-name"></strong></p>
 
             <div class="form-group" style="text-align: left; margin-top: 15px;">
                 <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
@@ -104,5 +225,14 @@
 
 {% block scripts %}
     {{ super() }}
+    <style>
+        .row-inactive td {
+            background-color: #fceeee;
+            color: #a94442;
+        }
+        .row-inactive td:first-child {
+            text-decoration: line-through;
+        }
+    </style>
     <script src="{{ url_for('static', filename='js/parceirosPage.js') }}"></script>
 {% endblock %}

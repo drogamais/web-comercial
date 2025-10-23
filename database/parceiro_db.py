@@ -3,7 +3,7 @@ from mysql.connector import Error
 from flask import g
 from config import DB_CONFIG
 
-DIM_PARCEIRO_TABLE = "dim_parceiro"
+DIM_PARCEIRO_TABLE = "bronze_parceiros"
 
 def get_db_connection():
     try:
@@ -20,6 +20,9 @@ def close_db_connection(e=None):
         db.close()
 
 def create_tables():
+    """
+    Cria a tabela dim_parceiro com a nova estrutura completa.
+    """
     conn = get_db_connection()
     if conn is None: return
     cursor = conn.cursor()
@@ -28,21 +31,40 @@ def create_tables():
             CREATE TABLE IF NOT EXISTS {DIM_PARCEIRO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nome VARCHAR(255) NOT NULL,
-                status INT DEFAULT 1,  -- 1 = Ativo, 0 = Inativo
-                UNIQUE(nome)
+                tipo VARCHAR(100) DEFAULT NULL,
+                cnpj VARCHAR(18) DEFAULT NULL,
+                nome_fantasia VARCHAR(255) DEFAULT NULL,
+                razao_social VARCHAR(255) DEFAULT NULL,
+                email VARCHAR(255) DEFAULT NULL,
+                telefone VARCHAR(20) DEFAULT NULL,
+                data_entrada DATE DEFAULT NULL,
+                data_saida DATE DEFAULT NULL,
+                status INT DEFAULT 1
             )
         """)
         conn.commit()
     except Error as e:
-        print(f"Erro ao criar tabela parceiros: {e}")
+        print(f"Erro ao criar tabela {DIM_PARCEIRO_TABLE}: {e}")
     finally:
         cursor.close()
 
-def add_parceiro(nome):
+def add_parceiro(cnpj, nome_fantasia, tipo, razao_social, nome, email, telefone, data_entrada, data_saida, status):
+    """
+    Adiciona um novo parceiro com todos os campos.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
+    sql = f"""
+        INSERT INTO {DIM_PARCEIRO_TABLE} (
+            cnpj, nome_fantasia, tipo, razao_social, nome, 
+            email, telefone, data_entrada, data_saida, status
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
     try:
-        cursor.execute(f"""INSERT INTO {DIM_PARCEIRO_TABLE} (nome, status) VALUES (%s, 1)""", (nome,))
+        cursor.execute(sql, (
+            cnpj, nome_fantasia, tipo, razao_social, nome,
+            email, telefone, data_entrada, data_saida, status
+        ))
         conn.commit()
         return None
     except Error as e:
@@ -52,9 +74,13 @@ def add_parceiro(nome):
         cursor.close()
 
 def get_all_parceiros():
+    """
+    Busca todos os parceiros (ativos e inativos) para a gestão.
+    """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute(f"""SELECT * FROM {DIM_PARCEIRO_TABLE} WHERE status = 1 ORDER BY nome ASC""")
+    # Atualizado para ordenar pelo novo campo 'nome'
+    cursor.execute(f"""SELECT * FROM {DIM_PARCEIRO_TABLE} ORDER BY nome ASC""")
     return cursor.fetchall()
 
 def get_parceiro_by_id(parceiro_id):
@@ -63,12 +89,25 @@ def get_parceiro_by_id(parceiro_id):
     cursor.execute(f"""SELECT * FROM {DIM_PARCEIRO_TABLE} WHERE id = %s""", (parceiro_id,))
     return cursor.fetchone()
 
-def update_parceiro(parceiro_id, nome):
+def update_parceiro(parceiro_id, cnpj, nome_fantasia, tipo, razao_social, nome, email, telefone, data_entrada, data_saida, status):
+    """
+    Atualiza um parceiro existente com todos os campos.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
-    sql = f"""UPDATE {DIM_PARCEIRO_TABLE} SET nome = %s WHERE id = %s"""
+    sql = f"""
+        UPDATE {DIM_PARCEIRO_TABLE} SET
+            cnpj = %s, nome_fantasia = %s, tipo = %s, razao_social = %s, 
+            nome = %s, email = %s, telefone = %s, data_entrada = %s, 
+            data_saida = %s, status = %s
+        WHERE id = %s
+    """
     try:
-        cursor.execute(sql, (nome, parceiro_id))
+        cursor.execute(sql, (
+            cnpj, nome_fantasia, tipo, razao_social, nome,
+            email, telefone, data_entrada, data_saida, status,
+            parceiro_id
+        ))
         conn.commit()
         return cursor.rowcount, None
     except Error as e:
@@ -78,8 +117,12 @@ def update_parceiro(parceiro_id, nome):
         cursor.close()
 
 def delete_parceiro(parceiro_id):
+    """
+    Realiza um "soft delete" (apenas marca como inativo).
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
+    # A lógica de soft-delete é mantida, apenas atualiza o status.
     sql = f"""UPDATE {DIM_PARCEIRO_TABLE} SET status = 0 WHERE id = %s"""
     try:
         cursor.execute(sql, (parceiro_id,))

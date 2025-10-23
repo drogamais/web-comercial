@@ -16,20 +16,13 @@
 <body>
 
     <div id="assunto-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 style="margin-top: 0;">Descrição Completa</h2> 
-            <p id="assunto-modal-content" style="text-align: left; white-space: pre-wrap;"></p>
-            <div class="modal-actions">
-                <button id="assunto-modal-btn-close" class="modal-button-confirm">Fechar</button>
-            </div>
         </div>
-    </div>
     <div class="container">
         <nav class="navbar">
             <div class="dropdown">
                 <button class="dropbtn">Menu</button>
                 <div id="myDropdown" class="dropdown-content">
-                    <a href="{{ url_for('campanha.upload_page') }}" class="{{ 'active' if active_page == 'upload' else '' }}">Upload de Planilha</a>
+                    <a href="{{ url_for('campanha_produtos.upload_page') }}" class="{{ 'active' if active_page == 'upload' else '' }}">Upload de Planilha</a>
                     <a href="{{ url_for('campanha.gestao_campanhas') }}" class="{{ 'active' if active_page == 'campanhas' else '' }}">Gerenciar Campanhas</a>
                     <a href="{{ url_for('index') }}" style="border-top: 1px solid #ddd; background-color: #f0f0f0;">&larr; Voltar ao Menu Principal</a>
                 </div>

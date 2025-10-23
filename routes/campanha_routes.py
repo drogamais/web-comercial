@@ -19,39 +19,6 @@ campanha_bp = Blueprint(
     url_prefix='/campanha'
 )
 
-@campanha_bp.route('/upload', methods=['GET', 'POST'])
-def upload_page():
-    if request.method == 'POST':
-        campanha_id = request.form.get('campanha')
-        if not campanha_id:
-            flash('Por favor, selecione uma campanha.', 'danger')
-            return redirect(url_for('campanha.upload_page'))
-
-        file = request.files.get('file')
-        if not file or file.filename == '':
-            flash('Nenhum arquivo selecionado.', 'danger')
-            return redirect(url_for('campanha.upload_page'))
-
-        if file and allowed_file(file.filename):
-            try:                
-                nome = request.form.get('nome')
-                data_inicio = request.form.get('data_inicio')
-                data_fim = request.form.get('data_fim')
-                if not all([nome, data_inicio, data_fim]):
-                    flash('Todos os campos são obrigatórios.', 'danger')
-                else:
-                    error = db_campanha.add_campaign(nome, data_inicio, data_fim)
-                    if error: flash(f'Erro ao criar campanha: {error}', 'danger')
-                    else: flash('Campanha criada com sucesso!', 'success')
-                return redirect(url_for('campanha.gestao_campanhas'))
-                
-            except Exception as e:
-                flash(f'Ocorreu um erro: {e}', 'danger')
-            return redirect(url_for('campanha.upload_page'))
-
-    campanhas = db_campanha.get_active_campaigns_for_upload()
-    return render_template('campanha/upload_campanha.html', active_page='upload', campanhas=campanhas)
-
 @campanha_bp.route('/download_modelo')
 def download_modelo():
     try:

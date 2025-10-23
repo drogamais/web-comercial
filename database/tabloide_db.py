@@ -7,7 +7,7 @@ from config import DB_CONFIG
 import datetime
 
 DIM_TABLOIDE_TABLE = "dim_tabloide"
-FAT_PRODUTO_TABLE = "fact_tabloide_produto"
+FAT_PRODUTO_TABLE = "fat_tabloide_produto"
 
 def get_db_connection():
     try:

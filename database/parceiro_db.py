@@ -3,6 +3,8 @@ from mysql.connector import Error
 from flask import g
 from config import DB_CONFIG
 
+DIM_PARCEIRO_TABLE = "dim_parceiro"
+
 def get_db_connection():
     try:
         if 'db_parceiro' not in g: # Nome único
@@ -22,8 +24,8 @@ def create_tables():
     if conn is None: return
     cursor = conn.cursor()
     try:
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS parceiros (
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS {DIM_PARCEIRO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nome VARCHAR(255) NOT NULL,
                 status INT DEFAULT 1,  -- 1 = Ativo, 0 = Inativo
@@ -40,7 +42,7 @@ def add_parceiro(nome):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO parceiros (nome, status) VALUES (%s, 1)", (nome,))
+        cursor.execute(f"""INSERT INTO {DIM_PARCEIRO_TABLE} (nome, status) VALUES (%s, 1)""", (nome,))
         conn.commit()
         return None
     except Error as e:
@@ -52,19 +54,19 @@ def add_parceiro(nome):
 def get_all_parceiros():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM parceiros WHERE status = 1 ORDER BY nome ASC")
+    cursor.execute(f"""SELECT * FROM {DIM_PARCEIRO_TABLE} WHERE status = 1 ORDER BY nome ASC""")
     return cursor.fetchall()
 
 def get_parceiro_by_id(parceiro_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM parceiros WHERE id = %s", (parceiro_id,))
+    cursor.execute(f"""SELECT * FROM {DIM_PARCEIRO_TABLE} WHERE id = %s""", (parceiro_id,))
     return cursor.fetchone()
 
 def update_parceiro(parceiro_id, nome):
     conn = get_db_connection()
     cursor = conn.cursor()
-    sql = "UPDATE parceiros SET nome = %s WHERE id = %s"
+    sql = f"""UPDATE {DIM_PARCEIRO_TABLE} SET nome = %s WHERE id = %s"""
     try:
         cursor.execute(sql, (nome, parceiro_id))
         conn.commit()
@@ -78,7 +80,7 @@ def update_parceiro(parceiro_id, nome):
 def delete_parceiro(parceiro_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    sql = "UPDATE parceiros SET status = 0 WHERE id = %s"
+    sql = f"""UPDATE {DIM_PARCEIRO_TABLE} SET status = 0 WHERE id = %s"""
     try:
         cursor.execute(sql, (parceiro_id,))
         conn.commit()

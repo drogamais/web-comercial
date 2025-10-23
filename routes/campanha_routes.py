@@ -1,12 +1,14 @@
+# routes/campanha_routes.py
+
 import pandas as pd
 import numpy as np
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 )
 import os
-import database.campanha_db as db_campanha # Usamos 'db_campanha' para simplificar
-import database.common_db as db_common # Importa o módulo comum
-from utils import allowed_file # 
+import database.campanha_db as db_campanha # Para gerenciar campanhas
+# Removido: db_campanha_produtos e db_common (não são mais usados aqui)
+from utils import allowed_file
 
 # Cria o Blueprint de Campanha com prefixo de URL
 campanha_bp = Blueprint(
@@ -14,7 +16,7 @@ campanha_bp = Blueprint(
     __name__,
     template_folder='templates',
     static_folder='static',
-    url_prefix='/campanha' # Todas as rotas aqui começarão com /campanha
+    url_prefix='/campanha'
 )
 
 @campanha_bp.route('/upload', methods=['GET', 'POST'])
@@ -31,34 +33,20 @@ def upload_page():
             return redirect(url_for('campanha.upload_page'))
 
         if file and allowed_file(file.filename):
-            try:
-                column_map = {
-                    'CÓDIGO DE BARRAS': 'codigo_barras', 'DESCRIÇÃO': 'descricao', 'PONTUAÇÃO': 'pontuacao',
-                    'PREÇO NORMAL': 'preco_normal', 'PREÇO COM DESCONTO': 'preco_desconto',
-                    'REBAIXE': 'rebaixe', 'QTD LIMITE': 'qtd_limite'
-                }
-                df = pd.read_excel(file, dtype={'CÓDIGO DE BARRAS': str}).rename(columns=column_map)
-                df = df.replace({np.nan: None})
-                
-                required_cols = column_map.values()
-                if not all(col in df.columns for col in required_cols):
-                    flash('A planilha não contém todas as colunas esperadas.', 'danger')
-                    return redirect(url_for('campanha.upload_page'))
-
-                produtos_para_inserir = [
-                    (campanha_id, row.get('codigo_barras'), row.get('descricao'), row.get('pontuacao'),
-                     row.get('preco_normal'), row.get('preco_desconto'), row.get('rebaixe'), row.get('qtd_limite'))
-                    for _, row in df.iterrows()
-                ]
-                
-                if produtos_para_inserir:
-                    rowcount, error = db_campanha.add_products_bulk(produtos_para_inserir)
-                    if error: flash(f'Erro ao salvar produtos: {error}', 'danger')
-                    else: flash(f'{rowcount} produtos processados e salvos com sucesso!', 'success')
+            try:                
+                nome = request.form.get('nome')
+                data_inicio = request.form.get('data_inicio')
+                data_fim = request.form.get('data_fim')
+                if not all([nome, data_inicio, data_fim]):
+                    flash('Todos os campos são obrigatórios.', 'danger')
                 else:
-                    flash('Nenhum produto encontrado na planilha.', 'warning')
+                    error = db_campanha.add_campaign(nome, data_inicio, data_fim)
+                    if error: flash(f'Erro ao criar campanha: {error}', 'danger')
+                    else: flash('Campanha criada com sucesso!', 'success')
+                return redirect(url_for('campanha.gestao_campanhas'))
+                
             except Exception as e:
-                flash(f'Ocorreu um erro ao processar o arquivo: {e}', 'danger')
+                flash(f'Ocorreu um erro: {e}', 'danger')
             return redirect(url_for('campanha.upload_page'))
 
     campanhas = db_campanha.get_active_campaigns_for_upload()
@@ -66,11 +54,6 @@ def upload_page():
 
 @campanha_bp.route('/download_modelo')
 def download_modelo():
-    """
-    Rota para baixar o arquivo .xlsx modelo para upload.
-    """
-    # O campanha_bp.root_path aponta para a pasta 'routes'
-    # '..' sobe um nível para a raiz do projeto
     try:
         static_dir = os.path.join(campanha_bp.root_path, '..', 'static', 'models')
         filename = 'modelo_campanha.xlsx'
@@ -81,8 +64,7 @@ def download_modelo():
         )
     except FileNotFoundError:
         flash('Arquivo modelo não encontrado no servidor.', 'danger')
-        # Redireciona de volta para a página anterior ou uma página padrão
-        return redirect(request.referrer or url_for('tabloide.gestao_tabloides'))
+        return redirect(request.referrer or url_for('campanha.gestao_campanhas'))
 
 @campanha_bp.route('/gerenciar', methods=['GET', 'POST'])
 def gestao_campanhas():
@@ -97,6 +79,7 @@ def gestao_campanhas():
             if error: flash(f'Erro ao criar campanha: {error}', 'danger')
             else: flash('Campanha criada com sucesso!', 'success')
         return redirect(url_for('campanha.gestao_campanhas'))
+    
     campanhas = db_campanha.get_all_campaigns()
     return render_template('campanha/campanhas.html', active_page='campanhas', campanhas=campanhas)
 
@@ -120,100 +103,4 @@ def deletar_campanha(campaign_id):
     else: flash('Campanha desativada com sucesso!', 'success')
     return redirect(url_for('campanha.gestao_campanhas'))
 
-@campanha_bp.route('/<int:campanha_id>/produtos')
-def produtos_por_campanha(campanha_id):
-    campanha = db_campanha.get_campaign_by_id(campanha_id)
-    if not campanha:
-        flash('Campanha não encontrada.', 'danger')
-        return redirect(url_for('campanha.gestao_campanhas'))
-    produtos = db_campanha.get_products_by_campaign_id(campanha_id)
-    return render_template('campanha/produtos_campanha.html', active_page='campanhas', campanha=campanha, produtos=produtos)
-
-@campanha_bp.route('/<int:campanha_id>/produtos/adicionar', methods=['POST'])
-def adicionar_produto(campanha_id):
-    try:
-        dados_produto = (
-            campanha_id, request.form.get('codigo_barras'), request.form.get('descricao'),
-            request.form.get('pontuacao') or None, request.form.get('preco_normal') or None,
-            request.form.get('preco_desconto') or None, request.form.get('rebaixe') or None,
-            request.form.get('qtd_limite') or None
-        )
-        _, error = db_campanha.add_single_product(dados_produto)
-        if error: flash(f'Erro ao adicionar produto: {error}', 'danger')
-        else: flash('Novo produto adicionado com sucesso!', 'success')
-    except Exception as e:
-        flash(f'Ocorreu um erro inesperado: {e}', 'danger')
-    return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
-
-@campanha_bp.route('/<int:campanha_id>/produtos/atualizar', methods=['POST'])
-def atualizar_produtos(campanha_id):
-    selecionados = request.form.getlist('selecionado')
-    if not selecionados:
-        flash('Nenhum produto selecionado para atualizar.', 'warning')
-        return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
-    produtos_para_atualizar = [
-        (request.form.get(f'codigo_barras_{pid}'), request.form.get(f'descricao_{pid}'),
-         request.form.get(f'pontuacao_{pid}') or None, request.form.get(f'preco_normal_{pid}') or None,
-         request.form.get(f'preco_desconto_{pid}') or None, request.form.get(f'rebaixe_{pid}') or None,
-         request.form.get(f'qtd_limite_{pid}') or None, pid)
-        for pid in selecionados
-    ]
-    rowcount, error = db_campanha.update_products_in_bulk(produtos_para_atualizar)
-    if error: flash(f'Erro ao atualizar produtos: {error}', 'danger')
-    else: flash(f'{rowcount} produto(s) atualizado(s) com sucesso!', 'success')
-    return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
-
-@campanha_bp.route('/<int:campanha_id>/produtos/deletar', methods=['POST'])
-def deletar_produtos(campanha_id):
-    selecionados = request.form.getlist('selecionado')
-    if not selecionados:
-        flash('Nenhum produto selecionado para deletar.', 'warning')
-        return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
-    rowcount, error = db_campanha.delete_products_in_bulk(selecionados)
-    if error: flash(f'Erro ao deletar produtos: {error}', 'danger')
-    else: flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
-    return redirect(url_for('campanha.produtos_por_campanha', campanha_id=campanha_id))
-
-# ADICIONE ESTA NOVA ROTA NO FINAL DO ARQUIVO
-@campanha_bp.route('/<int:campanha_id>/produtos/validar_gtins', methods=['POST'])
-def validar_gtins(campanha_id):
-    """
-    Recebe uma lista de GTINs do frontend, normaliza (zfill(14)),
-    verifica no dbDrogamais e retorna a lista dos GTINs ORIGINAIS que são válidos.
-    """
-    data = request.get_json()
-    gtins_raw = data.get('gtins', []) # Ex: ['736532824844', '']
-
-    if not gtins_raw:
-        return jsonify({"error": "Nenhum GTIN enviado"}), 400
-
-    # 1. Filtra GTINs não vazios (mantém os originais)
-    gtins_para_validar_raw = [gtin for gtin in gtins_raw if gtin and gtin.strip()]
-    
-    if not gtins_para_validar_raw:
-        return jsonify({"valid_gtins": []}) # Retorna sucesso com lista vazia
-
-    # 2. Cria a lista normalizada (com padding de 0) para enviar ao banco
-    #    usando str.zfill(14)
-    gtins_padded = [g.zfill(14) for g in gtins_para_validar_raw] 
-    #    Ex: ['736532824844'] -> ['00736532824844']
-    
-    # 3. Cria um mapa para traduzir a resposta do banco de volta para o original
-    #    Ex: {'00736532824844': '736532824844'}
-    map_padded_to_raw = {padded: raw for padded, raw in zip(gtins_padded, gtins_para_validar_raw)}
-
-    # 4. Envia a lista PADDED (com zeros) para o banco
-    #    (Assumindo que as correções de 'ean_unico' e 'collation' da etapa anterior foram feitas)
-    validos_padded, error = db_common.validate_gtins_in_external_db(gtins_padded)
-    
-    if error:
-        return jsonify({"error": error}), 500
-    
-    # 5. Converte o resultado PADDED (do banco) de volta para a lista RAW (original)
-    #    Ex: validos_padded = {'00736532824844'}
-    #        validos_raw (convertido) = {'736532824844'}
-    validos_raw = {map_padded_to_raw[padded_gtin] for padded_gtin in validos_padded if padded_gtin in map_padded_to_raw}
-
-    # 6. Retorna a lista de GTINs ORIGINAIS para o JavaScript
-    #    O JavaScript poderá comparar '736532824844' (do Set) com '736532824844' (do input.value)
-    return jsonify({"valid_gtins": list(validos_raw)})
+# --- ROTAS DE PRODUTOS MOVIDAS PARA campanha_produtos_routes.py ---

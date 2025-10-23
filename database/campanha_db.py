@@ -1,29 +1,35 @@
-# aplicacao_web_campanhas/database_campanha.py
+# database/campanha_db.py
 
 import mysql.connector
 from mysql.connector import Error
 from flask import g
 from config import DB_CONFIG
-import datetime # Adicionado para comparar datas
+import datetime
 
 DIM_CAMPANHA_TABLE = "dim_campanha"
-FAT_PRODUTO_TABLE = "fat_campanha_produto"
+# FAT_PRODUTO_TABLE foi movido para campanha_produtos_db.py
 
 def get_db_connection():
+    """
+    Obtém a conexão do banco de dados para o módulo CAMPANHA.
+    Esta conexão (g.db) será usada por campanha_db e campanha_produtos_db.
+    """
     try:
         if 'db' not in g:
             g.db = mysql.connector.connect(**DB_CONFIG)
         return g.db
     except Error as e:
-        print(f"Erro ao conectar ao MySQL: {e}")
+        print(f"Erro ao conectar ao MySQL (Campanha): {e}")
         return None
 
 def close_db_connection(e=None):
+    """ Fecha a conexão do módulo CAMPANHA (g.db) """
     db = g.pop('db', None)
     if db is not None:
         db.close()
 
 def create_tables():
+    """ Cria APENAS a tabela dim_campanha """
     conn = get_db_connection()
     if conn is None: return
     cursor = conn.cursor()
@@ -39,26 +45,9 @@ def create_tables():
             )
         """
         cursor.execute(sql_create_dim)
-
-        sql_create_fact = f"""
-            CREATE TABLE IF NOT EXISTS {FAT_PRODUTO_TABLE} (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                campanha_id INT NOT NULL,
-                codigo_barras VARCHAR(50),
-                descricao VARCHAR(255),
-                pontuacao INT,
-                preco_normal DECIMAL(10, 2),
-                preco_desconto DECIMAL(10, 2),
-                rebaixe DECIMAL(10, 2),
-                qtd_limite INT,
-                FOREIGN KEY (campanha_id) REFERENCES {DIM_CAMPANHA_TABLE}(id) ON DELETE CASCADE
-            )
-        """
-        cursor.execute(sql_create_fact)
-        
         conn.commit()
     except Error as e:
-        print(f"Erro ao criar tabelas: {e}")
+        print(f"Erro ao criar tabela {DIM_CAMPANHA_TABLE}: {e}")
     finally:
         cursor.close()
 
@@ -69,13 +58,11 @@ def create_tables():
 def add_campaign(nome, data_inicio, data_fim):
     conn = get_db_connection()
     cursor = conn.cursor()
-
     sql = f"""
         INSERT INTO {DIM_CAMPANHA_TABLE} (nome, data_inicio, data_fim, status) VALUES (%s, %s, %s, 1)
     """
     try:
         cursor.execute(sql, (nome, data_inicio, data_fim))
-
         conn.commit()
         return None
     except Error as e:
@@ -88,12 +75,10 @@ def get_all_campaigns():
     """Busca todas as campanhas ATIVAS (status=1)."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-
     sql = f"""
         SELECT * FROM {DIM_CAMPANHA_TABLE} WHERE status = 1 ORDER BY data_inicio DESC
     """
     cursor.execute(sql)
-
     return cursor.fetchall()
 
 def get_active_campaigns_for_upload():
@@ -106,12 +91,10 @@ def get_active_campaigns_for_upload():
     cursor = conn.cursor(dictionary=True)
     today = datetime.date.today()
     try:
-
         sql = f"""
             SELECT * FROM {DIM_CAMPANHA_TABLE} WHERE status = 1 AND data_fim >= %s ORDER BY data_inicio DESC
         """
         cursor.execute(sql,(today,))
-
         return cursor.fetchall()
     except Error as e:
         print(f"Erro ao buscar campanhas ativas para upload: {e}")
@@ -123,7 +106,6 @@ def get_active_campaigns_for_upload():
 def get_campaign_by_id(campanha_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    # Busca mesmo se estiver inativa, para permitir visualização de produtos antigos
     sql = f"""
         SELECT * FROM {DIM_CAMPANHA_TABLE} WHERE id = %s
     """
@@ -152,7 +134,6 @@ def delete_campaign(campaign_id):
     """Realiza um soft delete de uma campanha (define status = 0)."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Alterado de DELETE para UPDATE (Soft Delete)
     sql = f"""
         UPDATE {DIM_CAMPANHA_TABLE} SET status = 0 WHERE id = %s
     """
@@ -166,86 +147,4 @@ def delete_campaign(campaign_id):
     finally:
         cursor.close()
 
-#############################################
-##          PRODUTOS CAMPANHA
-#############################################
-
-def add_products_bulk(produtos):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
-        INSERT INTO {FAT_PRODUTO_TABLE} (campanha_id, codigo_barras, descricao, pontuacao, preco_normal, preco_desconto, rebaixe, qtd_limite)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    try:
-        cursor.executemany(sql, produtos)
-        conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
-        conn.rollback()
-        return 0, str(e)
-    finally:
-        cursor.close()
-
-def get_products_by_campaign_id(campanha_id):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(f"""SELECT * FROM {FAT_PRODUTO_TABLE} WHERE campanha_id = %s""", (campanha_id,))
-    return cursor.fetchall()
-
-def add_single_product(dados_produto):
-    """Adiciona um único produto ao banco de dados."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
-        INSERT INTO {FAT_PRODUTO_TABLE} (campanha_id, codigo_barras, descricao, pontuacao, preco_normal, preco_desconto, rebaixe, qtd_limite)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    try:
-        cursor.execute(sql, dados_produto)
-        conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
-        conn.rollback()
-        return 0, str(e)
-    finally:
-        cursor.close()
-
-def update_products_in_bulk(produtos_para_atualizar):
-    """Atualiza múltiplos produtos no banco de dados."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
-        UPDATE {FAT_PRODUTO_TABLE} SET
-            codigo_barras = %s, descricao = %s, pontuacao = %s,
-            preco_normal = %s, preco_desconto = %s, rebaixe = %s, qtd_limite = %s
-        WHERE id = %s
-    """
-    try:
-        cursor.executemany(sql, produtos_para_atualizar)
-        conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
-        conn.rollback()
-        return 0, str(e)
-    finally:
-        cursor.close()
-
-def delete_products_in_bulk(ids_para_deletar):
-    """Deleta múltiplos produtos do banco de dados com base em seus IDs."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # Prepara a query para aceitar uma lista de IDs
-    format_strings = ','.join(['%s'] * len(ids_para_deletar))
-    sql = f"""
-        DELETE FROM {FAT_PRODUTO_TABLE} WHERE id IN ({format_strings})
-    """
-    try:
-        cursor.execute(sql, tuple(ids_para_deletar))
-        conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
-        conn.rollback()
-        return 0, str(e)
-    finally:
-        cursor.close()
+# Todas as funções de PRODUTO foram movidas

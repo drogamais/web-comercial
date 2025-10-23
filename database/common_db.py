@@ -17,8 +17,7 @@ def get_drogamais_db_connection():
             "password": DB_CONFIG.get("password"),
             "host": DB_CONFIG.get("host"),
             "port": DB_CONFIG.get("port", 3306), # Usa 3306 como padrão
-            #"database": "dbDrogamais", # Define o banco de dados
-            "database": "dbSults",
+            "database": "dbDrogamais", # Define o banco de dados
             "collation": "utf8mb4_general_ci"
         }
 

@@ -63,7 +63,7 @@
             </tbody>
         </table>
         <div style="display: flex; gap: 15px; margin-top: 20px;">
-            <button type="submit" formaction="{{ url_for('campanha.atualizar_produtos', campanha_id=campanha.id) }}" style="flex: 1;">Salvar Alterações</button>
+            <button type="submit" formaction="{{ url_for('campanha_produtos.atualizar_produtos', campanha_id=campanha.id) }}" style="flex: 1;">Salvar Alterações</button>
             
             <button type="button" id="btn-validar-formato" class="button-filter" style="flex: 1;">
                 Validar Formato (Local)
@@ -77,7 +77,7 @@
                 Limpar Validações
             </button>
             
-            <button type="submit" formaction="{{ url_for('campanha.deletar_produtos', campanha_id=campanha.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none;" onclick="return confirm('Tem certeza que deseja deletar os produtos selecionados?');">Deletar Selecionados</button>
+            <button type="submit" formaction="{{ url_for('campanha_produtos.deletar_produtos', campanha_id=campanha.id) }}" class="button-danger" style="flex: 1; margin: 0; max-width: none;" onclick="return confirm('Tem certeza que deseja deletar os produtos selecionados?');">Deletar Selecionados</button>
         </div>
     </form>
     {% else %}
@@ -88,7 +88,7 @@
 
     <h2>Adicionar Novo Produto</h2>
     <div class="filter-container">
-        <form action="{{ url_for('campanha.adicionar_produto', campanha_id=campanha.id) }}" method="post" class="filter-form">
+        <form action="{{ url_for('campanha_produtos.adicionar_produto', campanha_id=campanha.id) }}" method="post" class="filter-form">
             <div class="form-group" style="flex: 1.5;">
                 <label>Cód. Barras:</label>
                 <input type="text" name="codigo_barras">
@@ -124,7 +124,7 @@
 {% endblock %}
 
 {% block scripts %}
-    {{ super() }} {# Mantém drag_and_drop.js se precisar #}
+    {{ super() }}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="{{ url_for('static', filename='js/productTableUtils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/produtosCampanhaPage.js') }}"></script>

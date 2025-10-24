@@ -161,7 +161,7 @@ window.ProductTableUtils = (function() {
     function initEditCheckboxes(tableBody) {
         const checkboxes = tableBody.querySelectorAll('.edit-checkbox'); // Assume classe padrão
         checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('click', function() {
+            checkbox.addEventListener('change', function() {
                 const row = this.closest('tr');
                 const inputs = row.querySelectorAll('input[type="text"], input[type="number"]'); // Ajuste seletor se necessário
                 inputs.forEach(input => {

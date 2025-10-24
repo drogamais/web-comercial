@@ -41,7 +41,7 @@
             <div class="form-group" style="flex: 1;">
                 <label for="tipo">Tipo: <span style="color: red;">*</span></label>
                 <select id="tipo" name="tipo" required>
-                    <option value="" disabled selected>Selecione...</option>
+                    <option value="" selected>Selecione...</option>
                     <option value="INDUSTRIA">INDUSTRIA</option>
                     <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
                 </select>
@@ -63,20 +63,20 @@
                 <label for="data_saida">Data Saída: <span style="color: red;">*</span></label>
                 <input type="date" id="data_saida" name="data_saida" required>
             </div>
+
             <div class="form-group" style="flex: 1;">
                 <label for="status">Status:</label>
                 <select id="status" name="status">
-                    <option value="" disabled selected>Selecione...</option>
-                    <option value="ativo" selected>ATIVO</option>
+                    <option value="" selected>Selecione...</option>
+                    <option value="ativo">ATIVO</option>  
                     <option value="inativo">INATIVO</option>
                 </select>
             </div>
-
             <div class="form-group" style="flex: 1; justify-content: flex-end; align-self: flex-end;">
                  <button type="submit" style="height: 38px;">Criar Parceiro</button>
             </div>
         </form>
-        </div>
+    </div>
 
 
     <h2>Parceiros Cadastrados</h2>
@@ -99,11 +99,10 @@
                 <td>{{ p.tipo }}</td>
                 <td>
                     {% if p.status == 1 %}
-                        <span style="color: green; font-weight: bold;">Ativo</span>
-                    {% else %}
+                        <span style="color: green; font-weight: bold;">ATIVO</span> {% else %}
                         <span style="color: #e74c3c; font-weight: bold;">Inativo</span>
                     {% endif %}
-                </td>
+                    </td>
                 <td>
                     <div class="action-buttons-container">
                         <button type="button" class="btn-edit button-filter btn-editar-parceiro"
@@ -136,11 +135,10 @@
     <p>Nenhum parceiro cadastrado ainda.</p>
     {% endif %}
 
-
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 1100px;"> <h2>Editar Parceiro</h2>
             <form id="edit-form" method="post" class="filter-form" style="align-items: flex-start;">
-                
+
                 <div class="form-group" style="flex: 1.5;">
                     <label for="nome_ajustado_edit">Nome Ajustado: <span style="color: red;">*</span></label>
                     <input type="text" id="nome_ajustado_edit" name="nome_ajustado_edit" required>
@@ -153,7 +151,7 @@
                     <label for="nome_fantasia_edit">Nome Fantasia:</label>
                     <input type="text" id="nome_fantasia_edit" name="nome_fantasia_edit">
                 </div>
-                
+
                 <div class="form-group" style="flex: 1.5;">
                     <label for="razao_social_edit">Razão Social: <span style="color: red;">*</span></label>
                     <input type="text" id="razao_social_edit" name="razao_social_edit" required>
@@ -184,14 +182,13 @@
                     <input type="date" id="data_saida_edit" name="data_saida_edit" required>
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label for="status_edit">Status:</label>
-                    <select id="status_edit" name="status_edit">
-                        <option value="" disabled>Selecione...</option>
+                    <label for="status_edit">Status:</label> <select id="status_edit" name="status_edit"> 
+                        <option value="" disabled>Selecione...</option> 
                         <option value="ativo">ATIVO</option>
                         <option value="inativo">INATIVO</option>
                     </select>
                 </div>
-                
+
                 <div class="modal-actions" style="flex-basis: 100%; margin-top: 25px;">
                     <button id="modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
                     <button type="submit" class="modal-button-confirm">Salvar</button>

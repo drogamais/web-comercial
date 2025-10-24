@@ -35,7 +35,9 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 5%;">Editar?</th>
+                    <th style="width: 5%; text-align: center;">
+                         <input type="checkbox" id="select-all-checkbox" title="Selecionar Todos">
+                    </th>
                     <th style="width: 15%;">Cód. Barras</th>
                     <th>Descrição</th>
                     <th style="width: 8%;">Pontos</th>
@@ -128,4 +130,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="{{ url_for('static', filename='js/productTableUtils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/produtosCampanhaPage.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/selectAll.js') }}"></script>
 {% endblock %}

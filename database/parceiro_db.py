@@ -39,7 +39,8 @@ def create_tables():
                 telefone VARCHAR(20) DEFAULT NULL,
                 data_entrada DATE DEFAULT NULL,
                 data_saida DATE DEFAULT NULL,
-                status INT DEFAULT 1
+                status INT DEFAULT 1,
+                data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         """)
         conn.commit()

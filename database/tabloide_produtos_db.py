@@ -22,17 +22,12 @@ def create_product_table():
                 codigo_interno VARCHAR(50) DEFAULT NULL,
                 descricao VARCHAR(255),
                 
-                -- Colunas da planilha
                 laboratorio VARCHAR(255),
                 preco_normal DECIMAL(10, 2),
-                preco_desconto DECIMAL(10, 2),      -- (PREÇO DESCONTO GERAL)
+                preco_desconto DECIMAL(10, 2),
                 preco_desconto_cliente DECIMAL(10, 2),
+                preco_app DECIMAL(10, 2),
                 tipo_regra VARCHAR(100),
-                
-                -- Colunas antigas (mantidas como NULLable, mas não usadas)
-                pontuacao INT,
-                rebaixe DECIMAL(10, 2),
-                qtd_limite INT,
 
                 FOREIGN KEY (campanha_id) REFERENCES {DIM_TABLOIDE_TABLE}(id) ON DELETE CASCADE
             )
@@ -53,9 +48,9 @@ def add_products_bulk(produtos):
     sql = f"""
         INSERT INTO {FAT_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_interno, descricao, laboratorio, 
-            preco_normal, preco_desconto, preco_desconto_cliente, tipo_regra
+            preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.executemany(sql, produtos)
@@ -80,9 +75,9 @@ def add_single_product(dados_produto):
     sql = f"""
         INSERT INTO {FAT_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_interno, descricao, laboratorio, 
-            preco_normal, preco_desconto, preco_desconto_cliente, tipo_regra
+            preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.execute(sql, dados_produto)
@@ -101,7 +96,7 @@ def update_products_in_bulk(produtos_para_atualizar):
     sql = f"""
         UPDATE {FAT_PRODUTO_TABLE} SET
             codigo_barras = %s, codigo_interno = %s, descricao = %s, laboratorio = %s, 
-            preco_normal = %s, preco_desconto = %s, preco_desconto_cliente = %s, tipo_regra = %s
+            preco_normal = %s, preco_desconto = %s, preco_desconto_cliente = %s, preco_app = %s, tipo_regra = %s
         WHERE id = %s
     """
     try:

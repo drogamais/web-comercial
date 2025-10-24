@@ -57,7 +57,8 @@
                     <td><input type="text" name="laboratorio_{{ p.id }}" value="{{ p.laboratorio or '' }}" disabled></td>
                     <td><input type="number" step="0.01" name="preco_normal_{{ p.id }}" value="{{ p.preco_normal or '' }}" disabled></td>
                     <td><input type="number" step="0.01" name="preco_desconto_{{ p.id }}" value="{{ p.preco_desconto or '' }}" disabled></td>
-                    <td><input type="number" step="0.01" name="preco_desconto_cliente_{{ p.id }}" value="{{ p.preco_desconto_cliente or '' }}" disabled></td> 
+                    <td><input type="number" step="0.01" name="preco_desconto_cliente_{{ p.id }}" value="{{ p.preco_desconto_cliente or '' }}" disabled></td>
+                    <td><input type="number" step="0.01" name="preco_app_{{ p.id }}" value="{{ p.preco_app or '' }}" disabled></td>
                     <td><input type="text" name="tipo_regra_{{ p.id }}" value="{{ p.tipo_regra or '' }}" disabled></td>
                 </tr>
                 {% endfor %}

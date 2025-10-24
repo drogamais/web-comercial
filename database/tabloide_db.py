@@ -42,7 +42,7 @@ def create_tables():
                 data_inicio DATE NOT NULL,
                 data_fim DATE NOT NULL,
                 status INT DEFAULT 1,
-                UNIQUE(nome)
+                UNIQUE(nome, data_inicio, data_fim)
             )
         """)
         conn.commit()

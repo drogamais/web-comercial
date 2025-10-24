@@ -1,13 +1,12 @@
-# Aplicação Web de Gestão de Atendimentos
+# Aplicação Web de Gerencia para Campanha, Tabloides e Parceiros
 
-Esta é uma aplicação web desenvolvida com Flask para registar, visualizar e editar atendimentos. O sistema foi desenhado para ser uma ferramenta interna, otimizando o fluxo de trabalho de diferentes tipos de registo, incluindo inserções padrão, de convénio e em massa para múltiplas lojas.
+Esta é uma aplicação web desenvolvida com Flask para registar, visualizar e editar produtos de campanhas e tabloides. O sistema foi desenhado para ser uma ferramenta interna, otimizando o fluxo de trabalho de diferentes tipos de registo, incluindo inserções padrão.
 
 ## Funcionalidades Principais
 
 -   **Inserção de Atendimentos:** Formulários em grade para inserção rápida de múltiplos registos.
--   **Páginas Dedicadas:** Interfaces separadas para atendimentos Padrão e de Convênio.
--   **Inserção em Massa:** Uma funcionalidade para registar um mesmo tipo de atendimento para dezenas de lojas de uma só vez.
--   **Edição e Visualização:** Uma página para visualizar os registos recentes, com filtros por data e por responsável. Apenas registos dos últimos 3 dias podem ser editados.
+-   **Páginas Dedicadas:** Interfaces separadas para Campanhas, Tabloides e Parceiros
+-   **Edição e Visualização:** Uma página para visualizar os registos recentes
 -   **Interface Limpa:** O layout foi organizado para ser intuitivo e fácil de usar.
 
 ## Tecnologias Utilizadas
@@ -33,7 +32,7 @@ Siga estes passos para configurar o ambiente de desenvolvimento local:
 1.  **Clonar o Repositório (se estiver no Git)**
     ```bash
     git clone <url_do_seu_repositorio>
-    cd aplicacao_web_atendimento
+    cd web-comercial
     ```
 
 2.  **Criar e Ativar o Ambiente Virtual (`venv`)**

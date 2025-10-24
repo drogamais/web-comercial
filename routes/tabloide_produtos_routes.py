@@ -42,6 +42,7 @@ def upload_page():
                     'PREÇO NORMAL': 'preco_normal',
                     'PREÇO DESCONTO GERAL': 'preco_desconto',
                     'PREÇO DESCONTO CLIENTE+': 'preco_desconto_cliente',
+                    'PREÇO APP': 'preco_app',
                     'TIPO DE REGRA': 'tipo_regra'
                 }
 
@@ -104,6 +105,7 @@ def upload_page():
                         row.get('preco_normal'),
                         row.get('preco_desconto'),
                         row.get('preco_desconto_cliente'),
+                        row.get('preco_app'),
                         row.get('tipo_regra')
                     ))
 
@@ -159,6 +161,7 @@ def adicionar_produto(campanha_id):
             request.form.get('preco_normal') or None,
             request.form.get('preco_desconto') or None,
             request.form.get('preco_desconto_cliente') or None,
+            request.form.get('preco_app') or None,
             request.form.get('tipo_regra') or None
         )
         _, error = db_tabloide_produtos.add_single_product(dados_produto)
@@ -209,6 +212,7 @@ def atualizar_produtos(campanha_id):
             request.form.get(f'preco_normal_{pid}') or None,
             request.form.get(f'preco_desconto_{pid}') or None,
             request.form.get(f'preco_desconto_cliente_{pid}') or None,
+            request.form.get(f'preco_app_{pid}') or None,
             request.form.get(f'tipo_regra_{pid}') or None,
             pid
         ))

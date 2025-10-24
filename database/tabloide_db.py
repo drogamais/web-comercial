@@ -1,32 +1,10 @@
 # database/tabloide_db.py
 
-import mysql.connector
 from mysql.connector import Error
-from flask import g
-from config import DB_CONFIG
+from database.common_db import get_db_connection
 import datetime
 
 DIM_TABLOIDE_TABLE = "dim_tabloide"
-# FAT_PRODUTO_TABLE foi movido para tabloide_produtos_db.py
-
-def get_db_connection():
-    """
-    Obtém a conexão do banco de dados para o módulo TABLOIDE.
-    Esta conexão (g.db_tabloide) será usada por tabloide_db e tabloide_produtos_db.
-    """
-    try:
-        if 'db_tabloide' not in g: # Nome único para a conexão
-            g.db_tabloide = mysql.connector.connect(**DB_CONFIG)
-        return g.db_tabloide
-    except Error as e:
-        print(f"Erro ao conectar ao MySQL (Tabloide): {e}")
-        return None
-
-def close_db_connection(e=None):
-    """ Fecha a conexão do módulo TABLOIDE (g.db_tabloide) """
-    db = g.pop('db_tabloide', None)
-    if db is not None:
-        db.close()
 
 def create_tables():
     """ Cria APENAS a tabela dim_tabloide """
@@ -126,5 +104,3 @@ def delete_campaign(campaign_id):
         return 0, str(e)
     finally:
         cursor.close()
-
-# Todas as funções de PRODUTO foram movidas

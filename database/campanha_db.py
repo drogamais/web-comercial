@@ -1,32 +1,10 @@
 # database/campanha_db.py
 
-import mysql.connector
 from mysql.connector import Error
-from flask import g
-from config import DB_CONFIG
+from database.common_db import get_db_connection
 import datetime
 
 DIM_CAMPANHA_TABLE = "dim_campanha"
-# FAT_PRODUTO_TABLE foi movido para campanha_produtos_db.py
-
-def get_db_connection():
-    """
-    Obtém a conexão do banco de dados para o módulo CAMPANHA.
-    Esta conexão (g.db) será usada por campanha_db e campanha_produtos_db.
-    """
-    try:
-        if 'db' not in g:
-            g.db = mysql.connector.connect(**DB_CONFIG)
-        return g.db
-    except Error as e:
-        print(f"Erro ao conectar ao MySQL (Campanha): {e}")
-        return None
-
-def close_db_connection(e=None):
-    """ Fecha a conexão do módulo CAMPANHA (g.db) """
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
 
 def create_tables():
     """ Cria APENAS a tabela dim_campanha """

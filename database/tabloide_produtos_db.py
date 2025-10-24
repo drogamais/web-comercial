@@ -1,8 +1,7 @@
 # database/tabloide_produtos_db.py
 
 from mysql.connector import Error
-# Importa a conexão do módulo principal de tabloide
-from database.tabloide_db import get_db_connection
+from database.common_db import get_db_connection
 
 DIM_TABLOIDE_TABLE = "dim_tabloide"
 FAT_PRODUTO_TABLE = "fat_tabloide_produto"

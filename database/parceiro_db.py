@@ -1,23 +1,9 @@
-import mysql.connector
+# database/parceiro_db.py
+
 from mysql.connector import Error
-from flask import g
-from config import DB_CONFIG
+from database.common_db import get_db_connection
 
 DIM_PARCEIRO_TABLE = "bronze_parceiros"
-
-def get_db_connection():
-    try:
-        if 'db_parceiro' not in g: # Nome único
-            g.db_parceiro = mysql.connector.connect(**DB_CONFIG)
-        return g.db_parceiro
-    except Error as e:
-        print(f"Erro ao conectar ao MySQL (Parceiro): {e}")
-        return None
-
-def close_db_connection(e=None):
-    db = g.pop('db_parceiro', None)
-    if db is not None:
-        db.close()
 
 def create_tables():
     """

@@ -1,39 +1,46 @@
 # database/common_db.py
+
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import Error, pooling # 1. IMPORTAR POOLING
 from flask import g
 from config import DB_CONFIG # Precisa importar a configuração
 
-# --- NOVAS FUNÇÕES PARA VALIDAR GTIN NO dbDrogamais ---
+# --- CRIAR O POOL PRINCIPAL ---
+# (Usando a configuração padrão do config.py, que já aponta para dbDrogamais)
+try:
+    main_pool = mysql.connector.pooling.MySQLConnectionPool(
+        pool_name="main_pool", # Nome genérico
+        pool_size=10, # Talvez aumentar um pouco se for compartilhado
+        **DB_CONFIG
+    )
+except Error as e:
+    print(f"Erro ao criar o pool de conexões principal: {e}")
+    main_pool = None
+# --- FIM ---
 
-def get_drogamais_db_connection():
-    """
-    Cria uma nova conexão de banco de dados especificamente para o dbDrogamais.
-    """
+# --- FUNÇÃO PRINCIPAL PARA OBTER CONEXÃO ---
+def get_db_connection():
+    """Obtém uma conexão do pool principal."""
     try:
-        config_drogamais = {
-            "user": DB_CONFIG.get("user"),
-            "password": DB_CONFIG.get("password"),
-            "host": DB_CONFIG.get("host"),
-            "port": DB_CONFIG.get("port", 3306), # Usa 3306 como padrão
-            "database": "dbDrogamais", # CORRIGIDO AQUI
-            "collation": "utf8mb4_general_ci"
-        }
-
-        if 'db_drogamais' not in g:
-            # Conecta usando a configuração limpa
-            g.db_drogamais = mysql.connector.connect(**config_drogamais)
-        return g.db_drogamais
-        
+        # Usar uma chave genérica em 'g'
+        if 'db_conn' not in g:
+            if main_pool is None:
+                 raise Error("Pool de conexões 'main_pool' não está disponível.")
+            g.db_conn = main_pool.get_connection()
+        return g.db_conn
     except Error as e:
-        print(f"Erro ao conectar ao dbDrogamais: {e}")
+        print(f"Erro ao obter conexão do pool principal: {e}")
         return None
+# --- FIM ---
 
-def close_drogamais_db_connection(e=None):
-    """ Fecha a conexão específica do dbDrogamais """
-    db = g.pop('db_drogamais', None)
+# --- FUNÇÃO PRINCIPAL PARA FECHAR/DEVOLVER CONEXÃO ---
+def close_db_connection(e=None):
+    """Devolve a conexão principal ao pool."""
+    db = g.pop('db_conn', None)
     if db is not None:
         db.close()
+# --- FIM ---
+
 
 def validate_gtins_in_external_db(gtin_list):
     """
@@ -43,7 +50,7 @@ def validate_gtins_in_external_db(gtin_list):
     if not gtin_list:
         return set(), None
 
-    conn = get_drogamais_db_connection()
+    conn = get_db_connection()
     if conn is None:
         return None, "Não foi possível conectar ao banco de dados dbDrogamais."
 
@@ -79,7 +86,7 @@ def get_codigo_interno_map_from_gtins(gtin_list):
     if not gtin_list:
         return {}, None
 
-    conn = get_drogamais_db_connection()
+    conn = get_db_connection()
     if conn is None:
         return None, "Não foi possível conectar ao banco de dados dbDrogamais."
 

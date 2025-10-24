@@ -1,8 +1,7 @@
 # database/campanha_produtos_db.py
 
 from mysql.connector import Error
-# Importa a conexão do módulo principal de campanha
-from database.campanha_db import get_db_connection
+from database.common_db import get_db_connection
 
 DIM_CAMPANHA_TABLE = "dim_campanha"
 FAT_PRODUTO_TABLE = "fat_campanha_produto"

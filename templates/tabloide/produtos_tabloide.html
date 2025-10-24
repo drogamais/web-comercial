@@ -10,9 +10,6 @@
 {% block content %}
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>Gerenciar Produtos do Tabloide: {{ tabloide.nome }}</h1>
-        <a href="{{ url_for('tabloide.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
-            &#x2B07; Baixar Modelo da Planilha
-        </a>
 
         <div style="display: flex; gap: 15px; margin-top: 20px;">
             <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60; min-width: 150px;">

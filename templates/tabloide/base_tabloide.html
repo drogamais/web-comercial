@@ -25,7 +25,12 @@
     </div>
 
     <div class="container">
-        <nav class="navbar">
+        <nav class="navbar" style="align-items: center; justify-content: space-between;">
+            <div>
+                <a href="{{ url_for('tabloide.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
+                    &#x2B07; Baixar Modelo Tabloide
+                </a>
+            </div>
             <div class="dropdown">
                 <button class="dropbtn">Menu</button>
                 <div id="myDropdown" class="dropdown-content">

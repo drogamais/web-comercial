@@ -28,7 +28,7 @@ def create_product_table():
                 preco_desconto_cliente DECIMAL(10, 2),
                 preco_app DECIMAL(10, 2),
                 tipo_regra VARCHAR(100),
-                data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
                 FOREIGN KEY (campanha_id) REFERENCES {DIM_TABLOIDE_TABLE}(id) ON DELETE CASCADE
             )

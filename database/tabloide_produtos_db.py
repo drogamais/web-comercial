@@ -4,17 +4,17 @@ from mysql.connector import Error
 from database.common_db import get_db_connection
 
 DIM_TABLOIDE_TABLE = "dim_tabloide"
-FAT_PRODUTO_TABLE = "fat_tabloide_produto"
+DIM_TABLOIDE_PRODUTO_TABLE = "dim_tabloide_produto"
 
 def create_product_table():
-    """ Cria APENAS a tabela fat_tabloide_produto """
+    """ Cria APENAS a tabela dim_tabloide_produto """
     conn = get_db_connection()
     if conn is None: return
     cursor = conn.cursor()
     try:
         # Tabela 'produtos_tabloide' (Schema ATUALIZADO)
         cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS {FAT_PRODUTO_TABLE} (
+            CREATE TABLE IF NOT EXISTS {DIM_TABLOIDE_PRODUTO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 campanha_id INT NOT NULL,
                 codigo_barras VARCHAR(50),
@@ -34,7 +34,7 @@ def create_product_table():
         """)
         conn.commit()
     except Error as e:
-        print(f"Erro ao criar tabela {FAT_PRODUTO_TABLE} (Tabloide): {e}")
+        print(f"Erro ao criar tabela {DIM_TABLOIDE_PRODUTO_TABLE} (Tabloide): {e}")
     finally:
         cursor.close()
 
@@ -46,7 +46,7 @@ def add_products_bulk(produtos):
     cursor = conn.cursor()
     # SQL ATUALIZADO
     sql = f"""
-        INSERT INTO {FAT_PRODUTO_TABLE} (
+        INSERT INTO {DIM_TABLOIDE_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_interno, descricao, laboratorio, 
             preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
         )
@@ -65,7 +65,7 @@ def add_products_bulk(produtos):
 def get_products_by_campaign_id(campanha_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute(f"""SELECT * FROM {FAT_PRODUTO_TABLE} WHERE campanha_id = %s""", (campanha_id,))
+    cursor.execute(f"""SELECT * FROM {DIM_TABLOIDE_PRODUTO_TABLE} WHERE campanha_id = %s""", (campanha_id,))
     return cursor.fetchall()
 
 def add_single_product(dados_produto):
@@ -73,7 +73,7 @@ def add_single_product(dados_produto):
     cursor = conn.cursor()
     # SQL ATUALIZADO
     sql = f"""
-        INSERT INTO {FAT_PRODUTO_TABLE} (
+        INSERT INTO {DIM_TABLOIDE_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_interno, descricao, laboratorio, 
             preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
         )
@@ -94,7 +94,7 @@ def update_products_in_bulk(produtos_para_atualizar):
     cursor = conn.cursor()
     # SQL ATUALIZADO
     sql = f"""
-        UPDATE {FAT_PRODUTO_TABLE} SET
+        UPDATE {DIM_TABLOIDE_PRODUTO_TABLE} SET
             codigo_barras = %s, codigo_interno = %s, descricao = %s, laboratorio = %s, 
             preco_normal = %s, preco_desconto = %s, preco_desconto_cliente = %s, preco_app = %s, tipo_regra = %s
         WHERE id = %s
@@ -113,7 +113,7 @@ def delete_products_in_bulk(ids_para_deletar):
     conn = get_db_connection()
     cursor = conn.cursor()
     format_strings = ','.join(['%s'] * len(ids_para_deletar))
-    sql = f"""DELETE FROM {FAT_PRODUTO_TABLE} WHERE id IN ({format_strings})"""
+    sql = f"""DELETE FROM {DIM_TABLOIDE_PRODUTO_TABLE} WHERE id IN ({format_strings})"""
     try:
         cursor.execute(sql, tuple(ids_para_deletar))
         conn.commit()

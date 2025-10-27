@@ -39,6 +39,7 @@ def upload_page():
                     'GTIN': 'codigo_barras',
                     'DESCRIÇÃO': 'descricao',
                     'LABORATÓRIO': 'laboratorio',
+                    'TIPO DE PREÇO': 'tipo_preco',
                     'PREÇO NORMAL': 'preco_normal',
                     'PREÇO DESCONTO GERAL': 'preco_desconto',
                     'PREÇO DESCONTO CLIENTE+': 'preco_desconto_cliente',
@@ -102,6 +103,7 @@ def upload_page():
                         ci, # Coluna nova
                         row.get('descricao'),
                         row.get('laboratorio'),
+                        row.get('tipo_preco'),
                         row.get('preco_normal'),
                         row.get('preco_desconto'),
                         row.get('preco_desconto_cliente'),
@@ -158,6 +160,7 @@ def adicionar_produto(campanha_id):
             ci, # Coluna nova
             request.form.get('descricao'),
             request.form.get('laboratorio') or None,
+            request.form.get('tipo_preco') or None,
             request.form.get('preco_normal') or None,
             request.form.get('preco_desconto') or None,
             request.form.get('preco_desconto_cliente') or None,
@@ -209,6 +212,7 @@ def atualizar_produtos(campanha_id):
             ci, # Coluna nova
             request.form.get(f'descricao_{pid}'),
             request.form.get(f'laboratorio_{pid}') or None,
+            request.form.get(f'tipo_preco_{pid}') or None,
             request.form.get(f'preco_normal_{pid}') or None,
             request.form.get(f'preco_desconto_{pid}') or None,
             request.form.get(f'preco_desconto_cliente_{pid}') or None,

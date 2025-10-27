@@ -22,6 +22,7 @@ def create_product_table():
                 descricao VARCHAR(255),
                 
                 laboratorio VARCHAR(255),
+                tipo_preco VARCHAR(100) DEFAULT NULL,
                 preco_normal DECIMAL(10, 2),
                 preco_desconto DECIMAL(10, 2),
                 preco_desconto_cliente DECIMAL(10, 2),
@@ -48,9 +49,9 @@ def add_products_bulk(produtos):
     sql = f"""
         INSERT INTO {DIM_TABLOIDE_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_interno, descricao, laboratorio, 
-            preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
+            tipo_preco, preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.executemany(sql, produtos)
@@ -75,9 +76,9 @@ def add_single_product(dados_produto):
     sql = f"""
         INSERT INTO {DIM_TABLOIDE_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_interno, descricao, laboratorio, 
-            preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
+            tipo_preco, preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.execute(sql, dados_produto)
@@ -96,7 +97,7 @@ def update_products_in_bulk(produtos_para_atualizar):
     sql = f"""
         UPDATE {DIM_TABLOIDE_PRODUTO_TABLE} SET
             codigo_barras = %s, codigo_interno = %s, descricao = %s, laboratorio = %s, 
-            preco_normal = %s, preco_desconto = %s, preco_desconto_cliente = %s, preco_app = %s, tipo_regra = %s
+            tipo_preco = %s, preco_normal = %s, preco_desconto = %s, preco_desconto_cliente = %s, preco_app = %s, tipo_regra = %s
         WHERE id = %s
     """
     try:

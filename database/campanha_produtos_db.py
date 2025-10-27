@@ -16,9 +16,10 @@ def create_product_table():
             CREATE TABLE IF NOT EXISTS {DIM_CAMPANHA_PRODUTO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 campanha_id INT NOT NULL,
-                codigo_barras VARCHAR(50),
-                codigo_interno VARCHAR(50) DEFAULT NULL,
-                descricao VARCHAR(255),
+                codigo_barras VARCHAR(14),
+                codigo_barras_normalizado VARCHAR(14) DEFAULT NULL,
+                codigo_interno VARCHAR(14) DEFAULT NULL,
+                descricao TEXT,
                 pontuacao INT,
                 preco_normal DECIMAL(10, 2),
                 preco_desconto DECIMAL(10, 2),
@@ -29,9 +30,16 @@ def create_product_table():
             )
         """
         cursor.execute(sql_create_fact)
+        # --- Adicionar coluna se não existir (para bancos já criados) ---
+        cursor.execute(f"""
+            ALTER TABLE {DIM_CAMPANHA_PRODUTO_TABLE}
+            ADD COLUMN IF NOT EXISTS codigo_barras_normalizado VARCHAR(14) DEFAULT NULL
+            AFTER codigo_barras;
+        """)
+        # -----------------------------------------------------------------
         conn.commit()
     except Error as e:
-        print(f"Erro ao criar tabela {DIM_CAMPANHA_PRODUTO_TABLE}: {e}")
+        print(f"Erro ao criar/alterar tabela {DIM_CAMPANHA_PRODUTO_TABLE}: {e}")
     finally:
         cursor.close()
 
@@ -42,12 +50,13 @@ def create_product_table():
 def add_products_bulk(produtos):
     conn = get_db_connection()
     cursor = conn.cursor()
+    # Adicionado codigo_barras_normalizado
     sql = f"""
         INSERT INTO {DIM_CAMPANHA_PRODUTO_TABLE} (
-            campanha_id, codigo_barras, codigo_interno, descricao, pontuacao, 
+            campanha_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, pontuacao,
             preco_normal, preco_desconto, rebaixe, qtd_limite
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.executemany(sql, produtos)
@@ -62,6 +71,7 @@ def add_products_bulk(produtos):
 def get_products_by_campaign_id(campanha_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+    # Seleciona a nova coluna também, embora não seja exibida diretamente no HTML padrão
     cursor.execute(f"""SELECT * FROM {DIM_CAMPANHA_PRODUTO_TABLE} WHERE campanha_id = %s""", (campanha_id,))
     return cursor.fetchall()
 
@@ -69,12 +79,13 @@ def add_single_product(dados_produto):
     """Adiciona um único produto ao banco de dados."""
     conn = get_db_connection()
     cursor = conn.cursor()
+    # Adicionado codigo_barras_normalizado
     sql = f"""
         INSERT INTO {DIM_CAMPANHA_PRODUTO_TABLE} (
-            campanha_id, codigo_barras, codigo_interno, descricao, pontuacao, 
+            campanha_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, pontuacao,
             preco_normal, preco_desconto, rebaixe, qtd_limite
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     try:
         cursor.execute(sql, dados_produto)
@@ -90,9 +101,10 @@ def update_products_in_bulk(produtos_para_atualizar):
     """Atualiza múltiplos produtos no banco de dados."""
     conn = get_db_connection()
     cursor = conn.cursor()
+    # Adicionado codigo_barras_normalizado
     sql = f"""
         UPDATE {DIM_CAMPANHA_PRODUTO_TABLE} SET
-            codigo_barras = %s, codigo_interno = %s, descricao = %s, pontuacao = %s,
+            codigo_barras = %s, codigo_barras_normalizado = %s, codigo_interno = %s, descricao = %s, pontuacao = %s,
             preco_normal = %s, preco_desconto = %s, rebaixe = %s, qtd_limite = %s
         WHERE id = %s
     """

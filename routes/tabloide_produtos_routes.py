@@ -5,19 +5,26 @@ import numpy as np
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, jsonify
 )
-import database.tabloide_db as db_tabloide  # Para listar tabloides
-import database.tabloide_produtos_db as db_tabloide_produtos # Para gerenciar produtos
-import database.common_db as db_common # Para validar GTIN e Cód. Interno
+import database.tabloide_db as db_tabloide
+import database.tabloide_produtos_db as db_tabloide_produtos
+import database.common_db as db_common
 from utils import allowed_file
 
-# Cria o Blueprint de Produtos de Tabloide
 tabloide_produtos_bp = Blueprint(
-    'tabloide_produtos', # Nome do blueprint (usado em url_for)
+    'tabloide_produtos',
     __name__,
     template_folder='templates',
     static_folder='static',
-    url_prefix='/tabloide' # Mesmo prefixo do pai
+    url_prefix='/tabloide'
 )
+
+# --- Função auxiliar para normalizar código de barras ---
+def normalize_barcode(barcode):
+    if barcode and isinstance(barcode, str) and barcode.strip():
+        # Remove espaços extras e preenche com zeros à esquerda até 14 dígitos
+        return barcode.strip().zfill(14)
+    return None
+# --------------------------------------------------------
 
 
 @tabloide_produtos_bp.route('/upload', methods=['GET', 'POST'])
@@ -36,23 +43,20 @@ def upload_page():
         if file and allowed_file(file.filename):
             try:
                 column_map = {
-                    'GTIN': 'codigo_barras',
-                    'DESCRIÇÃO': 'descricao',
-                    'LABORATÓRIO': 'laboratorio',
-                    'TIPO DE PREÇO': 'tipo_preco',
-                    'PREÇO NORMAL': 'preco_normal',
-                    'PREÇO DESCONTO GERAL': 'preco_desconto',
-                    'PREÇO DESCONTO CLIENTE+': 'preco_desconto_cliente',
-                    'PREÇO APP': 'preco_app',
-                    'TIPO DE REGRA': 'tipo_regra'
+                    'GTIN': 'codigo_barras', 'DESCRIÇÃO': 'descricao', 'LABORATÓRIO': 'laboratorio',
+                    'TIPO DE PREÇO': 'tipo_preco', 'PREÇO NORMAL': 'preco_normal',
+                    'PREÇO DESCONTO GERAL': 'preco_desconto', 'PREÇO DESCONTO CLIENTE+': 'preco_desconto_cliente',
+                    'PREÇO APP': 'preco_app', 'TIPO DE REGRA': 'tipo_regra'
                 }
 
                 try:
+                    # Garante leitura como string
                     df = pd.read_excel(file, sheet_name='Todos', dtype={'GTIN': str})
                 except Exception as e:
                     flash(f'Erro ao ler a planilha. Verifique se a aba "Todos" existe e se a coluna GTIN está presente. (Erro: {e})', 'danger')
                     return redirect(url_for('tabloide_produtos.upload_page'))
 
+                # Normalização dos nomes das colunas (mantido)
                 df.columns = (
                     df.columns.astype(str)
                     .str.replace(r'\s+', ' ', regex=True)
@@ -63,7 +67,6 @@ def upload_page():
 
                 required_source_cols = list(column_map.keys())
                 missing_cols = [col for col in required_source_cols if col not in df.columns]
-
                 if missing_cols:
                     flash(f'A planilha (aba "Todos") não contém todas as colunas esperadas. Faltando: {", ".join(missing_cols)}', 'danger')
                     return redirect(url_for('tabloide_produtos.upload_page'))
@@ -71,36 +74,48 @@ def upload_page():
                 df = df.rename(columns=column_map)
                 df = df.replace({np.nan: None})
 
-                cols_to_numeric = ['preco_normal', 'preco_desconto', 'preco_desconto_cliente']
+                # Conversão para numérico (mantido)
+                cols_to_numeric = ['preco_normal', 'preco_desconto', 'preco_desconto_cliente', 'preco_app']
                 for col in cols_to_numeric:
                     if col in df.columns:
+                        # errors='coerce' transforma erros em NaN, que depois viram None
                         df[col] = pd.to_numeric(df[col], errors='coerce').replace({np.nan: None})
 
-                # --- LÓGICA DE BUSCA DO CODIGO_INTERNO ---
-                gtins_raw = [g for g in df['codigo_barras'].tolist() if g and g.strip()]
-                if gtins_raw:
-                    gtins_padded = [g.zfill(14) for g in gtins_raw]
-                    map_padded_to_raw = {padded: raw for padded, raw in zip(gtins_padded, gtins_raw)}
-                    
-                    ci_map_padded, err = db_common.get_codigo_interno_map_from_gtins(gtins_padded)
+                # --- LÓGICA DE BUSCA DO CODIGO_INTERNO E NORMALIZAÇÃO ---
+                gtins_raw_list = []
+                gtins_normalizados_map = {} # Mapa raw -> normalizado
+                for g in df['codigo_barras'].tolist():
+                    g_str = str(g) if g is not None else None
+                    if g_str and g_str.strip():
+                        gtins_raw_list.append(g_str)
+                        normalized = normalize_barcode(g_str)
+                        if normalized:
+                            gtins_normalizados_map[g_str] = normalized
+
+                gtins_para_buscar = list(gtins_normalizados_map.values()) # Apenas normalizados válidos
+
+                if gtins_para_buscar:
+                    ci_map_normalizado, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
                     if err:
                         flash(f'Erro ao buscar códigos internos: {err}', 'warning')
-                        ci_map_padded = {}
-                    
-                    ci_map_raw = {map_padded_to_raw[p]: ci for p, ci in ci_map_padded.items() if p in map_padded_to_raw}
+                        ci_map_normalizado = {}
                 else:
-                    ci_map_raw = {}
+                    ci_map_normalizado = {}
                 # --- FIM DA LÓGICA ---
 
                 produtos_para_inserir = []
                 for _, row in df.iterrows():
                     cb_raw = row.get('codigo_barras')
-                    ci = ci_map_raw.get(cb_raw)
+                    cb_raw_str = str(cb_raw) if cb_raw is not None else None
+                    cb_normalizado = normalize_barcode(cb_raw_str)
+                    ci = ci_map_normalizado.get(cb_normalizado) if cb_normalizado else None
 
+                    # Adiciona cb_normalizado à tupla
                     produtos_para_inserir.append((
                         tabloide_id,
-                        cb_raw,
-                        ci, # Coluna nova
+                        cb_raw_str,
+                        cb_normalizado, # <-- CÓDIGO NORMALIZADO
+                        ci, # Código interno
                         row.get('descricao'),
                         row.get('laboratorio'),
                         row.get('tipo_preco'),
@@ -122,12 +137,16 @@ def upload_page():
 
             except Exception as e:
                 flash(f'Ocorreu um erro inesperado ao processar o arquivo: {e}', 'danger')
-            
+
             return redirect(url_for('tabloide_produtos.upload_page'))
 
     # GET
-    tabloides = db_tabloide.get_active_campaigns_for_upload()
-    return render_template('tabloide/upload_tabloide.html', active_page='upload', tabloides=tabloides)
+    tabloides = db_tabloide.get_all_campaigns() # Busca sempre todos
+    return render_template(
+        'tabloide/upload_tabloide.html',
+        active_page='upload',
+        tabloides=tabloides
+    )
 
 
 @tabloide_produtos_bp.route('/<int:campanha_id>/produtos')
@@ -145,19 +164,21 @@ def produtos_por_tabloide(campanha_id):
 def adicionar_produto(campanha_id):
     try:
         cb_raw = request.form.get('codigo_barras')
+        cb_normalizado = normalize_barcode(cb_raw) # <-- NORMALIZA
         ci = None
 
-        if cb_raw and cb_raw.strip():
-            cb_padded = cb_raw.strip().zfill(14)
-            ci_map_padded, err = db_common.get_codigo_interno_map_from_gtins([cb_padded])
+        if cb_normalizado: # Busca CI com código normalizado
+            ci_map_normalizado, err = db_common.get_codigo_interno_map_from_gtins([cb_normalizado])
             if err:
                 flash(f'Aviso: Não foi possível buscar o Cód. Interno: {err}', 'warning')
-            ci = ci_map_padded.get(cb_padded)
+            ci = ci_map_normalizado.get(cb_normalizado)
 
+        # Adiciona cb_normalizado à tupla
         dados_produto = (
             campanha_id,
             cb_raw,
-            ci, # Coluna nova
+            cb_normalizado, # <-- CÓDIGO NORMALIZADO
+            ci, # Código interno
             request.form.get('descricao'),
             request.form.get('laboratorio') or None,
             request.form.get('tipo_preco') or None,
@@ -185,31 +206,31 @@ def atualizar_produtos(campanha_id):
         return redirect(url_for('tabloide_produtos.produtos_por_tabloide', campanha_id=campanha_id))
 
     gtins_raw_dict = {pid: request.form.get(f'codigo_barras_{pid}') for pid in selecionados}
-    gtins_raw_list = [g for g in gtins_raw_dict.values() if g and g.strip()]
-    
-    if gtins_raw_list:
-        gtins_padded = [g.zfill(14) for g in gtins_raw_list]
-        map_padded_to_raw = {padded: raw for padded, raw in zip(gtins_padded, gtins_raw_list)}
-        ci_map_padded, err = db_common.get_codigo_interno_map_from_gtins(gtins_padded)
+    # Calcula normalizados para todos os selecionados
+    gtins_normalizados_map = {pid: normalize_barcode(gtins_raw_dict.get(pid)) for pid in selecionados}
+    gtins_para_buscar = [norm for norm in gtins_normalizados_map.values() if norm] # Apenas normalizados válidos
+
+    if gtins_para_buscar:
+        # Busca CIs usando os códigos normalizados
+        ci_map_normalizado, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
         if err:
             flash(f'Erro ao buscar códigos internos: {err}', 'warning')
-            ci_map_padded = {}
-        ci_map_raw = {map_padded_to_raw[p]: ci for p, ci in ci_map_padded.items() if p in map_padded_to_raw}
+            ci_map_normalizado = {}
     else:
-        ci_map_raw = {}
+        ci_map_normalizado = {}
 
     produtos_para_atualizar = []
     for pid in selecionados:
         cb_raw = gtins_raw_dict.get(pid)
-        ci = ci_map_raw.get(cb_raw)
-        
-        if ci is None:
-             if not cb_raw or not cb_raw.strip():
-                 ci = None
+        cb_normalizado = gtins_normalizados_map.get(pid) # Pega o normalizado já calculado
+        # Busca o CI correspondente ao código normalizado
+        ci = ci_map_normalizado.get(cb_normalizado) if cb_normalizado else None
 
+        # Adiciona cb_normalizado à tupla para o UPDATE
         produtos_para_atualizar.append((
             cb_raw,
-            ci, # Coluna nova
+            cb_normalizado, # <-- CÓDIGO NORMALIZADO
+            ci, # Código interno
             request.form.get(f'descricao_{pid}'),
             request.form.get(f'laboratorio_{pid}') or None,
             request.form.get(f'tipo_preco_{pid}') or None,
@@ -218,7 +239,7 @@ def atualizar_produtos(campanha_id):
             request.form.get(f'preco_desconto_cliente_{pid}') or None,
             request.form.get(f'preco_app_{pid}') or None,
             request.form.get(f'tipo_regra_{pid}') or None,
-            pid
+            pid # ID do produto no final para o WHERE
         ))
 
     rowcount, error = db_tabloide_produtos.update_products_in_bulk(produtos_para_atualizar)
@@ -245,20 +266,28 @@ def deletar_produtos(campanha_id):
 
 @tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/validar_gtins', methods=['POST'])
 def validar_gtins_tabloide(tabloide_id):
+    # Esta função já trabalha com a normalização internamente ao chamar db_common.validate_gtins_in_external_db
+    # Nenhuma alteração necessária aqui.
     data = request.get_json()
     gtins_raw = data.get('gtins', [])
 
     if not gtins_raw:
         return jsonify({"error": "Nenhum GTIN enviado"}), 400
 
-    gtins_para_validar_raw = [gtin for gtin in gtins_raw if gtin and gtin.strip()]
+    gtins_para_validar_raw = [gtin for gtin in gtins_raw if gtin and str(gtin).strip()]
     if not gtins_para_validar_raw:
         return jsonify({"valid_gtins": []})
 
-    gtins_padded = [g.zfill(14) for g in gtins_para_validar_raw]
-    map_padded_to_raw = {padded: raw for padded, raw in zip(gtins_padded, gtins_para_validar_raw)}
+    # Normaliza antes de validar e mapeia de volta
+    gtins_padded = [normalize_barcode(str(g)) for g in gtins_para_validar_raw]
+    gtins_padded_validos = [g for g in gtins_padded if g]
 
-    validos_padded, error = db_common.validate_gtins_in_external_db(gtins_padded) 
+    if not gtins_padded_validos:
+         return jsonify({"valid_gtins": []})
+
+    map_padded_to_raw = {normalize_barcode(str(raw)): str(raw) for raw in gtins_para_validar_raw if normalize_barcode(str(raw))}
+
+    validos_padded, error = db_common.validate_gtins_in_external_db(gtins_padded_validos)
 
     if error:
         error_message = f"Erro ao validar GTINs no banco externo: {error}"

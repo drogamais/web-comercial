@@ -6,7 +6,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, jsonify
 )
 import database.campanha_db as db_campanha
-import database.campanha_produtos_db as db_campanha_produtos
+import database.campanha_produtos_db as db_campanha_produtos # <-- Importado para deletar
 import database.common_db as db_common
 from utils import allowed_file
 
@@ -21,7 +21,6 @@ campanha_produtos_bp = Blueprint(
 # --- Função auxiliar para normalizar código de barras ---
 def normalize_barcode(barcode):
     if barcode and isinstance(barcode, str) and barcode.strip():
-        # Remove espaços extras e preenche com zeros à esquerda até 14 dígitos
         return barcode.strip().zfill(14)
     return None
 # --------------------------------------------------------
@@ -41,12 +40,23 @@ def upload_page():
 
         if file and allowed_file(file.filename):
             try:
+                # -----------------------------------------------------------
+                # PASSO 1: DELETAR PRODUTOS EXISTENTES PARA ESTA CAMPANHA
+                # -----------------------------------------------------------
+                deleted_count, delete_error = db_campanha_produtos.delete_products_by_campaign_id(campanha_id)
+                if delete_error:
+                    flash(f'Erro ao limpar produtos antigos da campanha: {delete_error}', 'danger')
+                    return redirect(url_for('campanha_produtos.upload_page'))
+                if deleted_count > 0:
+                    flash(f'{deleted_count} produto(s) antigo(s) removido(s) da campanha.', 'info')
+                # -----------------------------------------------------------
+
+                # PASSO 2: Ler e processar a nova planilha
                 column_map = {
                     'CÓDIGO DE BARRAS': 'codigo_barras', 'DESCRIÇÃO': 'descricao', 'PONTUAÇÃO': 'pontuacao',
                     'PREÇO NORMAL': 'preco_normal', 'PREÇO COM DESCONTO': 'preco_desconto',
                     'REBAIXE': 'rebaixe', 'QTD LIMITE': 'qtd_limite'
                 }
-                # Garante leitura como string para evitar problemas com .zfill
                 df = pd.read_excel(file, dtype={'CÓDIGO DE BARRAS': str}).rename(columns=column_map)
                 df = df.replace({np.nan: None})
 
@@ -57,20 +67,18 @@ def upload_page():
 
                 # --- LÓGICA DE BUSCA DO CODIGO_INTERNO E NORMALIZAÇÃO ---
                 gtins_raw_list = []
-                gtins_normalizados_map = {} # Mapa raw -> normalizado
+                gtins_normalizados_map = {}
                 for g in df['codigo_barras'].tolist():
-                    # Trata o caso de g ser None ou não ser string antes de processar
                     g_str = str(g) if g is not None else None
                     if g_str and g_str.strip():
                         gtins_raw_list.append(g_str)
                         normalized = normalize_barcode(g_str)
-                        if normalized: # Só adiciona se a normalização for bem sucedida
+                        if normalized:
                             gtins_normalizados_map[g_str] = normalized
 
-                gtins_para_buscar = list(gtins_normalizados_map.values()) # Apenas normalizados válidos para busca
+                gtins_para_buscar = list(gtins_normalizados_map.values())
 
                 if gtins_para_buscar:
-                    # Busca CI usando os códigos já normalizados
                     ci_map_normalizado, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
                     if err:
                         flash(f'Erro ao buscar códigos internos: {err}', 'warning')
@@ -82,18 +90,15 @@ def upload_page():
                 produtos_para_inserir = []
                 for _, row in df.iterrows():
                     cb_raw = row.get('codigo_barras')
-                    cb_raw_str = str(cb_raw) if cb_raw is not None else None # Converte para string ou None
-                    cb_normalizado = normalize_barcode(cb_raw_str) # Calcula o normalizado
-
-                    # Busca código interno usando o código normalizado
+                    cb_raw_str = str(cb_raw) if cb_raw is not None else None
+                    cb_normalizado = normalize_barcode(cb_raw_str)
                     ci = ci_map_normalizado.get(cb_normalizado) if cb_normalizado else None
 
-                    # Adiciona cb_normalizado à tupla
                     produtos_para_inserir.append((
                         campanha_id,
-                        cb_raw_str, # Código original (string ou None)
-                        cb_normalizado, # <-- CÓDIGO NORMALIZADO (string ou None)
-                        ci, # Código interno
+                        cb_raw_str,
+                        cb_normalizado,
+                        ci,
                         row.get('descricao'),
                         row.get('pontuacao'),
                         row.get('preco_normal'),
@@ -102,24 +107,30 @@ def upload_page():
                         row.get('qtd_limite')
                     ))
 
+                # PASSO 3: Inserir os novos produtos
                 if produtos_para_inserir:
                     rowcount, error = db_campanha_produtos.add_products_bulk(produtos_para_inserir)
-                    if error: flash(f'Erro ao salvar produtos: {error}', 'danger')
-                    else: flash(f'{rowcount} produtos processados e salvos com sucesso!', 'success')
+                    if error:
+                        flash(f'Erro ao salvar novos produtos: {error}', 'danger')
+                    else:
+                        flash(f'{rowcount} novo(s) produto(s) processado(s) e salvo(s) com sucesso!', 'success')
                 else:
-                    flash('Nenhum produto encontrado na planilha.', 'warning')
+                    flash('Nenhum produto encontrado na nova planilha para inserir.', 'warning')
+
             except Exception as e:
                 flash(f'Ocorreu um erro ao processar o arquivo: {e}', 'danger')
+
             return redirect(url_for('campanha_produtos.upload_page'))
 
     # GET
-    campanhas = db_campanha.get_all_campaigns() # Busca sempre todas
+    campanhas = db_campanha.get_all_campaigns()
     return render_template(
         'campanha/upload_campanha.html',
         active_page='upload',
         campanhas=campanhas
     )
 
+# ... (Restante das funções: produtos_por_campanha, adicionar_produto, atualizar_produtos, deletar_produtos, validar_gtins permanecem iguais) ...
 
 @campanha_produtos_bp.route('/<int:campanha_id>/produtos')
 def produtos_por_campanha(campanha_id):
@@ -225,39 +236,29 @@ def deletar_produtos(campanha_id):
 
 @campanha_produtos_bp.route('/<int:campanha_id>/produtos/validar_gtins', methods=['POST'])
 def validar_gtins(campanha_id):
-    # Esta função já trabalha com a normalização internamente ao chamar db_common.validate_gtins_in_external_db
-    # Nenhuma alteração necessária aqui, pois ela valida o código que o usuário digitou (raw)
-    # contra os códigos normalizados no banco de dados externo.
     data = request.get_json()
     gtins_raw = data.get('gtins', [])
 
     if not gtins_raw:
         return jsonify({"error": "Nenhum GTIN enviado"}), 400
 
-    # Filtra apenas os GTINs não vazios para validação
     gtins_para_validar_raw = [gtin for gtin in gtins_raw if gtin and str(gtin).strip()]
 
     if not gtins_para_validar_raw:
-        return jsonify({"valid_gtins": []}) # Retorna lista vazia se não houver GTINs válidos para buscar
+        return jsonify({"valid_gtins": []})
 
-    # Normaliza os GTINs *antes* de enviar para a validação no banco externo
     gtins_padded = [normalize_barcode(str(g)) for g in gtins_para_validar_raw]
-    # Remove Nones que podem ter sido gerados por normalize_barcode
     gtins_padded_validos = [g for g in gtins_padded if g]
 
     if not gtins_padded_validos:
-         return jsonify({"valid_gtins": []}) # Retorna lista vazia se nenhum GTIN pode ser normalizado
+         return jsonify({"valid_gtins": []})
 
-    # Cria um mapa reverso de normalizado para raw para retornar os códigos originais válidos
     map_padded_to_raw = {normalize_barcode(str(raw)): str(raw) for raw in gtins_para_validar_raw if normalize_barcode(str(raw))}
-
-    # Valida os códigos normalizados no banco externo
     validos_padded, error = db_common.validate_gtins_in_external_db(gtins_padded_validos)
 
     if error:
         return jsonify({"error": error}), 500
 
-    # Mapeia de volta para os códigos raw originais que são válidos
     validos_raw = {map_padded_to_raw[padded_gtin] for padded_gtin in validos_padded if padded_gtin in map_padded_to_raw}
 
     return jsonify({"valid_gtins": list(validos_raw)})

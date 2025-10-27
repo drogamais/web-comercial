@@ -6,7 +6,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, jsonify
 )
 import database.tabloide_db as db_tabloide
-import database.tabloide_produtos_db as db_tabloide_produtos
+import database.tabloide_produtos_db as db_tabloide_produtos # <-- Importado para deletar
 import database.common_db as db_common
 from utils import allowed_file
 
@@ -21,7 +21,6 @@ tabloide_produtos_bp = Blueprint(
 # --- Função auxiliar para normalizar código de barras ---
 def normalize_barcode(barcode):
     if barcode and isinstance(barcode, str) and barcode.strip():
-        # Remove espaços extras e preenche com zeros à esquerda até 14 dígitos
         return barcode.strip().zfill(14)
     return None
 # --------------------------------------------------------
@@ -42,6 +41,18 @@ def upload_page():
 
         if file and allowed_file(file.filename):
             try:
+                # ---------------------------------------------------------
+                # PASSO 1: DELETAR PRODUTOS EXISTENTES PARA ESTE TABLOIDE
+                # ---------------------------------------------------------
+                deleted_count, delete_error = db_tabloide_produtos.delete_products_by_campaign_id(tabloide_id)
+                if delete_error:
+                    flash(f'Erro ao limpar produtos antigos do tabloide: {delete_error}', 'danger')
+                    return redirect(url_for('tabloide_produtos.upload_page'))
+                if deleted_count > 0:
+                    flash(f'{deleted_count} produto(s) antigo(s) removido(s) do tabloide.', 'info')
+                # ---------------------------------------------------------
+
+                # PASSO 2: Ler e processar a nova planilha
                 column_map = {
                     'GTIN': 'codigo_barras', 'DESCRIÇÃO': 'descricao', 'LABORATÓRIO': 'laboratorio',
                     'TIPO DE PREÇO': 'tipo_preco', 'PREÇO NORMAL': 'preco_normal',
@@ -50,13 +61,11 @@ def upload_page():
                 }
 
                 try:
-                    # Garante leitura como string
                     df = pd.read_excel(file, sheet_name='Todos', dtype={'GTIN': str})
                 except Exception as e:
                     flash(f'Erro ao ler a planilha. Verifique se a aba "Todos" existe e se a coluna GTIN está presente. (Erro: {e})', 'danger')
                     return redirect(url_for('tabloide_produtos.upload_page'))
 
-                # Normalização dos nomes das colunas (mantido)
                 df.columns = (
                     df.columns.astype(str)
                     .str.replace(r'\s+', ' ', regex=True)
@@ -74,16 +83,14 @@ def upload_page():
                 df = df.rename(columns=column_map)
                 df = df.replace({np.nan: None})
 
-                # Conversão para numérico (mantido)
                 cols_to_numeric = ['preco_normal', 'preco_desconto', 'preco_desconto_cliente', 'preco_app']
                 for col in cols_to_numeric:
                     if col in df.columns:
-                        # errors='coerce' transforma erros em NaN, que depois viram None
                         df[col] = pd.to_numeric(df[col], errors='coerce').replace({np.nan: None})
 
                 # --- LÓGICA DE BUSCA DO CODIGO_INTERNO E NORMALIZAÇÃO ---
                 gtins_raw_list = []
-                gtins_normalizados_map = {} # Mapa raw -> normalizado
+                gtins_normalizados_map = {}
                 for g in df['codigo_barras'].tolist():
                     g_str = str(g) if g is not None else None
                     if g_str and g_str.strip():
@@ -92,7 +99,7 @@ def upload_page():
                         if normalized:
                             gtins_normalizados_map[g_str] = normalized
 
-                gtins_para_buscar = list(gtins_normalizados_map.values()) # Apenas normalizados válidos
+                gtins_para_buscar = list(gtins_normalizados_map.values())
 
                 if gtins_para_buscar:
                     ci_map_normalizado, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
@@ -110,12 +117,11 @@ def upload_page():
                     cb_normalizado = normalize_barcode(cb_raw_str)
                     ci = ci_map_normalizado.get(cb_normalizado) if cb_normalizado else None
 
-                    # Adiciona cb_normalizado à tupla
                     produtos_para_inserir.append((
                         tabloide_id,
                         cb_raw_str,
-                        cb_normalizado, # <-- CÓDIGO NORMALIZADO
-                        ci, # Código interno
+                        cb_normalizado,
+                        ci,
                         row.get('descricao'),
                         row.get('laboratorio'),
                         row.get('tipo_preco'),
@@ -126,14 +132,15 @@ def upload_page():
                         row.get('tipo_regra')
                     ))
 
+                # PASSO 3: Inserir os novos produtos
                 if produtos_para_inserir:
                     rowcount, error = db_tabloide_produtos.add_products_bulk(produtos_para_inserir)
                     if error:
-                        flash(f'Erro ao salvar produtos: {error}', 'danger')
+                        flash(f'Erro ao salvar novos produtos: {error}', 'danger')
                     else:
-                        flash(f'{rowcount} produtos processados e salvos com sucesso!', 'success')
+                        flash(f'{rowcount} novo(s) produto(s) processado(s) e salvo(s) com sucesso!', 'success')
                 else:
-                    flash('Nenhum produto encontrado na planilha.', 'warning')
+                    flash('Nenhum produto encontrado na nova planilha para inserir.', 'warning')
 
             except Exception as e:
                 flash(f'Ocorreu um erro inesperado ao processar o arquivo: {e}', 'danger')
@@ -141,7 +148,7 @@ def upload_page():
             return redirect(url_for('tabloide_produtos.upload_page'))
 
     # GET
-    tabloides = db_tabloide.get_all_campaigns() # Busca sempre todos
+    tabloides = db_tabloide.get_all_campaigns()
     return render_template(
         'tabloide/upload_tabloide.html',
         active_page='upload',
@@ -266,8 +273,6 @@ def deletar_produtos(campanha_id):
 
 @tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/validar_gtins', methods=['POST'])
 def validar_gtins_tabloide(tabloide_id):
-    # Esta função já trabalha com a normalização internamente ao chamar db_common.validate_gtins_in_external_db
-    # Nenhuma alteração necessária aqui.
     data = request.get_json()
     gtins_raw = data.get('gtins', [])
 
@@ -278,7 +283,6 @@ def validar_gtins_tabloide(tabloide_id):
     if not gtins_para_validar_raw:
         return jsonify({"valid_gtins": []})
 
-    # Normaliza antes de validar e mapeia de volta
     gtins_padded = [normalize_barcode(str(g)) for g in gtins_para_validar_raw]
     gtins_padded_validos = [g for g in gtins_padded if g]
 
@@ -286,7 +290,6 @@ def validar_gtins_tabloide(tabloide_id):
          return jsonify({"valid_gtins": []})
 
     map_padded_to_raw = {normalize_barcode(str(raw)): str(raw) for raw in gtins_para_validar_raw if normalize_barcode(str(raw))}
-
     validos_padded, error = db_common.validate_gtins_in_external_db(gtins_padded_validos)
 
     if error:

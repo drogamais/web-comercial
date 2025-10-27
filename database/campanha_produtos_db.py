@@ -50,7 +50,6 @@ def create_product_table():
 def add_products_bulk(produtos):
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Adicionado codigo_barras_normalizado
     sql = f"""
         INSERT INTO {DIM_CAMPANHA_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, pontuacao,
@@ -71,7 +70,6 @@ def add_products_bulk(produtos):
 def get_products_by_campaign_id(campanha_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    # Seleciona a nova coluna também, embora não seja exibida diretamente no HTML padrão
     cursor.execute(f"""SELECT * FROM {DIM_CAMPANHA_PRODUTO_TABLE} WHERE campanha_id = %s""", (campanha_id,))
     return cursor.fetchall()
 
@@ -79,7 +77,6 @@ def add_single_product(dados_produto):
     """Adiciona um único produto ao banco de dados."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Adicionado codigo_barras_normalizado
     sql = f"""
         INSERT INTO {DIM_CAMPANHA_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, pontuacao,
@@ -101,7 +98,6 @@ def update_products_in_bulk(produtos_para_atualizar):
     """Atualiza múltiplos produtos no banco de dados."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Adicionado codigo_barras_normalizado
     sql = f"""
         UPDATE {DIM_CAMPANHA_PRODUTO_TABLE} SET
             codigo_barras = %s, codigo_barras_normalizado = %s, codigo_interno = %s, descricao = %s, pontuacao = %s,
@@ -119,8 +115,10 @@ def update_products_in_bulk(produtos_para_atualizar):
         cursor.close()
 
 def delete_products_in_bulk(ids_para_deletar):
-    """Deleta múltiplos produtos do banco de dados com base em seus IDs."""
+    """Deleta múltiplos produtos do banco de dados com base em seus IDs (lista de IDs)."""
     conn = get_db_connection()
+    if not ids_para_deletar: # Evita erro se a lista estiver vazia
+        return 0, None
     cursor = conn.cursor()
     format_strings = ','.join(['%s'] * len(ids_para_deletar))
     sql = f"""
@@ -133,5 +131,22 @@ def delete_products_in_bulk(ids_para_deletar):
     except Error as e:
         conn.rollback()
         return 0, str(e)
+    finally:
+        cursor.close()
+
+def delete_products_by_campaign_id(campanha_id):
+    """Deleta TODOS os produtos associados a um campanha_id."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sql = f"""
+        DELETE FROM {DIM_CAMPANHA_PRODUTO_TABLE} WHERE campanha_id = %s
+    """
+    try:
+        cursor.execute(sql, (campanha_id,))
+        conn.commit()
+        return cursor.rowcount, None # Retorna número de linhas deletadas e None (sem erro)
+    except Error as e:
+        conn.rollback()
+        return 0, str(e) # Retorna 0 linhas e a mensagem de erro
     finally:
         cursor.close()

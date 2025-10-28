@@ -203,3 +203,232 @@
 .modal-button-danger:hover {
     background-color: #c0392b;
 }
+
+/* --- LAYOUT COM SIDEBAR (COLAPSÁVEL POR HOVER) --- */
+body {
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar {
+    width: 60px; /* LARGURA COLAPSADA PADRÃO */
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #2c3e50;
+    padding-top: 0;
+    color: white;
+    overflow-x: hidden;
+    white-space: nowrap;
+    z-index: 1000;
+    box-sizing: border-box;
+    transition: width 0.3s ease;
+}
+
+/* NO HOVER: Expande a sidebar */
+.sidebar:hover {
+    width: 240px; /* LARGURA EXPANDIDA */
+}
+
+/* --- ÍCONE DE EXPANSÃO DA SIDEBAR --- */
+.sidebar-expand-icon {
+    position: absolute;
+    top: 50%; /* Centraliza verticalmente */
+    right: 5px; /* Posição à direita da barra colapsada */
+    transform: translateY(-50%);
+    color: #bdc3c7; /* Cor da seta */
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: opacity 0.3s ease, right 0.3s ease;
+    opacity: 1; /* Sempre visível */
+}
+
+/* Esconde o ícone quando a sidebar está expandida */
+.sidebar:hover .sidebar-expand-icon {
+    opacity: 0;
+    right: -20px; /* Move para fora da vista */
+}
+
+
+.main-content {
+    margin-left: 60px;
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f4f7f6;
+    min-height: 100vh;
+    box-sizing: border-box;
+    transition: margin-left 0.3s ease;
+}
+
+body:has(.sidebar:hover) .main-content {
+    margin-left: 240px;
+}
+
+/* --- HEADER --- */
+.sidebar-header {
+    padding: 0 20px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid #3a5068;
+    padding-top: 20px;
+    height: 90px;
+    box-sizing: border-box;
+    transition: padding 0.3s ease, height 0.3s ease;
+    position: relative; /* Para posicionar a seta */
+}
+
+/* Header no estado colapsado */
+.sidebar:not(:hover) .sidebar-header {
+    height: 60px;
+    padding-top: 15px;
+    padding-left: 0;
+    padding-right: 0;
+    text-align: center;
+}
+
+/* Títulos (span) */
+.sidebar-header .title-line-1 span,
+.sidebar-header .title-line-2 span {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* Títulos (span) no estado expandido */
+.sidebar:hover .sidebar-header .title-line-1 span,
+.sidebar:hover .sidebar-header .title-line-2 span {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.1s;
+}
+
+/* Títulos (p) */
+.sidebar-header .title-line-1 { font-size: 1.5em; font-weight: bold; color: #ffffff; margin: 0; }
+.sidebar-header .title-line-2 { font-size: 1em; color: #bdc3c7; margin: 0; }
+
+
+/* --- NAVEGAÇÃO (DROPDOWNS) --- */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding-top: 15px;
+}
+
+.sidebar-nav-group {
+    margin-bottom: 5px;
+}
+
+/* Botão que abre o dropdown */
+.sidebar-dropdown-toggle {
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 14px 20px;
+    font-size: 1em;
+    font-weight: bold;
+    color: #bdc3c7;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    box-sizing: border-box;
+    height: 45px;
+}
+.sidebar-dropdown-toggle:hover {
+    background-color: #3a5068;
+    color: #ecf0f1;
+}
+
+/* Texto dentro do botão (e links) */
+.sidebar-dropdown-toggle span,
+.sidebar-nav-group a span {
+    opacity: 0;
+    visibility: hidden;
+    margin-left: 10px;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* Texto (span) no estado expandido */
+.sidebar:hover .sidebar-dropdown-toggle span,
+.sidebar:hover .sidebar-nav-group a span {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.1s;
+}
+
+/* Seta indicadora (fechada) para os DROPDOWNS INTERNOS */
+.sidebar-dropdown-toggle::after {
+    content: '\25B8'; /* ▸ */
+    font-size: 0.8em;
+    transition: transform 0.3s ease, opacity 0.2s ease;
+    margin-left: auto;
+    opacity: 0; /* Escondida por padrão */
+    visibility: hidden;
+}
+
+/* Seta (::after) dos DROPDOWNS INTERNOS no estado expandido */
+.sidebar:hover .sidebar-dropdown-toggle::after {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.1s;
+}
+
+.sidebar-dropdown-toggle.active::after {
+    transform: rotate(90deg); /* ▾ */
+}
+.sidebar-dropdown-toggle.active {
+    color: #ffffff;
+}
+
+/* Submenu */
+.sidebar-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background-color: rgba(0,0,0,0.15);
+}
+
+/* Links normais e de submenu */
+.sidebar-nav-group a {
+    display: flex;
+    align-items: center;
+    color: #ecf0f1;
+    text-decoration: none;
+    padding: 12px 20px 12px 25px;
+    font-size: 1em;
+    transition: background-color 0.2s ease, border-left 0.2s ease;
+    border-left: 4px solid transparent;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.sidebar-submenu a {
+    padding-left: 35px;
+    font-size: 0.95em;
+}
+
+.sidebar-nav-group a:hover {
+    background-color: #3a5068;
+}
+
+.sidebar-nav-group a.active {
+    background-color: #34495e;
+    border-left: 4px solid #3498db;
+    font-weight: bold;
+}
+
+.sidebar-nav-group a[href*="index"] {
+    border-left-color: transparent !important;
+}
+
+.sidebar-nav-group-title {
+    display: none;
+}
+
+/* Esconde o antigo .navbar */
+.navbar {
+    display: none !important;
+}

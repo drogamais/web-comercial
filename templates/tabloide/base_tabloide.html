@@ -10,10 +10,54 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/drag_and_drop.css') }}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     {% block styles %}{% endblock %}
 </head>
 <body>
+
+    <nav class="sidebar">
+        <i class="fas fa-chevron-right sidebar-expand-icon"></i>
+        <div class="sidebar-header">
+            <p class="title-line-1"><span>Drogamais</span></p>
+            <p class="title-line-2"><span>Web Comercial</span></p>
+        </div>
+        <div class="sidebar-nav">
+            
+            <div class="sidebar-nav-group">
+                <button type="button" class="sidebar-dropdown-toggle">
+                    <span>Campanha</span> </button>
+                <div class="sidebar-submenu">
+                    <a href="{{ url_for('campanha_produtos.upload_page') }}"><span>Upload de Planilha</span></a>
+                    <a href="{{ url_for('campanha.gestao_campanhas') }}"><span>Gerenciar Campanhas</span></a>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav-group">
+                <button type="button" class="sidebar-dropdown-toggle">
+                    <span>Tabloide</span> </button>
+                <div class="sidebar-submenu">
+                    <a href="{{ url_for('tabloide_produtos.upload_page') }}" class="{{ 'active' if active_page == 'upload' else '' }}"><span>Upload de Planilha</span></a>
+                    <a href="{{ url_for('tabloide.gestao_tabloides') }}" class="{{ 'active' if active_page == 'tabloides' else '' }}"><span>Gerenciar Tabloides</span></a>
+                    <a href="{{ url_for('tabloide.download_modelo') }}" style="color: #3498db; font-size: 0.9em; border-left-color: transparent;"><span>&#x2B07; Baixar Modelo</span></a>
+                </div>
+            </div>
+
+            <div class="sidebar-nav-group">
+                <button type="button" class="sidebar-dropdown-toggle">
+                    <span>Parceiros</span> </button>
+                <div class="sidebar-submenu">
+                    <a href="{{ url_for('parceiro.gestao_parceiros') }}"><span>Gerenciar Parceiros</span></a>
+                </div>
+            </div>
+
+            <div class="sidebar-nav-group" style="margin-top: 20px; border-top: 1px solid #3a5068; padding-top: 10px;">
+                 <a href="{{ url_for('index') }}" style="border-left-color: transparent;"><span>&larr; Menu Principal</span></a>
+            </div>
+        </div>
+    </nav>
+
     <div id="assunto-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="margin-top: 0;">Descrição Completa</h2>
@@ -24,36 +68,24 @@
         </div>
     </div>
 
-    <div class="container">
-        <nav class="navbar" style="align-items: center; justify-content: space-between;">
-            <div>
-                <a href="{{ url_for('tabloide.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
-                    &#x2B07; Baixar Modelo Tabloide
-                </a>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Menu</button>
-                <div id="myDropdown" class="dropdown-content">
-                    <a href="{{ url_for('tabloide_produtos.upload_page') }}" class="{{ 'active' if active_page == 'upload' else '' }}">Upload de Planilha</a>
-                    <a href="{{ url_for('tabloide.gestao_tabloides') }}" class="{{ 'active' if active_page == 'tabloides' else '' }}">Gerenciar Tabloides</a>
-                    <a href="{{ url_for('index') }}" style="border-top: 1px solid #ddd; background-color: #f0f0f0;">&larr; Voltar ao Menu Principal</a>
-                </div>
-            </div>
-        </nav>
-
-        {% block content %}{% endblock %}
-    </div>
+    <main class="main-content">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
     {% block scripts %}
     <script src="{{ url_for('static', filename='js/drag_and_drop.js') }}"></script>
     {% endblock %}
+    
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.App && App.main && App.main.init) {
-                App.main.init();
+                // App.main.init(); 
             }
         });
     </script>

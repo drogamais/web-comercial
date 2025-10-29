@@ -4,7 +4,7 @@
 
 {% block styles %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/page-tabloide.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tabloide/css/page-tabloide.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -133,7 +133,7 @@
 {% block scripts %}
     {{ super() }}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="{{ url_for('static', filename='js/productTableUtils.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/produtosTabloidePage.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/selectAll.js') }}"></script>
+    <script src="{{ url_for('static', filename='core/js/productTableUtils.js') }}"></script>
+    <script src="{{ url_for('static', filename='core/js/selectAll.js') }}"></script>
+    <script src="{{ url_for('static', filename='tabloide/js/produtosTabloidePage.js') }}"></script>
 {% endblock %}

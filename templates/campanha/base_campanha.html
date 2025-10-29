@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block styles %}
-    {{ super() }} <link rel="stylesheet" href="{{ url_for('static', filename='css/drag_and_drop.css') }}">
+    {{ super() }} <link rel="stylesheet" href="{{ url_for('static', filename='core/css/drag_and_drop.css') }}">
 {% endblock %}
 
 {% block scripts %}
-    {{ super() }} <script src="{{ url_for('static', filename='js/drag_and_drop.js') }}"></script>
+    {{ super() }} <script src="{{ url_for('static', filename='core/js/drag_and_drop.js') }}"></script>
 {% endblock %}

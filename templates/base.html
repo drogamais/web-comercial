@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Web Comercial{% endblock %}</title>
     
-    <link rel="icon" href="{{ url_for('static', filename='images/logo_drogamais.ico') }}" type="image/x-icon">
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/alert.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='core/images/logo_drogamais.ico') }}" type="image/x-icon">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='core/css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='core/css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='core/css/modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='core/css/alert.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='core/css/forms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='core/css/tables.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     {% block styles %}{% endblock %}
@@ -37,8 +37,8 @@
         </div>
     </main>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='core/js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='core/js/sidebar.js') }}"></script>
 
     {% block scripts %}{% endblock %}
     

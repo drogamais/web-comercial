@@ -4,7 +4,7 @@
 
 {% block styles %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='core/css/index.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -76,5 +76,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='js/indexPage.js') }}"></script>
+    <script src="{{ url_for('static', filename='core/js/indexPage.js') }}"></script>
 {% endblock %}

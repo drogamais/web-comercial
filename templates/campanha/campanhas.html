@@ -3,7 +3,7 @@
 {% block title %}Gerenciar Campanhas{% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/page-campanhas.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='campanha/css/page-campanhas.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -123,5 +123,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='js/campanhasListPage.js') }}"></script>
+    <script src="{{ url_for('static', filename='campanha/js/campanhasListPage.js') }}"></script>
 {% endblock %}

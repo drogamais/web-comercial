@@ -25,7 +25,7 @@ tabloide_bp = Blueprint(
 @tabloide_bp.route('/download_modelo')
 def download_modelo():
     try:
-        static_dir = os.path.join(tabloide_bp.root_path, '..', 'static', 'models')
+        static_dir = os.path.join(tabloide_bp.root_path, '..', 'static', 'core', 'models')
         filename = 'modelo_tabloide.xlsx'
         return send_from_directory(
             static_dir,

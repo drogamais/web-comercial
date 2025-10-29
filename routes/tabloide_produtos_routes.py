@@ -257,7 +257,7 @@ def atualizar_produtos(tabloide_id):
     return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
 
 
-@tabloide_produtos_bp.route('/<int:campanha_id>/produtos/deletar', methods=['POST'])
+@tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/deletar', methods=['POST'])
 def deletar_produtos(tabloide_id):
     selecionados = request.form.getlist('selecionado')
     if not selecionados:

@@ -53,7 +53,7 @@ def gestao_tabloides():
                 flash('Tabloide criado com sucesso!', 'success')
         return redirect(url_for('tabloide.gestao_tabloides'))
 
-    tabloides = db_tabloide.get_all_campaigns()
+    tabloides = db_tabloide.get_all_tabloide()
     return render_template(
         'tabloide/tabloides.html', 
         active_page='tabloides_gestao', 
@@ -61,8 +61,8 @@ def gestao_tabloides():
     )
 
 
-@tabloide_bp.route('/editar/<int:campaign_id>', methods=['POST'])
-def editar_tabloide(campaign_id):
+@tabloide_bp.route('/editar/<int:tabloide_id>', methods=['POST'])
+def editar_tabloide(tabloide_id):
     nome = request.form.get('nome_edit')
     data_inicio = request.form.get('data_inicio_edit')
     data_fim = request.form.get('data_fim_edit')
@@ -70,7 +70,7 @@ def editar_tabloide(campaign_id):
     if not all([nome, data_inicio, data_fim]):
         flash('Todos os campos são obrigatórios para a edição.', 'danger')
     else:
-        _, error = db_tabloide.update_campaign(campaign_id, nome, data_inicio, data_fim)
+        _, error = db_tabloide.update_tabloide(tabloide_id, nome, data_inicio, data_fim)
         if error:
             flash(f'Erro ao atualizar tabloide: {error}', 'danger')
         else:
@@ -78,10 +78,9 @@ def editar_tabloide(campaign_id):
     return redirect(url_for('tabloide.gestao_tabloides'))
 
 
-@tabloide_bp.route('/deletar/<int:campaign_id>', methods=['POST'])
-
-def deletar_tabloide(campaign_id):
-    _, error = db_tabloide.delete_campaign(campaign_id)
+@tabloide_bp.route('/deletar/<int:tabloide_id>', methods=['POST'])
+def deletar_tabloide(tabloide_id):
+    _, error = db_tabloide.delete_tabloide(tabloide_id)
     if error:
         flash(f'Erro ao deletar tabloide: {error}', 'danger')
     # MUDANÇA: Mensagem de exclusão permanente

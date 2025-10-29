@@ -46,7 +46,7 @@
                 <td>{{ t.data_fim.strftime('%d/%m/%Y') }}</td>
                 <td>
                     <div class="action-buttons-container">
-                        <a href="{{ url_for('tabloide_produtos.produtos_por_tabloide', campanha_id=t.id) }}" class="button-filter btn-ver-produtos">
+                        <a href="{{ url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=t.id) }}" class="button-filter btn-ver-produtos">
                            Ver Produtos
                         </a>
                         

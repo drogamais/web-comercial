@@ -67,7 +67,7 @@ def add_products_bulk(produtos):
         conn.rollback()
         return 0, str(e)
 
-def get_products_by_campaign_id(tabloide_id):
+def get_products_by_tabloide_id(tabloide_id):
     conn = get_db_connection()
     sql = text(f"SELECT * FROM {DIM_TABLOIDE_PRODUTO_TABLE} WHERE tabloide_id = :id")
     try:

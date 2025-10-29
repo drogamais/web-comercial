@@ -79,12 +79,12 @@ def editar_tabloide(campaign_id):
 
 
 @tabloide_bp.route('/deletar/<int:campaign_id>', methods=['POST'])
+
 def deletar_tabloide(campaign_id):
     _, error = db_tabloide.delete_campaign(campaign_id)
     if error:
-        flash(f'Erro ao desativar tabloide: {error}', 'danger')
+        flash(f'Erro ao deletar tabloide: {error}', 'danger')
+    # MUDANÇA: Mensagem de exclusão permanente
     else:
-        flash('Tabloide desativado com sucesso!', 'success')
+        flash('Tabloide deletado permanentemente com sucesso!', 'success')
     return redirect(url_for('tabloide.gestao_tabloides'))
-
-# --- ROTAS DE PRODUTOS MOVIDAS PARA tabloide_produtos_routes.py ---

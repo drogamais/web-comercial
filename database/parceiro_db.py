@@ -105,7 +105,7 @@ def update_parceiro(parceiro_id, cnpj, nome_fantasia, tipo, razao_social, nome, 
 
 def delete_parceiro(parceiro_id):
     conn = get_db_connection()
-    sql = text(f"UPDATE {DIM_PARCEIRO_TABLE} SET status = 0 WHERE id = :id")
+    sql = text(f"DELETE FROM {DIM_PARCEIRO_TABLE} WHERE id = :id")
     try:
         result = conn.execute(sql, {"id": parceiro_id})
         conn.commit()

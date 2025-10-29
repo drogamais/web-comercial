@@ -61,7 +61,7 @@
                         <button type="button" class="button-danger btn-delete btn-deletar-campanha" 
                                 data-id="{{ c.id }}"
                                 data-nome="{{ c.nome }}">
-                            Deletar
+                            Deletar 
                         </button>
                     </div>
                 </td>
@@ -100,8 +100,7 @@
 
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2>Confirmar Desativação</h2>
-            <p>Para confirmar a desativação, por favor digite o nome da campanha no campo abaixo:</p>
+            <h2>Confirmar Exclusão</h2> <p>Para confirmar a exclusão, por favor digite o nome da campanha no campo abaixo:</p>
             
             <p class="delete-modal-campaign-name-label">Nome: <strong id="delete-modal-campaign-name"></strong></p>
             
@@ -109,7 +108,7 @@
                 <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
             </div>
 
-            <p class="delete-modal-info-text">(Isso irá aplicar um "soft delete", a campanha ficará inativa e oculta da lista de uploads)</p>
+            <p class="delete-modal-info-text">(Isso irá excluir permanentemente a campanha e todos os produtos vinculados a ela.)</p> <form id="delete-form" method="post" action="">
             
             <form id="delete-form" method="post" action="">
                 <div class="modal-actions" style="margin-top: 25px;">

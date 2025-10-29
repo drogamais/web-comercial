@@ -87,22 +87,15 @@
                 <th style="width: 25%;">Nome Ajustado</th>
                 <th style="width: 15%;">CNPJ</th>
                 <th style="width: 15%;">Tipo</th>
-                <th style="width: 10%;">Status</th>
                 <th style="width: 20%;" class="th-parceiro-acoes">Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for p in parceiros %}
-            <tr class="{{ 'row-inactive' if p.status == 0 }}">
+            <tr>
                 <td>{{ p.nome }}</td>
                 <td>{{ p.cnpj }}</td>
                 <td>{{ p.tipo }}</td>
-                <td>
-                    {% if p.status == 1 %}
-                        <span style="color: green; font-weight: bold;">ATIVO</span> {% else %}
-                        <span style="color: #e74c3c; font-weight: bold;">Inativo</span>
-                    {% endif %}
-                    </td>
                 <td>
                     <div class="action-buttons-container">
                         <button type="button" class="btn-edit button-filter btn-editar-parceiro"
@@ -196,10 +189,10 @@
             </form>
         </div>
     </div>
+
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2>Confirmar Desativação</h2>
-            <p>Para confirmar a desativação, por favor digite o nome ajustado do parceiro no campo abaixo:</p>
+            <h2>Confirmar Exclusão</h2> <p>Para confirmar a exclusão, por favor digite o nome ajustado do parceiro no campo abaixo:</p>
 
             <p class="delete-modal-parceiro-name-label">Nome Ajustado: <strong id="delete-modal-parceiro-name"></strong></p>
 
@@ -207,7 +200,7 @@
                 <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
             </div>
 
-            <p class="delete-modal-info-text">(Isso irá aplicar um "soft delete", o parceiro ficará inativo)</p>
+            <p class="delete-modal-info-text">(Isso irá excluir permanentemente o parceiro.)</p> <form id="delete-form" method="post" action="">
 
             <form id="delete-form" method="post" action="">
                 <div class="modal-actions" style="margin-top: 25px;">
@@ -222,14 +215,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <style>
-        .row-inactive td {
-            background-color: #fceeee;
-            color: #a94442;
-        }
-        .row-inactive td:first-child {
-            text-decoration: line-through;
-        }
-    </style>
     <script src="{{ url_for('static', filename='js/parceirosPage.js') }}"></script>
 {% endblock %}

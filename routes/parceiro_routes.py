@@ -88,11 +88,11 @@ def editar_parceiro(parceiro_id):
 
 @parceiro_bp.route('/deletar/<int:parceiro_id>', methods=['POST'])
 def deletar_parceiro(parceiro_id):
-    # Esta rota agora apenas realiza o SOFT DELETE (muda status para 0)
-    # A função de DB 'delete_parceiro' já faz isso.
+    # A função de DB 'delete_parceiro' agora fará um DELETE.
     _, error = db.delete_parceiro(parceiro_id)
     if error:
-        flash(f'Erro ao desativar parceiro: {error}', 'danger')
+        flash(f'Erro ao deletar parceiro: {error}', 'danger')
+    # MUDANÇA: Mensagem de exclusão permanente
     else:
-        flash('Parceiro desativado com sucesso!', 'success')
+        flash('Parceiro deletado permanentemente com sucesso!', 'success')
     return redirect(url_for('parceiro.gestao_parceiros'))

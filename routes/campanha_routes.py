@@ -63,11 +63,10 @@ def editar_campanha(campaign_id):
         else: flash('Campanha atualizada com sucesso!', 'success')
     return redirect(url_for('campanha.gestao_campanhas'))
 
+
 @campanha_bp.route('/deletar/<int:campaign_id>', methods=['POST'])
 def deletar_campanha(campaign_id):
     _, error = db_campanha.delete_campaign(campaign_id)
-    if error: flash(f'Erro ao desativar campanha: {error}', 'danger')
-    else: flash('Campanha desativada com sucesso!', 'success')
+    if error: flash(f'Erro ao deletar campanha: {error}', 'danger')
+    else: flash('Campanha deletada permanentemente com sucesso!', 'success')
     return redirect(url_for('campanha.gestao_campanhas'))
-
-# --- ROTAS DE PRODUTOS MOVIDAS PARA campanha_produtos_routes.py ---

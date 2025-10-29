@@ -102,7 +102,7 @@ def update_campaign(campaign_id, nome, data_inicio, data_fim):
 
 def delete_campaign(campaign_id):
     conn = get_db_connection()
-    sql = text(f"UPDATE {DIM_TABLOIDE_TABLE} SET status = 0 WHERE id = :id")
+    sql = text(f"DELETE FROM {DIM_TABLOIDE_TABLE} WHERE id = :id")
     try:
         result = conn.execute(sql, {"id": campaign_id})
         conn.commit()

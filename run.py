@@ -22,4 +22,5 @@ else:
     print("=" * 40)
     # Usa o servidor de produção Waitress (estável, sem auto-reload)
 
-    serve(app, host='192.168.21.251', port=5001)
+    serve(app, host='0.0.0.0', port=5001)
+    #serve(app, host='192.168.21.251', port=5001)

@@ -39,7 +39,7 @@ def upload_page():
                 # ---------------------------------------------------------
                 # PASSO 1: DELETAR PRODUTOS EXISTENTES PARA ESTE TABLOIDE
                 # ---------------------------------------------------------
-                deleted_count, delete_error = db_tabloide_produtos.delete_products_by_campaign_id(tabloide_id)
+                deleted_count, delete_error = db_tabloide_produtos.delete_products_by_tabloide_id(tabloide_id)
                 if delete_error:
                     flash(f'Erro ao limpar produtos antigos do tabloide: {delete_error}', 'danger')
                     return redirect(url_for('tabloide_produtos.upload_page'))
@@ -143,7 +143,7 @@ def upload_page():
             return redirect(url_for('tabloide_produtos.upload_page'))
 
     # GET
-    tabloides = db_tabloide.get_all_campaigns()
+    tabloides = db_tabloide.get_all_tabloide()
     return render_template(
         'tabloide/upload_tabloide.html',
         active_page='tabloide_upload',

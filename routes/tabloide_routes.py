@@ -46,7 +46,7 @@ def gestao_tabloides():
         if not all([nome, data_inicio, data_fim]):
             flash('Todos os campos são obrigatórios.', 'danger')
         else:
-            error = db_tabloide.add_campaign(nome, data_inicio, data_fim)
+            error = db_tabloide.add_tabloide(nome, data_inicio, data_fim)
             if error:
                 flash(f'Erro ao criar tabloide: {error}', 'danger')
             else:

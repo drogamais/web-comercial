@@ -1,18 +1,17 @@
 # database/campanha_db.py
 
-from mysql.connector import Error
+from sqlalchemy.sql import text
+from sqlalchemy.exc import SQLAlchemyError
 from database.common_db import get_db_connection
 import datetime
 
 DIM_CAMPANHA_TABLE = "dim_campanha"
 
 def create_tables():
-    """ Cria APENAS a tabela dim_campanha """
     conn = get_db_connection()
     if conn is None: return
-    cursor = conn.cursor()
     try:
-        sql_create_dim = f"""
+        sql = text(f"""
             CREATE TABLE IF NOT EXISTS {DIM_CAMPANHA_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nome VARCHAR(255) NOT NULL,
@@ -22,108 +21,92 @@ def create_tables():
                 data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 UNIQUE(nome)
             )
-        """
-        cursor.execute(sql_create_dim)
+        """)
+        conn.execute(sql)
         conn.commit()
-    except Error as e:
+    except SQLAlchemyError as e:
         print(f"Erro ao criar tabela {DIM_CAMPANHA_TABLE}: {e}")
-    finally:
-        cursor.close()
-
-#############################################
-##                  CAMPANHA
-#############################################
+        conn.rollback()
 
 def add_campaign(nome, data_inicio, data_fim):
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
-        INSERT INTO {DIM_CAMPANHA_TABLE} (nome, data_inicio, data_fim, status) VALUES (%s, %s, %s, 1)
-    """
+    sql = text(f"""
+        INSERT INTO {DIM_CAMPANHA_TABLE} (nome, data_inicio, data_fim, status) 
+        VALUES (:nome, :data_inicio, :data_fim, 1)
+    """)
     try:
-        cursor.execute(sql, (nome, data_inicio, data_fim))
+        params = {"nome": nome, "data_inicio": data_inicio, "data_fim": data_fim}
+        conn.execute(sql, params)
         conn.commit()
         return None
-    except Error as e:
+    except SQLAlchemyError as e:
         conn.rollback()
         return str(e)
-    finally:
-        cursor.close()
 
 def get_all_campaigns():
-    """Busca todas as campanhas ATIVAS (status=1)."""
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    sql = f"""
-        SELECT * FROM {DIM_CAMPANHA_TABLE} WHERE status = 1 ORDER BY data_inicio DESC
-    """
-    cursor.execute(sql)
-    return cursor.fetchall()
+    sql = text(f"SELECT * FROM {DIM_CAMPANHA_TABLE} WHERE status = 1 ORDER BY data_inicio DESC")
+    try:
+        cursor = conn.execute(sql)
+        results = cursor.mappings().fetchall()
+        cursor.close()
+        return results
+    except SQLAlchemyError as e:
+        print(f"Erro ao buscar campanhas: {e}")
+        return []
 
 def get_active_campaigns_for_upload():
-    """
-    Busca campanhas ativas (status=1) e que ainda não expiraram (data_fim >= hoje).
-    Usado na página de Upload.
-    """
     conn = get_db_connection()
     if conn is None: return []
-    cursor = conn.cursor(dictionary=True)
     today = datetime.date.today()
+    sql = text(f"""
+        SELECT * FROM {DIM_CAMPANHA_TABLE} 
+        WHERE status = 1 AND data_fim >= :today 
+        ORDER BY data_inicio DESC
+    """)
     try:
-        sql = f"""
-            SELECT * FROM {DIM_CAMPANHA_TABLE} WHERE status = 1 AND data_fim >= %s ORDER BY data_inicio DESC
-        """
-        cursor.execute(sql,(today,))
-        return cursor.fetchall()
-    except Error as e:
+        cursor = conn.execute(sql, {"today": today})
+        results = cursor.mappings().fetchall()
+        cursor.close()
+        return results
+    except SQLAlchemyError as e:
         print(f"Erro ao buscar campanhas ativas para upload: {e}")
         return []
-    finally:
-        cursor.close()
-
 
 def get_campaign_by_id(campanha_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    sql = f"""
-        SELECT * FROM {DIM_CAMPANHA_TABLE} WHERE id = %s
-    """
-    cursor.execute(sql, (campanha_id,))
-    return cursor.fetchone()
+    sql = text(f"SELECT * FROM {DIM_CAMPANHA_TABLE} WHERE id = :id")
+    try:
+        cursor = conn.execute(sql, {"id": campanha_id})
+        result = cursor.mappings().fetchone()
+        cursor.close()
+        return result
+    except SQLAlchemyError as e:
+        print(f"Erro ao buscar campanha por id: {e}")
+        return None
 
 def update_campaign(campaign_id, nome, data_inicio, data_fim):
-    """Atualiza os dados de uma campanha existente."""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
-        UPDATE {DIM_CAMPANHA_TABLE} SET nome = %s, data_inicio = %s, data_fim = %s
-        WHERE id = %s
-    """
+    sql = text(f"""
+        UPDATE {DIM_CAMPANHA_TABLE} SET nome = :nome, data_inicio = :data_inicio, data_fim = :data_fim
+        WHERE id = :id
+    """)
     try:
-        cursor.execute(sql, (nome, data_inicio, data_fim, campaign_id))
+        params = {"nome": nome, "data_inicio": data_inicio, "data_fim": data_fim, "id": campaign_id}
+        result = conn.execute(sql, params)
         conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    finally:
-        cursor.close()
 
 def delete_campaign(campaign_id):
-    """Realiza um soft delete de uma campanha (define status = 0)."""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
-        UPDATE {DIM_CAMPANHA_TABLE} SET status = 0 WHERE id = %s
-    """
+    sql = text(f"UPDATE {DIM_CAMPANHA_TABLE} SET status = 0 WHERE id = :id")
     try:
-        cursor.execute(sql, (campaign_id,))
+        result = conn.execute(sql, {"id": campaign_id})
         conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    finally:
-        cursor.close()
-
-# Todas as funções de PRODUTO foram movidas

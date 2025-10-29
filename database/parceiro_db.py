@@ -1,19 +1,16 @@
 # database/parceiro_db.py
 
-from mysql.connector import Error
+from sqlalchemy.sql import text
+from sqlalchemy.exc import SQLAlchemyError
 from database.common_db import get_db_connection
 
 DIM_PARCEIRO_TABLE = "bronze_parceiros"
 
 def create_tables():
-    """
-    Cria a tabela dim_parceiro com a nova estrutura completa.
-    """
     conn = get_db_connection()
     if conn is None: return
-    cursor = conn.cursor()
     try:
-        cursor.execute(f"""
+        sql = text(f"""
             CREATE TABLE IF NOT EXISTS {DIM_PARCEIRO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nome VARCHAR(255) NOT NULL,
@@ -29,94 +26,90 @@ def create_tables():
                 data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         """)
+        conn.execute(sql)
         conn.commit()
-    except Error as e:
+    except SQLAlchemyError as e:
         print(f"Erro ao criar tabela {DIM_PARCEIRO_TABLE}: {e}")
-    finally:
-        cursor.close()
+        conn.rollback()
 
 def add_parceiro(cnpj, nome_fantasia, tipo, razao_social, nome, email, telefone, data_entrada, data_saida, status):
-    """
-    Adiciona um novo parceiro com todos os campos.
-    """
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
+    sql = text(f"""
         INSERT INTO {DIM_PARCEIRO_TABLE} (
             cnpj, nome_fantasia, tipo, razao_social, nome, 
             email, telefone, data_entrada, data_saida, status
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
+        ) VALUES (:cnpj, :nome_fantasia, :tipo, :razao_social, :nome, 
+            :email, :telefone, :data_entrada, :data_saida, :status)
+    """)
     try:
-        cursor.execute(sql, (
-            cnpj, nome_fantasia, tipo, razao_social, nome,
-            email, telefone, data_entrada, data_saida, status
-        ))
+        params = {
+            "cnpj": cnpj, "nome_fantasia": nome_fantasia, "tipo": tipo, 
+            "razao_social": razao_social, "nome": nome, "email": email, 
+            "telefone": telefone, "data_entrada": data_entrada, 
+            "data_saida": data_saida, "status": status
+        }
+        conn.execute(sql, params)
         conn.commit()
         return None
-    except Error as e:
+    except SQLAlchemyError as e:
         conn.rollback()
         return str(e)
-    finally:
-        cursor.close()
 
 def get_all_parceiros():
-    """
-    Busca todos os parceiros (ativos e inativos) para a gestão.
-    """
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    # Atualizado para ordenar pelo novo campo 'nome'
-    cursor.execute(f"""SELECT * FROM {DIM_PARCEIRO_TABLE} ORDER BY nome ASC""")
-    return cursor.fetchall()
+    sql = text(f"SELECT * FROM {DIM_PARCEIRO_TABLE} ORDER BY nome ASC")
+    try:
+        cursor = conn.execute(sql)
+        results = cursor.mappings().fetchall()
+        cursor.close()
+        return results
+    except SQLAlchemyError as e:
+        print(f"Erro ao buscar parceiros: {e}")
+        return []
 
 def get_parceiro_by_id(parceiro_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(f"""SELECT * FROM {DIM_PARCEIRO_TABLE} WHERE id = %s""", (parceiro_id,))
-    return cursor.fetchone()
+    sql = text(f"SELECT * FROM {DIM_PARCEIRO_TABLE} WHERE id = :id")
+    try:
+        cursor = conn.execute(sql, {"id": parceiro_id})
+        result = cursor.mappings().fetchone()
+        cursor.close()
+        return result
+    except SQLAlchemyError as e:
+        print(f"Erro ao buscar parceiro por id: {e}")
+        return None
 
 def update_parceiro(parceiro_id, cnpj, nome_fantasia, tipo, razao_social, nome, email, telefone, data_entrada, data_saida, status):
-    """
-    Atualiza um parceiro existente com todos os campos.
-    """
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
+    sql = text(f"""
         UPDATE {DIM_PARCEIRO_TABLE} SET
-            cnpj = %s, nome_fantasia = %s, tipo = %s, razao_social = %s, 
-            nome = %s, email = %s, telefone = %s, data_entrada = %s, 
-            data_saida = %s, status = %s
-        WHERE id = %s
-    """
+            cnpj = :cnpj, nome_fantasia = :nome_fantasia, tipo = :tipo, 
+            razao_social = :razao_social, nome = :nome, email = :email, 
+            telefone = :telefone, data_entrada = :data_entrada, 
+            data_saida = :data_saida, status = :status
+        WHERE id = :id
+    """)
     try:
-        cursor.execute(sql, (
-            cnpj, nome_fantasia, tipo, razao_social, nome,
-            email, telefone, data_entrada, data_saida, status,
-            parceiro_id
-        ))
+        params = {
+            "cnpj": cnpj, "nome_fantasia": nome_fantasia, "tipo": tipo, 
+            "razao_social": razao_social, "nome": nome, "email": email, 
+            "telefone": telefone, "data_entrada": data_entrada, 
+            "data_saida": data_saida, "status": status, "id": parceiro_id
+        }
+        result = conn.execute(sql, params)
         conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    finally:
-        cursor.close()
 
 def delete_parceiro(parceiro_id):
-    """
-    Realiza um "soft delete" (apenas marca como inativo).
-    """
     conn = get_db_connection()
-    cursor = conn.cursor()
-    # A lógica de soft-delete é mantida, apenas atualiza o status.
-    sql = f"""UPDATE {DIM_PARCEIRO_TABLE} SET status = 0 WHERE id = %s"""
+    sql = text(f"UPDATE {DIM_PARCEIRO_TABLE} SET status = 0 WHERE id = :id")
     try:
-        cursor.execute(sql, (parceiro_id,))
+        result = conn.execute(sql, {"id": parceiro_id})
         conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    finally:
-        cursor.close()

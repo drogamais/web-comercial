@@ -1,18 +1,17 @@
 # database/campanha_produtos_db.py
 
-from mysql.connector import Error
+from sqlalchemy.sql import text
+from sqlalchemy.exc import SQLAlchemyError
 from database.common_db import get_db_connection
 
 DIM_CAMPANHA_TABLE = "dim_campanha"
 DIM_CAMPANHA_PRODUTO_TABLE = "dim_campanha_produto"
 
 def create_product_table():
-    """ Cria APENAS a tabela dim_campanha_produto """
     conn = get_db_connection()
     if conn is None: return
-    cursor = conn.cursor()
     try:
-        sql_create_fact = f"""
+        sql_create_fact = text(f"""
             CREATE TABLE IF NOT EXISTS {DIM_CAMPANHA_PRODUTO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 campanha_id INT NOT NULL,
@@ -28,125 +27,139 @@ def create_product_table():
                 data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (campanha_id) REFERENCES {DIM_CAMPANHA_TABLE}(id) ON DELETE CASCADE
             )
-        """
-        cursor.execute(sql_create_fact)
-        # --- Adicionar coluna se não existir (para bancos já criados) ---
-        cursor.execute(f"""
+        """)
+        conn.execute(sql_create_fact)
+        
+        sql_alter = text(f"""
             ALTER TABLE {DIM_CAMPANHA_PRODUTO_TABLE}
             ADD COLUMN IF NOT EXISTS codigo_barras_normalizado VARCHAR(14) DEFAULT NULL
             AFTER codigo_barras;
         """)
-        # -----------------------------------------------------------------
+        conn.execute(sql_alter)
         conn.commit()
-    except Error as e:
+    except SQLAlchemyError as e:
         print(f"Erro ao criar/alterar tabela {DIM_CAMPANHA_PRODUTO_TABLE}: {e}")
-    finally:
-        cursor.close()
+        conn.rollback()
 
-#############################################
-##          PRODUTOS CAMPANHA
-#############################################
 
 def add_products_bulk(produtos):
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
+    sql = text(f"""
         INSERT INTO {DIM_CAMPANHA_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, pontuacao,
             preco_normal, preco_desconto, rebaixe, qtd_limite
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
+        VALUES (:cid, :cb, :cbn, :ci, :desc, :pts, :pr_norm, :pr_desc, :reb, :qtd)
+    """)
+    
     try:
-        cursor.executemany(sql, produtos)
+        # Mapeia a lista de tuplas para uma lista de dicionários
+        produtos_dict = [
+            {
+                "cid": p[0], "cb": p[1], "cbn": p[2], "ci": p[3], "desc": p[4],
+                "pts": p[5], "pr_norm": p[6], "pr_desc": p[7], "reb": p[8], "qtd": p[9]
+            }
+            for p in produtos
+        ]
+        
+        result = conn.execute(sql, produtos_dict)
         conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    finally:
-        cursor.close()
 
 def get_products_by_campaign_id(campanha_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(f"""SELECT * FROM {DIM_CAMPANHA_PRODUTO_TABLE} WHERE campanha_id = %s""", (campanha_id,))
-    return cursor.fetchall()
+    sql = text(f"SELECT * FROM {DIM_CAMPANHA_PRODUTO_TABLE} WHERE campanha_id = :id")
+    try:
+        cursor = conn.execute(sql, {"id": campanha_id})
+        results = cursor.mappings().fetchall()
+        cursor.close()
+        return results
+    except SQLAlchemyError as e:
+        print(f"Erro em get_products_by_campaign_id: {e}")
+        return []
 
 def add_single_product(dados_produto):
-    """Adiciona um único produto ao banco de dados."""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
+    sql = text(f"""
         INSERT INTO {DIM_CAMPANHA_PRODUTO_TABLE} (
             campanha_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, pontuacao,
             preco_normal, preco_desconto, rebaixe, qtd_limite
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
+        VALUES (:cid, :cb, :cbn, :ci, :desc, :pts, :pr_norm, :pr_desc, :reb, :qtd)
+    """)
     try:
-        cursor.execute(sql, dados_produto)
+        params = {
+            "cid": dados_produto[0], "cb": dados_produto[1], "cbn": dados_produto[2], 
+            "ci": dados_produto[3], "desc": dados_produto[4], "pts": dados_produto[5],
+            "pr_norm": dados_produto[6], "pr_desc": dados_produto[7], "reb": dados_produto[8], 
+            "qtd": dados_produto[9]
+        }
+        result = conn.execute(sql, params)
         conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    finally:
-        cursor.close()
 
 def update_products_in_bulk(produtos_para_atualizar):
-    """Atualiza múltiplos produtos no banco de dados."""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
+    sql = text(f"""
         UPDATE {DIM_CAMPANHA_PRODUTO_TABLE} SET
-            codigo_barras = %s, codigo_barras_normalizado = %s, codigo_interno = %s, descricao = %s, pontuacao = %s,
-            preco_normal = %s, preco_desconto = %s, rebaixe = %s, qtd_limite = %s
-        WHERE id = %s
-    """
+            codigo_barras = :cb, codigo_barras_normalizado = :cbn, codigo_interno = :ci, 
+            descricao = :desc, pontuacao = :pts, preco_normal = :pr_norm, 
+            preco_desconto = :pr_desc, rebaixe = :reb, qtd_limite = :qtd
+        WHERE id = :id
+    """)
     try:
-        cursor.executemany(sql, produtos_para_atualizar)
+        # Mapeia a lista de tuplas para uma lista de dicionários
+        produtos_dict = [
+            {
+                "cb": p[0], "cbn": p[1], "ci": p[2], "desc": p[3], "pts": p[4],
+                "pr_norm": p[5], "pr_desc": p[6], "reb": p[7], "qtd": p[8], "id": p[9]
+            }
+            for p in produtos_para_atualizar
+        ]
+        
+        result = conn.execute(sql, produtos_dict)
         conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    finally:
-        cursor.close()
 
 def delete_products_in_bulk(ids_para_deletar):
-    """Deleta múltiplos produtos do banco de dados com base em seus IDs (lista de IDs)."""
     conn = get_db_connection()
-    if not ids_para_deletar: # Evita erro se a lista estiver vazia
+    if not ids_para_deletar:
         return 0, None
-    cursor = conn.cursor()
-    format_strings = ','.join(['%s'] * len(ids_para_deletar))
-    sql = f"""
-        DELETE FROM {DIM_CAMPANHA_PRODUTO_TABLE} WHERE id IN ({format_strings})
-    """
+    
     try:
-        cursor.execute(sql, tuple(ids_para_deletar))
+        # Cria placeholders seguros: :id_0, :id_1 ...
+        placeholders = [f":id_{i}" for i in range(len(ids_para_deletar))]
+        sql_text = text(f"""
+            DELETE FROM {DIM_CAMPANHA_PRODUTO_TABLE} 
+            WHERE id IN ({",".join(placeholders)})
+        """)
+        
+        # Cria o dicionário de parâmetros: {'id_0': '1', 'id_1': '2'}
+        params = {f"id_{i}": id_val for i, id_val in enumerate(ids_para_deletar)}
+        
+        result = conn.execute(sql_text, params)
         conn.commit()
-        return cursor.rowcount, None
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    finally:
-        cursor.close()
 
 def delete_products_by_campaign_id(campanha_id):
-    """Deleta TODOS os produtos associados a um campanha_id."""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    sql = f"""
-        DELETE FROM {DIM_CAMPANHA_PRODUTO_TABLE} WHERE campanha_id = %s
-    """
+    sql = text(f"DELETE FROM {DIM_CAMPANHA_PRODUTO_TABLE} WHERE campanha_id = :cid")
     try:
-        cursor.execute(sql, (campanha_id,))
+        result = conn.execute(sql, {"cid": campanha_id})
         conn.commit()
-        return cursor.rowcount, None # Retorna número de linhas deletadas e None (sem erro)
-    except Error as e:
+        return result.rowcount, None
+    except SQLAlchemyError as e:
         conn.rollback()
-        return 0, str(e) # Retorna 0 linhas e a mensagem de erro
-    finally:
-        cursor.close()
+        return 0, str(e)

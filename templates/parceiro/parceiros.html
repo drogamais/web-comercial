@@ -63,15 +63,7 @@
                 <label for="data_saida">Data Saída: <span style="color: red;">*</span></label>
                 <input type="date" id="data_saida" name="data_saida" required>
             </div>
-
-            <div class="form-group" style="flex: 1;">
-                <label for="status">Status:</label>
-                <select id="status" name="status">
-                    <option value="" selected>Selecione...</option>
-                    <option value="ativo">ATIVO</option>  
-                    <option value="inativo">INATIVO</option>
-                </select>
-            </div>
+            
             <div class="form-group" style="flex: 1; justify-content: flex-end; align-self: flex-end;">
                  <button type="submit" style="height: 38px;">Criar Parceiro</button>
             </div>
@@ -108,15 +100,14 @@
                                 data-email="{{ p.email or '' }}"
                                 data-telefone="{{ p.telefone or '' }}"
                                 data-data-entrada="{{ p.data_entrada.strftime('%Y-%m-%d') if p.data_entrada else '' }}"
-                                data-data-saida="{{ p.data_saida.strftime('%Y-%m-%d') if p.data_saida else '' }}"
-                                data-status="{{ 'ativo' if p.status == 1 else 'inativo' }}">
+                                data-data-saida="{{ p.data_saida.strftime('%Y-%m-%d') if p.data_saida else '' }}">
                             Editar
                         </button>
 
                         <button type="button" class="button-danger btn-delete btn-deletar-parceiro"
                                 data-id="{{ p.id }}"
                                 data-nome="{{ p.nome }}">
-                            Desativar
+                            Excluir 
                         </button>
                     </div>
                 </td>
@@ -174,13 +165,6 @@
                     <label for="data_saida_edit">Data Saída: <span style="color: red;">*</span></label>
                     <input type="date" id="data_saida_edit" name="data_saida_edit" required>
                 </div>
-                <div class="form-group" style="flex: 1;">
-                    <label for="status_edit">Status:</label> <select id="status_edit" name="status_edit"> 
-                        <option value="" disabled>Selecione...</option> 
-                        <option value="ativo">ATIVO</option>
-                        <option value="inativo">INATIVO</option>
-                    </select>
-                </div>
 
                 <div class="modal-actions" style="flex-basis: 100%; margin-top: 25px;">
                     <button id="modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
@@ -215,5 +199,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ url_for('static', filename='paceiro/js/parceirosPage.js') }}"></script>
+    <script src="{{ url_for('static', filename='parceiro/js/parceirosPage.js') }}"></script>
 {% endblock %}

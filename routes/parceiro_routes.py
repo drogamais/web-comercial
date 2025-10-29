@@ -17,8 +17,8 @@ def _get_form_data(form):
     data_entrada = form.get('data_entrada') or None
     data_saida = form.get('data_saida') or None
     
-    # Converte 'ativo'/'inativo' para 1/0
-    status = 1 if form.get('status') == 'ativo' else 0
+    # CORRIGIDO: Status sempre 1 (ATIVO) para criação, pois o campo foi removido do formulário.
+    status = 1 
 
     return {
         "cnpj": form.get('cnpj') or None,
@@ -67,8 +67,22 @@ def editar_parceiro(parceiro_id):
     # Pega os dados do formulário do modal (que têm sufixo _edit)
     form_data = {key.replace('_edit', ''): value for key, value in request.form.items()}
     
-    # Usa a função auxiliar para tratar os dados do formulário de edição
-    data = _get_form_data(form_data)
+    # Processamento manual dos dados, forçando status=1
+    data_entrada = form_data.get('data_entrada') or None
+    data_saida = form_data.get('data_saida') or None
+    
+    data = {
+        "cnpj": form_data.get('cnpj') or None,
+        "nome_fantasia": form_data.get('nome_fantasia') or None,
+        "tipo": form_data.get('tipo') or None,
+        "razao_social": form_data.get('razao_social') or None,
+        "nome": form_data.get('nome'),
+        "email": form_data.get('email') or None,
+        "telefone": form_data.get('telefone') or None,
+        "data_entrada": data_entrada,
+        "data_saida": data_saida,
+        "status": 1 # CORRIGIDO: Forçar status=1 para o registro que está sendo editado.
+    }
 
     if not data["nome"]:
         flash('O campo "Nome Ajustado" é obrigatório para a edição.', 'danger')

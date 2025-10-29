@@ -1,4 +1,4 @@
-// static/js/parceirosPage.js
+// static/parceiro/js/parceirosPage.js
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- LÓGICA MODAL EDIÇÃO ---
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             telefone: document.getElementById('telefone_edit'),
             dataEntrada: document.getElementById('data_entrada_edit'),
             dataSaida: document.getElementById('data_saida_edit'),
-            status: document.getElementById('status_edit')
+            // REMOVIDO: status: document.getElementById('status_edit') <-- ESTA LINHA FOI REMOVIDA
         };
 
         const showEditModal = (e) => {
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             inputs.telefone.value = data.telefone || '';
             inputs.dataEntrada.value = data.dataEntrada || '';
             inputs.dataSaida.value = data.dataSaida || '';
-            inputs.status.value = data.status || 'ativo'; // 'ativo' como padrão
+            // REMOVIDO: inputs.status.value = data.status || 'ativo'; // 'ativo' como padrão
 
             editModal.classList.add('show-modal');
         };

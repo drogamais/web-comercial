@@ -14,7 +14,7 @@ def create_product_table():
         sql_create = text(f"""
             CREATE TABLE IF NOT EXISTS {DIM_TABLOIDE_PRODUTO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                campanha_id INT NOT NULL,
+                tabloide_id INT NOT NULL,
                 codigo_barras VARCHAR(14),
                 codigo_barras_normalizado VARCHAR(14) DEFAULT NULL,
                 codigo_interno VARCHAR(14) DEFAULT NULL,
@@ -27,7 +27,7 @@ def create_product_table():
                 preco_app DECIMAL(10, 2),
                 tipo_regra VARCHAR(100),
                 data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                FOREIGN KEY (campanha_id) REFERENCES {DIM_TABLOIDE_TABLE}(id) ON DELETE CASCADE
+                FOREIGN KEY (tabloide_id) REFERENCES {DIM_TABLOIDE_TABLE}(id) ON DELETE CASCADE
             )
         """)
         conn.execute(sql_create)
@@ -47,7 +47,7 @@ def add_products_bulk(produtos):
     conn = get_db_connection()
     sql = text(f"""
         INSERT INTO {DIM_TABLOIDE_PRODUTO_TABLE} (
-            campanha_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, laboratorio,
+            tabloide_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, laboratorio,
             tipo_preco, preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
         )
         VALUES (:cid, :cb, :cbn, :ci, :desc, :lab, :tipo_pr, :pr_norm, :pr_desc, :pr_cli, :pr_app, :tipo_regra)
@@ -67,23 +67,23 @@ def add_products_bulk(produtos):
         conn.rollback()
         return 0, str(e)
 
-def get_products_by_campaign_id(campanha_id):
+def get_products_by_campaign_id(tabloide_id):
     conn = get_db_connection()
-    sql = text(f"SELECT * FROM {DIM_TABLOIDE_PRODUTO_TABLE} WHERE campanha_id = :id")
+    sql = text(f"SELECT * FROM {DIM_TABLOIDE_PRODUTO_TABLE} WHERE tabloide_id = :id")
     try:
-        cursor = conn.execute(sql, {"id": campanha_id})
+        cursor = conn.execute(sql, {"id": tabloide_id})
         results = cursor.mappings().fetchall()
         cursor.close()
         return results
     except SQLAlchemyError as e:
-        print(f"Erro em get_products_by_campaign_id (tabloide): {e}")
+        print(f"Erro em get_products_by_tabloide_id (tabloide): {e}")
         return []
 
 def add_single_product(dados_produto):
     conn = get_db_connection()
     sql = text(f"""
         INSERT INTO {DIM_TABLOIDE_PRODUTO_TABLE} (
-            campanha_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, laboratorio,
+            tabloide_id, codigo_barras, codigo_barras_normalizado, codigo_interno, descricao, laboratorio,
             tipo_preco, preco_normal, preco_desconto, preco_desconto_cliente, preco_app, tipo_regra
         )
         VALUES (:cid, :cb, :cbn, :ci, :desc, :lab, :tipo_pr, :pr_norm, :pr_desc, :pr_cli, :pr_app, :tipo_regra)
@@ -149,11 +149,11 @@ def delete_products_in_bulk(ids_para_deletar):
         conn.rollback()
         return 0, str(e)
 
-def delete_products_by_campaign_id(campanha_id):
+def delete_products_by_tabloide_id(tabloide_id):
     conn = get_db_connection()
-    sql = text(f"DELETE FROM {DIM_TABLOIDE_PRODUTO_TABLE} WHERE campanha_id = :cid")
+    sql = text(f"DELETE FROM {DIM_TABLOIDE_PRODUTO_TABLE} WHERE tabloide_id = :cid")
     try:
-        result = conn.execute(sql, {"cid": campanha_id})
+        result = conn.execute(sql, {"cid": tabloide_id})
         conn.commit()
         return result.rowcount, None
     except SQLAlchemyError as e:

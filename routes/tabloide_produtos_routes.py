@@ -6,7 +6,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, jsonify
 )
 import database.tabloide_db as db_tabloide
-import database.tabloide_produtos_db as db_tabloide_produtos # <-- Importado para deletar
+import database.tabloide_produtos_db as db_tabloide_produtos
 import database.common_db as db_common
 from utils import allowed_file, pad_barcode, clean_barcode
 
@@ -151,14 +151,14 @@ def upload_page():
     )
 
 
-@tabloide_produtos_bp.route('/<int:campanha_id>/produtos')
-def produtos_por_tabloide(campanha_id):
-    tabloide = db_tabloide.get_campaign_by_id(campanha_id)
+@tabloide_produtos_bp.route('/<int:tabloide_id>/produtos')
+def produtos_por_tabloide(tabloide_id):
+    tabloide = db_tabloide.get_tabloide_by_id(tabloide_id)
     if not tabloide:
         flash('Tabloide não encontrado.', 'danger')
         return redirect(url_for('tabloide.gestao_tabloides'))
 
-    produtos = db_tabloide_produtos.get_products_by_campaign_id(campanha_id)
+    produtos = db_tabloide_produtos.get_products_by_tabloide_id(tabloide_id)
     return render_template(
         'tabloide/produtos_tabloide.html', 
         active_page='tabloides_gestao', 
@@ -167,8 +167,8 @@ def produtos_por_tabloide(campanha_id):
     )
 
 
-@tabloide_produtos_bp.route('/<int:campanha_id>/produtos/adicionar', methods=['POST'])
-def adicionar_produto(campanha_id):
+@tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/adicionar', methods=['POST'])
+def adicionar_produto(tabloide_id):
     try:
         cb_raw = request.form.get('codigo_barras')
         cb_normalizado = pad_barcode(cb_raw) # <-- NORMALIZA
@@ -182,7 +182,7 @@ def adicionar_produto(campanha_id):
 
         # Adiciona cb_normalizado à tupla
         dados_produto = (
-            campanha_id,
+            tabloide_id,
             cb_raw,
             cb_normalizado, # <-- CÓDIGO NORMALIZADO
             ci, # Código interno
@@ -202,15 +202,15 @@ def adicionar_produto(campanha_id):
             flash('Novo produto adicionado com sucesso!', 'success')
     except Exception as e:
         flash(f'Ocorreu um erro inesperado: {e}', 'danger')
-    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', campanha_id=campanha_id))
+    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
 
 
-@tabloide_produtos_bp.route('/<int:campanha_id>/produtos/atualizar', methods=['POST'])
-def atualizar_produtos(campanha_id):
+@tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/atualizar', methods=['POST'])
+def atualizar_produtos(tabloide_id):
     selecionados = request.form.getlist('selecionado')
     if not selecionados:
         flash('Nenhum produto selecionado para atualizar.', 'warning')
-        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', campanha_id=campanha_id))
+        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
 
     gtins_raw_dict = {pid: request.form.get(f'codigo_barras_{pid}') for pid in selecionados}
     # Calcula normalizados para todos os selecionados
@@ -254,22 +254,22 @@ def atualizar_produtos(campanha_id):
         flash(f'Erro ao atualizar produtos: {error}', 'danger')
     else:
         flash(f'{rowcount} produto(s) atualizado(s) com sucesso!', 'success')
-    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', campanha_id=campanha_id))
+    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
 
 
 @tabloide_produtos_bp.route('/<int:campanha_id>/produtos/deletar', methods=['POST'])
-def deletar_produtos(campanha_id):
+def deletar_produtos(tabloide_id):
     selecionados = request.form.getlist('selecionado')
     if not selecionados:
         flash('Nenhum produto selecionado para deletar.', 'warning')
-        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', campanha_id=campanha_id))
+        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
 
     rowcount, error = db_tabloide_produtos.delete_products_in_bulk(selecionados)
     if error:
         flash(f'Erro ao deletar produtos: {error}', 'danger')
     else:
         flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
-    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', campanha_id=campanha_id))
+    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
 
 @tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/validar_gtins', methods=['POST'])
 def validar_gtins_tabloide(tabloide_id):

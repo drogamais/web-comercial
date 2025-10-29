@@ -28,7 +28,7 @@ def create_tables():
         print(f"Erro ao criar tabela {DIM_TABLOIDE_TABLE} (Tabloide): {e}")
         conn.rollback()
 
-def add_campaign(nome, data_inicio, data_fim):
+def add_tabloide(nome, data_inicio, data_fim):
     conn = get_db_connection()
     sql = text(f"""
         INSERT INTO {DIM_TABLOIDE_TABLE} (nome, data_inicio, data_fim, status) 
@@ -43,7 +43,7 @@ def add_campaign(nome, data_inicio, data_fim):
         conn.rollback()
         return str(e)
 
-def get_all_campaigns():
+def get_all_tabloide():
     conn = get_db_connection()
     sql = text(f"SELECT * FROM {DIM_TABLOIDE_TABLE} WHERE status = 1 ORDER BY data_inicio DESC")
     try:
@@ -55,7 +55,7 @@ def get_all_campaigns():
         print(f"Erro ao buscar tabloides: {e}")
         return []
 
-def get_active_campaigns_for_upload():
+def get_active_tabloide_for_upload():
     conn = get_db_connection()
     if conn is None: return []
     today = datetime.date.today()
@@ -73,11 +73,11 @@ def get_active_campaigns_for_upload():
         print(f"Erro ao buscar {DIM_TABLOIDE_TABLE} ativos para upload: {e}")
         return []
 
-def get_campaign_by_id(campanha_id):
+def get_tabloide_by_id(tabloide_id):
     conn = get_db_connection()
     sql = text(f"SELECT * FROM {DIM_TABLOIDE_TABLE} WHERE id = :id")
     try:
-        cursor = conn.execute(sql, {"id": campanha_id})
+        cursor = conn.execute(sql, {"id": tabloide_id})
         result = cursor.mappings().fetchone()
         cursor.close()
         return result
@@ -85,14 +85,14 @@ def get_campaign_by_id(campanha_id):
         print(f"Erro ao buscar tabloide por id: {e}")
         return None
 
-def update_campaign(campaign_id, nome, data_inicio, data_fim):
+def update_tabloide(tabloide_id, nome, data_inicio, data_fim):
     conn = get_db_connection()
     sql = text(f"""
         UPDATE {DIM_TABLOIDE_TABLE} SET nome = :nome, data_inicio = :data_inicio, data_fim = :data_fim
         WHERE id = :id
     """)
     try:
-        params = {"nome": nome, "data_inicio": data_inicio, "data_fim": data_fim, "id": campaign_id}
+        params = {"nome": nome, "data_inicio": data_inicio, "data_fim": data_fim, "id": tabloide_id}
         result = conn.execute(sql, params)
         conn.commit()
         return result.rowcount, None
@@ -100,11 +100,11 @@ def update_campaign(campaign_id, nome, data_inicio, data_fim):
         conn.rollback()
         return 0, str(e)
 
-def delete_campaign(campaign_id):
+def delete_tabloide(tabloide_id):
     conn = get_db_connection()
     sql = text(f"DELETE FROM {DIM_TABLOIDE_TABLE} WHERE id = :id")
     try:
-        result = conn.execute(sql, {"id": campaign_id})
+        result = conn.execute(sql, {"id": tabloide_id})
         conn.commit()
         return result.rowcount, None
     except SQLAlchemyError as e:

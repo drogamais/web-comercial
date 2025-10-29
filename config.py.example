@@ -8,5 +8,6 @@ DB_CONFIG = {
     "host": "10.48.12.20",
     "port": 3306,
     "database": "dbSults",
+    "charset": "utf8mb4",
     "collation": "utf8mb4_general_ci"
 }

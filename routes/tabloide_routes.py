@@ -54,7 +54,11 @@ def gestao_tabloides():
         return redirect(url_for('tabloide.gestao_tabloides'))
 
     tabloides = db_tabloide.get_all_campaigns()
-    return render_template('tabloide/tabloides.html', active_page='tabloides', tabloides=tabloides)
+    return render_template(
+        'tabloide/tabloides.html', 
+        active_page='tabloides_gestao', 
+        tabloides=tabloides
+    )
 
 
 @tabloide_bp.route('/editar/<int:campaign_id>', methods=['POST'])

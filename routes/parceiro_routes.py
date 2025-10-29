@@ -56,7 +56,11 @@ def gestao_parceiros():
 
     # GET: Busca todos os parceiros (ativos e inativos)
     parceiros = db.get_all_parceiros()
-    return render_template('parceiro/parceiros.html', active_page='parceiros', parceiros=parceiros)
+    return render_template(
+        'parceiro/parceiros.html', 
+        active_page='parceiros_gestao', 
+        parceiros=parceiros
+    )
 
 @parceiro_bp.route('/editar/<int:parceiro_id>', methods=['POST'])
 def editar_parceiro(parceiro_id):

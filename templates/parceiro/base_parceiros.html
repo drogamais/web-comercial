@@ -1,79 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Gestão de Parceiros{% endblock %}</title>
+{% extends "base.html" %}
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
+{% block styles %}
+    {{ super() }}
+{% endblock %}
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    {% block styles %}{% endblock %}
-</head>
-<body>
-
-    <nav class="sidebar">
-        <i class="fas fa-chevron-right sidebar-expand-icon"></i>
-        <div class="sidebar-header">
-            <p class="title-line-1"><span>Drogamais</span></p>
-            <p class="title-line-2"><span>Web Comercial</span></p>
-        </div>
-        <div class="sidebar-nav">
-            
-            <div class="sidebar-nav-group">
-                <button type="button" class="sidebar-dropdown-toggle">
-                    <span>Campanha</span> </button>
-                <div class="sidebar-submenu">
-                    <a href="{{ url_for('campanha_produtos.upload_page') }}"><span>Upload de Planilha</span></a>
-                    <a href="{{ url_for('campanha.gestao_campanhas') }}"><span>Gerenciar Campanhas</span></a>
-                </div>
-            </div>
-            
-            <div class="sidebar-nav-group">
-                <button type="button" class="sidebar-dropdown-toggle">
-                    <span>Tabloide</span> </button>
-                <div class="sidebar-submenu">
-                    <a href="{{ url_for('tabloide_produtos.upload_page') }}"><span>Upload de Planilha</span></a>
-                    <a href="{{ url_for('tabloide.gestao_tabloides') }}"><span>Gerenciar Tabloides</span></a>
-                </div>
-            </div>
-
-            <div class="sidebar-nav-group">
-                <button type="button" class="sidebar-dropdown-toggle">
-                    <span>Parceiros</span> </button>
-                <div class="sidebar-submenu">
-                    <a href="{{ url_for('parceiro.gestao_parceiros') }}" class="{{ 'active' if active_page == 'parceiros' else '' }}"><span>Gerenciar Parceiros</span></a>
-                </div>
-            </div>
-
-            <div class="sidebar-nav-group" style="margin-top: 20px; border-top: 1px solid #3a5068; padding-top: 10px;">
-                 <a href="{{ url_for('index') }}" style="border-left-color: transparent;"><span>&larr; Menu Principal</span></a>
-            </div>
-        </div>
-    </nav>
-
-    <main class="main-content">
-        <div class="container">
-            {% block content %}{% endblock %}
-        </div>
-    </main>
-
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
-    {% block scripts %}{% endblock %}
-    
-    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.App && App.main && App.main.init) {
-                // App.main.init();
-            }
-        });
-    </script>
-</body>
-</html>
+{% block scripts %}
+    {{ super() }}
+{% endblock %}

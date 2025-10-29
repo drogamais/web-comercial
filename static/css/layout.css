@@ -1,216 +1,28 @@
-/* Estilos para componentes reutilizáveis: menu, modais, alertas, etc. */
+/* static/css/layout.css */
 
-/* --- MENU DE NAVEGAÇÃO --- */
-.navbar {
-    position: relative;
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
-}
-
-.dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.dropbtn {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.dropbtn:hover {
-    background-color: #2980b9;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    background-color: #f9f9f9;
-    min-width: 180px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-    border-radius: 5px;
-}
-
-.dropdown-content a {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-    text-align: left;
-}
-
-.dropdown-content a:hover {
-    background-color: #f1f1f1;
-}
-
-.dropdown-content a.active {
-    background-color: #ddd;
-    font-weight: bold;
-}
-
-.show {
-    display: block;
-}
-
-/* --- ALERTAS DE FEEDBACK (FLASH) --- */
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    text-align: center;
-}
-
-.alert-success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-}
-
-.alert-danger {
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-}
-.alert-warning {
-    color: #856404;
-    background-color: #fff3cd;
-    border-color: #ffeeba;
-}
-
-/* --- NOTIFICAÇÃO CUSTOMIZADA --- */
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: #27ae60;
-    color: white;
-    padding: 15px 25px;
-    border-radius: 5px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1000;
-    font-size: 15px;
-    font-weight: 500;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-20px);
-    transition: all 0.4s ease-in-out;
-}
-
-.notification.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-/* --- MODAL DE CONFIRMAÇÃO --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    z-index: 2000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.modal-overlay.show-modal {
-    opacity: 1;
-    visibility: visible;
-}
-
-.modal-content {
-    background-color: #fff;
-    padding: 30px 35px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    transform: translateY(-20px);
-    transition: transform 0.3s ease;
-}
-
-.modal-overlay.show-modal .modal-content {
-    transform: translateY(0);
-}
-
-.modal-content p {
-    font-size: 17px;
-    margin-top: 0;
-    margin-bottom: 25px;
-    color: #333;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-}
-
-.modal-actions button {
-    width: 110px;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.modal-actions button:hover {
-    transform: translateY(-2px);
-}
-
-.modal-button-cancel {
-    background-color: #ecf0f1;
-    color: #7f8c8d;
-}
-.modal-button-cancel:hover {
-    background-color: #e24424;
-    color: #ecf0f1;
-}
-
-.modal-button-confirm {
-    background-color: #3498db;
-    color: white;
-}
-.modal-button-confirm:hover {
-    background-color: #2980b9;
-}
-
-/* --- NOVO ESTILO ADICIONADO --- */
-/* Para o botão de confirmação vermelho no modal */
-.modal-button-danger {
-    background-color: #e74c3c;
-    color: white;
-}
-.modal-button-danger:hover {
-    background-color: #c0392b;
-}
-
-/* --- LAYOUT COM SIDEBAR (COLAPSÁVEL POR HOVER) --- */
+/* --- ESTRUTURA PRINCIPAL --- */
 body {
     display: flex;
     margin: 0;
     padding: 0;
 }
 
+.main-content {
+    margin-left: 60px; /* Corresponde à largura colapsada da sidebar */
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f4f7f6;
+    min-height: 100vh;
+    box-sizing: border-box;
+    transition: margin-left 0.3s ease;
+}
+
+/* Ajusta o conteúdo quando a sidebar está expandida */
+body:has(.sidebar:hover) .main-content {
+    margin-left: 240px;
+}
+
+/* --- SIDEBAR --- */
 .sidebar {
     width: 60px; /* LARGURA COLAPSADA PADRÃO */
     height: 100vh;
@@ -251,22 +63,7 @@ body {
     right: -20px; /* Move para fora da vista */
 }
 
-
-.main-content {
-    margin-left: 60px;
-    flex-grow: 1;
-    padding: 20px;
-    background-color: #f4f7f6;
-    min-height: 100vh;
-    box-sizing: border-box;
-    transition: margin-left 0.3s ease;
-}
-
-body:has(.sidebar:hover) .main-content {
-    margin-left: 240px;
-}
-
-/* --- HEADER --- */
+/* --- HEADER DA SIDEBAR --- */
 .sidebar-header {
     padding: 0 20px 20px 20px;
     text-align: center;
@@ -275,7 +72,7 @@ body:has(.sidebar:hover) .main-content {
     height: 90px;
     box-sizing: border-box;
     transition: padding 0.3s ease, height 0.3s ease;
-    position: relative; /* Para posicionar a seta */
+    position: relative;
 }
 
 /* Header no estado colapsado */
@@ -424,11 +221,42 @@ body:has(.sidebar:hover) .main-content {
     border-left-color: transparent !important;
 }
 
-.sidebar-nav-group-title {
-    display: none;
+/* Estilo para o link de download DENTRO do submenu */
+.sidebar-link-modelo-interno span {
+    color: #3498db; /* Cor azul de link */
+    font-size: 0.9em;
+    font-weight: 500;
 }
 
-/* Esconde o antigo .navbar */
-.navbar {
-    display: none !important;
+.sidebar-link-modelo-interno:hover span {
+    color: #5dade2; /* Azul mais claro no hover */
+}
+
+/* --- HEADER DA SIDEBAR --- */
+/* (Regra existente) */
+.sidebar-header {
+    padding: 0 20px 20px 20px;
+    text-align: center;
+    border-bottom: 1px solid #3a5068;
+    padding-top: 20px;
+    height: 90px;
+    box-sizing: border-box;
+    transition: padding 0.3s ease, height 0.3s ease;
+    position: relative;
+}
+
+/* ADICIONE ESTAS NOVAS REGRAS ABAIXO */
+
+/* Link do Header */
+.sidebar-header a.sidebar-header-link {
+    text-decoration: none; /* Remove o sublinhado */
+    display: block; /* Faz o link preencher o header */
+}
+
+/* Garante que os títulos não fiquem azuis */
+.sidebar-header a.sidebar-header-link .title-line-1 {
+     color: #ffffff;
+}
+.sidebar-header a.sidebar-header-link .title-line-2 {
+     color: #bdc3c7;
 }

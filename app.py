@@ -42,7 +42,7 @@ app.register_blueprint(tabloide_produtos_bp)
 def index():
     """Renderiza a nova página inicial com os botões."""
     # Atualiza os links da index para apontar para as rotas de upload corretas
-    return render_template('index.html') #
+    return render_template('index.html', active_page='index') # MODIFICADO AQUI
 
 # --- Funções de Banco de Dados Globais ---
 # A função before_request permanece a mesma, pois ainda precisa chamar

@@ -126,11 +126,9 @@ def upload_page():
     campanhas = db_campanha.get_all_campaigns()
     return render_template(
         'campanha/upload_campanha.html',
-        active_page='upload',
+        active_page='campanha_upload',
         campanhas=campanhas
     )
-
-# ... (Restante das funções: produtos_por_campanha, adicionar_produto, atualizar_produtos, deletar_produtos, validar_gtins permanecem iguais) ...
 
 @campanha_produtos_bp.route('/<int:campanha_id>/produtos')
 def produtos_por_campanha(campanha_id):
@@ -140,7 +138,12 @@ def produtos_por_campanha(campanha_id):
         return redirect(url_for('campanha.gestao_campanhas'))
 
     produtos = db_campanha_produtos.get_products_by_campaign_id(campanha_id)
-    return render_template('campanha/produtos_campanha.html', active_page='campanhas', campanha=campanha, produtos=produtos)
+    return render_template(
+        'campanha/produtos_campanha.html', 
+        active_page='campanhas_gestao', 
+        campanha=campanha, 
+        produtos=produtos
+    )
 
 @campanha_produtos_bp.route('/<int:campanha_id>/produtos/adicionar', methods=['POST'])
 def adicionar_produto(campanha_id):

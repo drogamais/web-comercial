@@ -151,7 +151,7 @@ def upload_page():
     tabloides = db_tabloide.get_all_campaigns()
     return render_template(
         'tabloide/upload_tabloide.html',
-        active_page='upload',
+        active_page='tabloide_upload',
         tabloides=tabloides
     )
 
@@ -164,7 +164,12 @@ def produtos_por_tabloide(campanha_id):
         return redirect(url_for('tabloide.gestao_tabloides'))
 
     produtos = db_tabloide_produtos.get_products_by_campaign_id(campanha_id)
-    return render_template('tabloide/produtos_tabloide.html', active_page='tabloides', tabloide=tabloide, produtos=produtos)
+    return render_template(
+        'tabloide/produtos_tabloide.html', 
+        active_page='tabloides_gestao', 
+        tabloide=tabloide, 
+        produtos=produtos
+    )
 
 
 @tabloide_produtos_bp.route('/<int:campanha_id>/produtos/adicionar', methods=['POST'])

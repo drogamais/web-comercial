@@ -7,11 +7,11 @@ from flask import g
 from config import DB_CONFIG # Você ainda usa o config
 from urllib.parse import quote_plus
 
-# 1. Construir a URL de conexão para SQLAlchemy
-# Formato: "mariadb+mariadb://<user>:<password>@<host>:<port>/<database>"
+######################################
+#   CONFIGURAÇÕES CONEXÃO BANCO
+######################################
+
 try:
-    # 2. LÊ E ESCAPA A SENHA (e usuário, por segurança)
-    # Isso converte caracteres especiais (como @) em formato de URL (como %40)
     safe_user = quote_plus(DB_CONFIG['user'])
     safe_password = quote_plus(DB_CONFIG['password'])
     
@@ -27,10 +27,10 @@ except KeyError:
 try:
     engine = sqlalchemy.create_engine(
         DB_URL,
-        pool_size=2,          # <-- SUA SUGESTÃO: Perfeito para Waitress!
+        pool_size=2,          # Perfeito para Waitress que tem 4 threads! pool_size <= 4
         max_overflow=2,       # Conexões temporárias se o pool estiver cheio
         pool_recycle=3600,    # Recicla conexões após 1 hora (opcional, mas bom)
-        pool_pre_ping=True    # <-- A SOLUÇÃO: Testa a conexão antes de usar
+        pool_pre_ping=True    # Testa a conexão antes de usar
     )
 except Exception as e:
     print(f"Erro ao criar o engine do SQLAlchemy: {e}")
@@ -71,9 +71,9 @@ def validate_gtins_in_external_db(gtin_list):
         # Cria placeholders seguros: :gtin_0, :gtin_1 ...
         placeholders = [f":gtin_{i}" for i in range(len(gtin_list))]
         sql_text = text(f"""
-            SELECT codigo_barras_normalizado AS gtin
+            SELECT codigo_barras AS gtin
             FROM bronze_plugpharma_produtos
-            WHERE `codigo_barras_normalizado` IN ({",".join(placeholders)})
+            WHERE codigo_principal = 1 AND `codigo_barras` IN ({",".join(placeholders)})
         """)
         
         # Cria o dicionário de parâmetros: {'gtin_0': '123', 'gtin_1': '456'}
@@ -99,16 +99,16 @@ def get_codigo_interno_map_from_gtins(gtin_list):
     try:
         placeholders = [f":gtin_{i}" for i in range(len(gtin_list))]
         sql_text = text(f"""
-            SELECT codigo_barras_normalizado, codigo_interno
+            SELECT codigo_barras, codigo_interno
             FROM bronze_plugpharma_produtos
-            WHERE `codigo_barras_normalizado` IN ({",".join(placeholders)})
+            WHERE codigo_principal = 1 AND `codigo_barras` IN ({",".join(placeholders)})
         """)
         
         params = {f"gtin_{i}": gtin for i, gtin in enumerate(gtin_list)}
         
         cursor = conn.execute(sql_text, params)
         # .mappings() permite acessar por nome da coluna, como dictionary=True
-        validos_map = {row['codigo_barras_normalizado']: row['codigo_interno'] for row in cursor.mappings().fetchall()}
+        validos_map = {row['codigo_barras']: row['codigo_interno'] for row in cursor.mappings().fetchall()}
         cursor.close()
         return validos_map, None
         

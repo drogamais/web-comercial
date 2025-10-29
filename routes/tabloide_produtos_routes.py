@@ -8,7 +8,7 @@ from flask import (
 import database.tabloide_db as db_tabloide
 import database.tabloide_produtos_db as db_tabloide_produtos # <-- Importado para deletar
 import database.common_db as db_common
-from utils import allowed_file
+from utils import allowed_file, pad_barcode, clean_barcode
 
 tabloide_produtos_bp = Blueprint(
     'tabloide_produtos',
@@ -18,11 +18,6 @@ tabloide_produtos_bp = Blueprint(
     url_prefix='/tabloide'
 )
 
-# --- Função auxiliar para normalizar código de barras ---
-def normalize_barcode(barcode):
-    if barcode and isinstance(barcode, str) and barcode.strip():
-        return barcode.strip().zfill(14)
-    return None
 # --------------------------------------------------------
 
 
@@ -95,7 +90,7 @@ def upload_page():
                     g_str = str(g) if g is not None else None
                     if g_str and g_str.strip():
                         gtins_raw_list.append(g_str)
-                        normalized = normalize_barcode(g_str)
+                        normalized = pad_barcode(g_str)
                         if normalized:
                             gtins_normalizados_map[g_str] = normalized
 
@@ -114,7 +109,7 @@ def upload_page():
                 for _, row in df.iterrows():
                     cb_raw = row.get('codigo_barras')
                     cb_raw_str = str(cb_raw) if cb_raw is not None else None
-                    cb_normalizado = normalize_barcode(cb_raw_str)
+                    cb_normalizado = pad_barcode(cb_raw_str)
                     ci = ci_map_normalizado.get(cb_normalizado) if cb_normalizado else None
 
                     produtos_para_inserir.append((
@@ -176,7 +171,7 @@ def produtos_por_tabloide(campanha_id):
 def adicionar_produto(campanha_id):
     try:
         cb_raw = request.form.get('codigo_barras')
-        cb_normalizado = normalize_barcode(cb_raw) # <-- NORMALIZA
+        cb_normalizado = pad_barcode(cb_raw) # <-- NORMALIZA
         ci = None
 
         if cb_normalizado: # Busca CI com código normalizado
@@ -219,7 +214,7 @@ def atualizar_produtos(campanha_id):
 
     gtins_raw_dict = {pid: request.form.get(f'codigo_barras_{pid}') for pid in selecionados}
     # Calcula normalizados para todos os selecionados
-    gtins_normalizados_map = {pid: normalize_barcode(gtins_raw_dict.get(pid)) for pid in selecionados}
+    gtins_normalizados_map = {pid: pad_barcode(gtins_raw_dict.get(pid)) for pid in selecionados}
     gtins_para_buscar = [norm for norm in gtins_normalizados_map.values() if norm] # Apenas normalizados válidos
 
     if gtins_para_buscar:
@@ -284,24 +279,20 @@ def validar_gtins_tabloide(tabloide_id):
     if not gtins_raw:
         return jsonify({"error": "Nenhum GTIN enviado"}), 400
 
-    gtins_para_validar_raw = [gtin for gtin in gtins_raw if gtin and str(gtin).strip()]
+    # 1. USANDO clean_barcode
+    gtins_para_validar_raw = [clean_barcode(gtin) for gtin in gtins_raw if gtin and str(gtin).strip()]
+    gtins_para_validar_raw = [g for g in gtins_para_validar_raw if g]
+
     if not gtins_para_validar_raw:
-        return jsonify({"valid_gtins": []})
-
-    gtins_padded = [normalize_barcode(str(g)) for g in gtins_para_validar_raw]
-    gtins_padded_validos = [g for g in gtins_padded if g]
-
-    if not gtins_padded_validos:
          return jsonify({"valid_gtins": []})
 
-    map_padded_to_raw = {normalize_barcode(str(raw)): str(raw) for raw in gtins_para_validar_raw if normalize_barcode(str(raw))}
-    validos_padded, error = db_common.validate_gtins_in_external_db(gtins_padded_validos)
+    # 2. Envia os GTINs RAW (sem padding) para a função de banco
+    validos_raw_set, error = db_common.validate_gtins_in_external_db(gtins_para_validar_raw)
 
     if error:
         error_message = f"Erro ao validar GTINs no banco externo: {error}"
         print(f"Erro na rota validar_gtins_tabloide: {error_message}")
         return jsonify({"error": error_message}), 500
 
-    validos_raw = {map_padded_to_raw[padded_gtin] for padded_gtin in validos_padded if padded_gtin in map_padded_to_raw}
-
-    return jsonify({"valid_gtins": list(validos_raw)})
+    # 3. Retorna o set de GTINs válidos (que já estão no formato raw/cleaned)
+    return jsonify({"valid_gtins": list(validos_raw_set)})

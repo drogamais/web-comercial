@@ -1,0 +1,60 @@
+# -----------------------------------------------------------------
+# EXEMPLO DE SCRIPT DE DEPLOY (deploy.ps1.example)
+#
+# COMO USAR:
+# 1. FAÇA UMA CÓPIA deste arquivo e renomeie-a para 'deploy.ps1'.
+# 2. ADICIONE 'deploy.ps1' (o arquivo que você copiou) ao seu .gitignore.
+# 3. PREENCHA as variáveis na "Parte 1" abaixo com suas informações.
+# 4. EXECUTE o script 'deploy.ps1' (clique com o botão direito -> Executar com PowerShell).
+# -----------------------------------------------------------------
+
+# --- 1. CONFIGURAÇÃO (PREENCHA ESTES VALORES) ---
+
+# O IP ou nome de host do seu servidor de produção
+$computadorRemoto = "COLOQUE_O_IP_DO_SERVIDOR_AQUI"
+
+# O nome de usuário usado para logar no servidor (ex: "DOMINIO\usuario" or "nome_usuario")
+$usuarioRemoto    = "COLOQUE_SEU_USUARIO_AQUI"
+
+# O nome exato do serviço como está no NSSM
+$servicoNome      = "NomeDoServicoNoNSSM"
+
+# O caminho completo para a pasta do projeto NO SERVIDOR
+$caminhoProjeto   = "C:\caminho\para\o\projeto\no\servidor"
+
+# O caminho completo para o nssm.exe NO SERVIDOR
+$caminhoNSSM      = "C:\caminho\para\nssm\win64\nssm.exe"
+
+
+# --- 2. Obter a Credencial de Forma Segura ---
+# Esta parte é segura, pois pede a senha e não a armazena no script.
+Write-Host "Iniciando conexao com $computadorRemoto..."
+$securePassword = Read-Host -AsSecureString -Prompt "Digite a senha para $usuarioRemoto"
+$cred = New-Object System.Management.Automation.PSCredential($usuarioRemoto, $securePassword)
+
+
+# --- 3. Executar o Deploy Remoto ---
+Write-Host "Conectando e executando o deploy..."
+Invoke-Command -ComputerName $computadorRemoto -Credential $cred -ScriptBlock { 
+    
+    # O '$using:' permite que o script remoto use as variáveis locais definidas acima
+    
+    Write-Host "[Servidor] Iniciando deploy..."
+
+    Write-Host "[Servidor] Acessando pasta do projeto: $using:caminhoProjeto"
+    cd $using:caminhoProjeto
+    
+    Write-Host "[Servidor] Executando git pull..."
+    git pull
+    
+    Write-Host "[Servidor] Reiniciando servico: $using:servicoNome"
+    # O '&' é o operador de chamada do PowerShell, usado para executar um .exe
+    & $using:caminhoNSSM restart $using:servicoNome
+
+    Write-Host "[Servidor] Deploy concluido."
+}
+
+Write-Host "Processo finalizado."
+
+# Mantém a janela aberta por 5 segundos para você ler o resultado
+Start-Sleep -Seconds 5

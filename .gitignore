@@ -14,3 +14,6 @@ config.py
 # 4. (Opcional) Ficheiros de configuração do Editor de Código
 .vscode/
 .idea/
+
+# script de deploy automatico via WinRM
+deploy.ps1

@@ -6,9 +6,10 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, jsonify
 )
 import database.campanha_db as db_campanha
-import database.campanha_produtos_db as db_campanha_produtos # <-- Importado para deletar
+import database.campanha_produtos_db as db_campanha_produtos
 import database.common_db as db_common
 from utils import allowed_file, pad_barcode, clean_barcode
+from config import DELETE_PASSWORD
 
 campanha_produtos_bp = Blueprint(
     'campanha_produtos',
@@ -222,6 +223,13 @@ def atualizar_produtos(campanha_id):
 
 @campanha_produtos_bp.route('/<int:campanha_id>/produtos/deletar', methods=['POST'])
 def deletar_produtos(campanha_id):
+    # --- NOVO: Verificação de Senha para Deleção em Massa ---
+    confirmation_password = request.form.get('confirmation_password_bulk')
+    if confirmation_password != DELETE_PASSWORD:
+        flash('Senha de confirmação incorreta para deleção em massa.', 'danger')
+        return redirect(url_for('campanha_produtos.produtos_por_campanha', campanha_id=campanha_id))
+    # --- FIM NOVO ---
+    
     selecionados = request.form.getlist('selecionado')
     if not selecionados:
         flash('Nenhum produto selecionado para deletar.', 'warning')

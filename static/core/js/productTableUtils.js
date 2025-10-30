@@ -89,6 +89,37 @@ window.ProductTableUtils = (function() {
         });
     }
 
+    function initBulkDeleteValidation(tableBody) {
+        const deleteBtn = document.getElementById('btn-delete-products');
+        const passwordInput = document.getElementById('password-bulk-delete');
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        const REQUIRED_PASSWORD = '123'; // Senha hardcoded
+        
+        if (!deleteBtn || !passwordInput || !selectAllCheckbox) return;
+        
+        const checkDeleteStatus = () => {
+            // Pega todos os checkboxes de linhas que estão checados
+            const checkedBoxes = tableBody.querySelectorAll('.edit-checkbox:checked');
+            const hasChecked = checkedBoxes.length > 0;
+            const isPasswordCorrect = passwordInput.value === REQUIRED_PASSWORD;
+            
+            // Habilita se houver itens selecionados E a senha estiver correta
+            deleteBtn.disabled = !(hasChecked && isPasswordCorrect);
+            
+            // Se houver itens selecionados, muda a cor do botão de delete para indicar que algo será deletado
+            if (hasChecked) {
+                 deleteBtn.style.backgroundColor = 'var(--button-danger-color, #e74c3c)';
+            } else {
+                 deleteBtn.style.backgroundColor = '#cccccc'; // Cor de disabled
+            }
+        };
+
+        // Adiciona listeners para todos os eventos relevantes
+        tableBody.addEventListener('change', checkDeleteStatus);
+        selectAllCheckbox.addEventListener('change', checkDeleteStatus);
+        passwordInput.addEventListener('input', checkDeleteStatus);
+    }
+
     // --- INICIALIZAÇÃO E LISTENERS ---
 
     function initProductTable(config) {
@@ -125,6 +156,9 @@ window.ProductTableUtils = (function() {
         if (config.validateGtinUrl) {
             initValidateGtinButton(tableBody, config);
         }
+        
+        // 8. NOVO: Validação para Deleção em Massa
+        initBulkDeleteValidation(tableBody);
     }
 
     // --- Funções Auxiliares de Inicialização ---

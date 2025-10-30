@@ -9,6 +9,7 @@ import database.tabloide_db as db_tabloide
 import database.tabloide_produtos_db as db_tabloide_produtos
 import database.common_db as db_common
 from utils import allowed_file, pad_barcode, clean_barcode
+from config import DELETE_PASSWORD
 
 tabloide_produtos_bp = Blueprint(
     'tabloide_produtos',
@@ -259,6 +260,13 @@ def atualizar_produtos(tabloide_id):
 
 @tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/deletar', methods=['POST'])
 def deletar_produtos(tabloide_id):
+    # --- NOVO: Verificação de Senha para Deleção em Massa ---
+    confirmation_password = request.form.get('confirmation_password_bulk')
+    if confirmation_password != DELETE_PASSWORD:
+        flash('Senha de confirmação incorreta para deleção em massa.', 'danger')
+        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
+    # --- FIM NOVO ---
+    
     selecionados = request.form.getlist('selecionado')
     if not selecionados:
         flash('Nenhum produto selecionado para deletar.', 'warning')

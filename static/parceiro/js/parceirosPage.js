@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA MODAL DELEÇÃO (sem alterações) ---
+    // --- LÓGICA MODAL DELEÇÃO (Implementação de Senha) ---
     const deleteModal = document.getElementById('delete-modal');
     if (deleteModal) {
         const deleteButtons = document.querySelectorAll('.btn-delete');
@@ -67,9 +67,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteModalBtnCancel = document.getElementById('delete-modal-btn-cancel');
         const deleteModalBtnConfirm = document.getElementById('delete-modal-btn-confirm');
         const parceiroNameSpan = document.getElementById('delete-modal-parceiro-name'); 
-        const deleteInput = document.getElementById('delete-modal-input');
+        const nameInput = document.getElementById('delete-modal-input');
+        const passwordInput = document.getElementById('delete-modal-password'); // NOVO
+        const REQUIRED_PASSWORD = '123'; // Senha hardcoded
 
         let correctParceiroName = '';
+        
+        // Função para verificar se a confirmação de nome e senha estão corretas
+        const checkConfirmationStatus = () => {
+             const isNameMatch = nameInput.value === correctParceiroName;
+             const isPasswordMatch = passwordInput.value === REQUIRED_PASSWORD;
+             deleteModalBtnConfirm.disabled = !(isNameMatch && isPasswordMatch);
+        };
 
         const showDeleteModal = (e) => {
             const button = e.currentTarget;
@@ -78,7 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             deleteForm.action = `/parceiro/deletar/${parceiroId}`; 
             parceiroNameSpan.textContent = correctParceiroName;
-            deleteInput.value = '';
+            
+            // Limpa todos os campos ao abrir
+            nameInput.value = '';
+            passwordInput.value = '';
             deleteModalBtnConfirm.disabled = true;
             deleteModal.classList.add('show-modal');
         };
@@ -88,9 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
             correctParceiroName = '';
         };
 
-        deleteInput.addEventListener('input', () => {
-            deleteModalBtnConfirm.disabled = deleteInput.value !== correctParceiroName;
-        });
+        // Adiciona listeners para ambos os campos de validação
+        nameInput.addEventListener('input', checkConfirmationStatus);
+        passwordInput.addEventListener('input', checkConfirmationStatus);
 
         deleteButtons.forEach(button => button.addEventListener('click', showDeleteModal));
         deleteModalBtnCancel.addEventListener('click', closeDeleteModal);

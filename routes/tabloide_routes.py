@@ -6,9 +6,9 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 )
 import os
-import database.tabloide_db as db_tabloide  # Importa o banco de dados de tabloide
-# Removido: db_common e db_tabloide_produtos
+import database.tabloide_db as db_tabloide
 from utils import allowed_file
+from config import DELETE_PASSWORD
 
 # Cria o Blueprint de Tabloide
 tabloide_bp = Blueprint(
@@ -80,6 +80,13 @@ def editar_tabloide(tabloide_id):
 
 @tabloide_bp.route('/deletar/<int:tabloide_id>', methods=['POST'])
 def deletar_tabloide(tabloide_id):
+    # --- NOVO: Verificação de Senha ---
+    confirmation_password = request.form.get('confirmation_password')
+    if confirmation_password != DELETE_PASSWORD:
+        flash('Senha de confirmação incorreta.', 'danger')
+        return redirect(url_for('tabloide.gestao_tabloides'))
+    # --- FIM NOVO ---
+    
     _, error = db_tabloide.delete_tabloide(tabloide_id)
     if error:
         flash(f'Erro ao deletar tabloide: {error}', 'danger')

@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import database.parceiro_db as db
+from config import DELETE_PASSWORD
 
 # Campos principais do parceiro
 PARCEIRO_FIELDS = (
@@ -35,7 +36,6 @@ def gestao_parceiros():
                 flash(f'Erro ao criar parceiro: {error}', 'danger')
             else:
                 flash('Parceiro criado com sucesso!', 'success')
-        # Após a criação, redireciona para a página de gerenciamento (GET)
         return redirect(url_for('parceiro.gestao_parceiros'))
 
     # Lógica para o método GET (Visualização e Filtro)
@@ -51,10 +51,7 @@ def gestao_parceiros():
         data_saida_max=data_saida_max_filtro
     )
     
-    # Define o valor de status_filtro para o template:
-    # Se status_filtro for None (primeira carga da página), define para '1' (Ativo).
-    # Caso contrário, usa o valor da URL ('0', '1', ou '').
-    status_filtro_display = status_filtro if status_filtro is not None else ''
+    status_filtro_display = status_filtro if status_filtro is not None else '' 
     
     return render_template(
         'parceiro/parceiros.html',
@@ -83,6 +80,13 @@ def editar_parceiro(parceiro_id):
 
 @parceiro_bp.route('/deletar/<int:parceiro_id>', methods=['POST'])
 def deletar_parceiro(parceiro_id):
+    # --- NOVO: Verificação de Senha ---
+    confirmation_password = request.form.get('confirmation_password')
+    if confirmation_password != DELETE_PASSWORD:
+        flash('Senha de confirmação incorreta.', 'danger')
+        return redirect(url_for('parceiro.gestao_parceiros'))
+    # --- FIM NOVO ---
+    
     _, error = db.delete_parceiro(parceiro_id)
     if error:
         flash(f'Erro ao deletar parceiro: {error}', 'danger')

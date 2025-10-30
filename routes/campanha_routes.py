@@ -1,5 +1,3 @@
-# MUDANÇAS EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/routes/campanha_routes.py
-
 # routes/campanha_routes.py
 
 import pandas as pd
@@ -9,8 +7,9 @@ from flask import (
 )
 import os
 import database.campanha_db as db_campanha # Para gerenciar campanhas
-import database.parceiro_db as db_parceiro # <-- ADICIONADO: Para buscar parceiros
+import database.parceiro_db as db_parceiro # Para buscar parceiros
 from utils import allowed_file
+from config import DELETE_PASSWORD
 
 # Cria o Blueprint de Campanha com prefixo de URL
 campanha_bp = Blueprint(
@@ -81,6 +80,13 @@ def editar_campanha(campaign_id):
 
 @campanha_bp.route('/deletar/<int:campaign_id>', methods=['POST'])
 def deletar_campanha(campaign_id):
+    # --- NOVO: Verificação de Senha ---
+    confirmation_password = request.form.get('confirmation_password')
+    if confirmation_password != DELETE_PASSWORD:
+        flash('Senha de confirmação incorreta.', 'danger')
+        return redirect(url_for('campanha.gestao_campanhas'))
+    # --- FIM NOVO ---
+    
     _, error = db_campanha.delete_campaign(campaign_id)
     if error: flash(f'Erro ao deletar campanha: {error}', 'danger')
     else: flash('Campanha deletada permanentemente com sucesso!', 'success')

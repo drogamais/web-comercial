@@ -59,9 +59,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteModalBtnConfirm = document.getElementById('delete-modal-btn-confirm'); 
         const campaignNameSpan = document.getElementById('delete-modal-campaign-name');
         const deleteInput = document.getElementById('delete-modal-input'); 
+        // ADICIONADO: Pega o input de senha
+        const passwordInput = document.getElementById('delete-modal-password');
+        const REQUIRED_PASSWORD = '123'; // Senha hardcoded para validação no front-end
 
         let correctCampaignName = ''; 
-
+        
+        // NOVO: Função para verificar se a confirmação de nome e senha estão corretas
+        const checkConfirmationStatus = () => {
+             const isNameMatch = deleteInput.value === correctCampaignName;
+             // Verifica se o elemento existe antes de tentar ler o valor
+             const isPasswordMatch = passwordInput && passwordInput.value === REQUIRED_PASSWORD;
+             deleteModalBtnConfirm.disabled = !(isNameMatch && isPasswordMatch);
+        };
+        
         // Função para mostrar o modal de deleção
         const showDeleteModal = (e) => {
             const button = e.currentTarget;
@@ -74,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             campaignNameSpan.textContent = correctCampaignName;
 
             deleteInput.value = '';
+            // ADICIONADO: Limpa a senha ao abrir
+            if (passwordInput) passwordInput.value = '';
             deleteModalBtnConfirm.disabled = true;
 
             deleteModal.classList.add('show-modal');
@@ -84,24 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
             correctCampaignName = ''; 
         };
 
-        deleteInput.addEventListener('input', () => {
-            if (deleteInput.value === correctCampaignName) {
-                deleteModalBtnConfirm.disabled = false; 
-            } else {
-                deleteModalBtnConfirm.disabled = true; 
-            }
-        });
+        // ALTERADO: Troca o listener antigo pelos novos
+        deleteInput.addEventListener('input', checkConfirmationStatus);
+        // ADICIONADO: Listener para o campo de senha
+        if (passwordInput) passwordInput.addEventListener('input', checkConfirmationStatus);
 
         deleteButtons.forEach(button => {
             button.addEventListener('click', showDeleteModal);
-        });
-
-        deleteModalBtnCancel.addEventListener('click', closeDeleteModal);
-
-        deleteModal.addEventListener('click', function(event) {
-            if (event.target === this) {
-                closeDeleteModal();
-            }
         });
     }
 });

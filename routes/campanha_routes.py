@@ -1,3 +1,5 @@
+# MUDANÇAS EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/routes/campanha_routes.py
+
 # routes/campanha_routes.py
 
 import pandas as pd
@@ -7,7 +9,7 @@ from flask import (
 )
 import os
 import database.campanha_db as db_campanha # Para gerenciar campanhas
-# Removido: db_campanha_produtos e db_common (não são mais usados aqui)
+import database.parceiro_db as db_parceiro # <-- ADICIONADO: Para buscar parceiros
 from utils import allowed_file
 
 # Cria o Blueprint de Campanha com prefixo de URL
@@ -39,26 +41,39 @@ def gestao_campanhas():
         nome = request.form.get('nome')
         data_inicio = request.form.get('data_inicio')
         data_fim = request.form.get('data_fim')
+        parceiro_id = request.form.get('parceiro_id') or None # <-- ADICIONADO
+        
         if not all([nome, data_inicio, data_fim]):
-            flash('Todos os campos são obrigatórios.', 'danger')
+            flash('Campos Nome, Início e Fim são obrigatórios.', 'danger')
         else:
-            error = db_campanha.add_campaign(nome, data_inicio, data_fim)
+            # MODIFICADO: Passa o parceiro_id para a função do DB
+            error = db_campanha.add_campaign(nome, data_inicio, data_fim, parceiro_id)
             if error: flash(f'Erro ao criar campanha: {error}', 'danger')
             else: flash('Campanha criada com sucesso!', 'success')
         return redirect(url_for('campanha.gestao_campanhas'))
     
+    # GET
     campanhas = db_campanha.get_all_campaigns()
-    return render_template('campanha/campanhas.html', active_page='campanhas', campanhas=campanhas)
+    parceiros = db_parceiro.get_all_parceiros() # <-- ADICIONADO
+    return render_template(
+        'campanha/campanhas.html', 
+        active_page='campanhas', 
+        campanhas=campanhas,
+        parceiros=parceiros # <-- ADICIONADO
+    )
 
 @campanha_bp.route('/editar/<int:campaign_id>', methods=['POST'])
 def editar_campanha(campaign_id):
     nome = request.form.get('nome_edit')
     data_inicio = request.form.get('data_inicio_edit')
     data_fim = request.form.get('data_fim_edit')
+    parceiro_id = request.form.get('parceiro_id_edit') or None # <-- ADICIONADO
+    
     if not all([nome, data_inicio, data_fim]):
         flash('Todos os campos são obrigatórios para a edição.', 'danger')
     else:
-        _, error = db_campanha.update_campaign(campaign_id, nome, data_inicio, data_fim)
+        # MODIFICADO: Passa o parceiro_id para a função do DB
+        _, error = db_campanha.update_campaign(campaign_id, nome, data_inicio, data_fim, parceiro_id)
         if error: flash(f'Erro ao atualizar campanha: {error}', 'danger')
         else: flash('Campanha atualizada com sucesso!', 'success')
     return redirect(url_for('campanha.gestao_campanhas'))

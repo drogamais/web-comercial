@@ -19,10 +19,21 @@
 
     <div class="filter-container">
         <h2>Nova Campanha</h2>
-        <form action="{{ url_for('campanha.gestao_campanhas') }}" method="post" class="filter-form">
+        <form action="{{ url_for('campanha.gestao_campanhas') }}" method="post" class="filter-form" style="align-items: flex-end;">
             <div class="form-group"><label for="nome">Nome:</label><input type="text" name="nome" required></div>
             <div class="form-group"><label for="data_inicio">Início:</label><input type="date" name="data_inicio" required></div>
             <div class="form-group"><label for="data_fim">Fim:</label><input type="date" name="data_fim" required></div>
+            
+            <div class="form-group" style="flex: 1.5;">
+                <label for="parceiro_id">Parceiro:</label>
+                <select name="parceiro_id" id="parceiro_id">
+                    <option value="">(Nenhum)</option>
+                    {% for p in parceiros %}
+                    <option value="{{ p.id }}">{{ p.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
             <button type="submit">Criar Campanha</button>
         </form>
     </div>
@@ -35,7 +46,7 @@
                 <th>Nome</th>
                 <th class="th-campanha-inicio">Data de Início</th>
                 <th class="th-campanha-fim">Data de Fim</th>
-                <th class="th-campanha-acoes">Ações</th>
+                <th style="width: 15%;">Parceiro</th> <th class="th-campanha-acoes">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -44,7 +55,7 @@
                 <td>{{ c.nome }}</td>
                 <td>{{ c.data_inicio.strftime('%d/%m/%Y') }}</td>
                 <td>{{ c.data_fim.strftime('%d/%m/%Y') }}</td>
-                <td>
+                <td>{{ c.parceiro_nome or 'N/A' }}</td> <td>
                     <div class="action-buttons-container">
                         <a href="{{ url_for('campanha_produtos.produtos_por_campanha', campanha_id=c.id) }}" class="button-filter btn-ver-produtos">
                            Ver Produtos
@@ -54,8 +65,8 @@
                                 data-id="{{ c.id }}"
                                 data-nome="{{ c.nome }}"
                                 data-inicio="{{ c.data_inicio.strftime('%Y-%m-%d') }}"
-                                data-fim="{{ c.data_fim.strftime('%Y-%m-%d') }}">
-                            Editar
+                                data-fim="{{ c.data_fim.strftime('%Y-%m-%d') }}"
+                                data-parceiro-id="{{ c.parceiro_id or '' }}"> Editar
                         </button>
                         
                         <button type="button" class="button-danger btn-delete btn-deletar-campanha" 
@@ -90,6 +101,17 @@
                     <label for="data_fim_edit">Data de Fim:</label>
                     <input type="date" id="data_fim_edit" name="data_fim_edit" required>
                 </div>
+                
+                <div class="form-group">
+                    <label for="parceiro_id_edit">Parceiro:</label>
+                    <select name="parceiro_id_edit" id="parceiro_id_edit">
+                        <option value="">(Nenhum)</option>
+                        {% for p in parceiros %}
+                        <option value="{{ p.id }}">{{ p.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
                 <div class="modal-actions">
                     <button id="modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
                     <button type="submit" class="modal-button-confirm">Salvar</button>

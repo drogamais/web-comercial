@@ -1,3 +1,5 @@
+// MUDANÇAS EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/static/campanha/js/campanhasListPage.js
+
 document.addEventListener('DOMContentLoaded', () => {
     const editModal = document.getElementById('edit-modal');
     if (!editModal) return;
@@ -8,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nomeInput = document.getElementById('nome_edit');
     const dataInicioInput = document.getElementById('data_inicio_edit');
     const dataFimInput = document.getElementById('data_fim_edit');
+    const parceiroIdInput = document.getElementById('parceiro_id_edit'); // <-- ADICIONADO
 
     // Função para mostrar o modal
     const showModal = (e) => {
@@ -16,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const campaignName = button.dataset.nome;
         const campaignInicio = button.dataset.inicio;
         const campaignFim = button.dataset.fim;
+        const campaignParceiroId = button.dataset.parceiroId; // <-- ADICIONADO
 
         // CORRIGIDO: Adicionado prefixo /campanha
         editForm.action = `/campanha/editar/${campaignId}`;
@@ -24,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nomeInput.value = campaignName;
         dataInicioInput.value = campaignInicio;
         dataFimInput.value = campaignFim;
+        parceiroIdInput.value = campaignParceiroId || ''; // <-- ADICIONADO
 
         // Mostra o modal
         editModal.classList.add('show-modal');

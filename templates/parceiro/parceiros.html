@@ -22,8 +22,8 @@
         <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;">
             
             <div class="form-group" style="flex: 1.5;">
-                <label for="nome">Nome Ajustado: <span style="color: red;">*</span></label>
-                <input type="text" id="nome" name="nome" required>
+                <label for="nome_ajustado">Nome Ajustado: <span style="color: red;">*</span></label>
+                <input type="text" id="nome_ajustado" name="nome_ajustado" required>
             </div>
             <div class="form-group" style="flex: 1;">
                 <label for="cnpj">CNPJ: <span style="color: red;">*</span></label>
@@ -39,6 +39,9 @@
                 <input type="text" id="razao_social" name="razao_social" required>
             </div>
             <div class="form-group" style="flex: 1;">
+                <label for="ie">Inscrição Estadual (I.E.):</label> <input type="text" id="ie" name="ie">
+            </div>
+            <div class="form-group" style="flex: 1;">
                 <label for="tipo">Tipo: <span style="color: red;">*</span></label>
                 <select id="tipo" name="tipo" required>
                     <option value="" selected>Selecione...</option>
@@ -46,15 +49,15 @@
                     <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
                 </select>
             </div>
+
             <div class="form-group" style="flex: 1;">
                 <label for="telefone">Telefone:</label>
                 <input type="text" id="telefone" name="telefone">
             </div>
             <div class="form-group" style="flex: 1.5;">
-                <label for="email">E-mail:</label>
+                <label for="email">E-mail (Geral):</label>
                 <input type="email" id="email" name="email">
             </div>
-
             <div class="form-group" style="flex: 1;">
                 <label for="data_entrada">Data Entrada: <span style="color: red;">*</span></label>
                 <input type="date" id="data_entrada" name="data_entrada" required>
@@ -64,6 +67,32 @@
                 <input type="date" id="data_saida" name="data_saida" required>
             </div>
             
+            <div class="form-group" style="flex: 2.5;">
+                <label for="endereco">Endereço:</label> <input type="text" id="endereco" name="endereco">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="bairro">Bairro:</label> <input type="text" id="bairro" name="bairro">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="cidade">Cidade:</label> <input type="text" id="cidade" name="cidade">
+            </div>
+            <div class="form-group" style="flex: 0.5;">
+                <label for="estado">Estado:</label> <input type="text" id="estado" name="estado" maxlength="2">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="cep">CEP:</label> <input type="text" id="cep" name="cep">
+            </div>
+
+            <div class="form-group" style="flex: 1.5;">
+                <label for="representante_legal">Representante Legal:</label> <input type="text" id="representante_legal" name="representante_legal">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="representante_cpf">CPF Representante:</label> <input type="text" id="representante_cpf" name="representante_cpf">
+            </div>
+            <div class="form-group" style="flex: 1.5;">
+                <label for="representante_email">Email Representante:</label> <input type="email" id="representante_email" name="representante_email">
+            </div>
+
             <div class="form-group" style="flex: 1; justify-content: flex-end; align-self: flex-end;">
                  <button type="submit" style="height: 38px;">Criar Parceiro</button>
             </div>
@@ -85,14 +114,14 @@
         <tbody>
             {% for p in parceiros %}
             <tr>
-                <td>{{ p.nome }}</td>
+                <td>{{ p.nome_ajustado }}</td>
                 <td>{{ p.cnpj }}</td>
                 <td>{{ p.tipo }}</td>
                 <td>
                     <div class="action-buttons-container">
                         <button type="button" class="btn-edit button-filter btn-editar-parceiro"
                                 data-id="{{ p.id }}"
-                                data-nome-ajustado="{{ p.nome }}"
+                                data-nome-ajustado="{{ p.nome_ajustado }}"
                                 data-cnpj="{{ p.cnpj }}"
                                 data-nome-fantasia="{{ p.nome_fantasia or '' }}"
                                 data-razao-social="{{ p.razao_social }}"
@@ -100,13 +129,22 @@
                                 data-email="{{ p.email or '' }}"
                                 data-telefone="{{ p.telefone or '' }}"
                                 data-data-entrada="{{ p.data_entrada.strftime('%Y-%m-%d') if p.data_entrada else '' }}"
-                                data-data-saida="{{ p.data_saida.strftime('%Y-%m-%d') if p.data_saida else '' }}">
+                                data-data-saida="{{ p.data_saida.strftime('%Y-%m-%d') if p.data_saida else '' }}"
+                                data-ie="{{ p.ie or '' }}"
+                                data-endereco="{{ p.endereco or '' }}"
+                                data-bairro="{{ p.bairro or '' }}"
+                                data-cidade="{{ p.cidade or '' }}"
+                                data-estado="{{ p.estado or '' }}"
+                                data-cep="{{ p.cep or '' }}"
+                                data-representante-legal="{{ p.representante_legal or '' }}"
+                                data-representante-cpf="{{ p.representante_cpf or '' }}"
+                                data-representante-email="{{ p.representante_email or '' }}">
                             Editar
                         </button>
 
                         <button type="button" class="button-danger btn-delete btn-deletar-parceiro"
                                 data-id="{{ p.id }}"
-                                data-nome="{{ p.nome }}">
+                                data-nome-ajustado="{{ p.nome_ajustado }}">
                             Excluir 
                         </button>
                     </div>
@@ -141,6 +179,9 @@
                     <input type="text" id="razao_social_edit" name="razao_social_edit" required>
                 </div>
                 <div class="form-group" style="flex: 1;">
+                    <label for="ie_edit">Inscrição Estadual (I.E.):</label> <input type="text" id="ie_edit" name="ie_edit">
+                </div>
+                <div class="form-group" style="flex: 1;">
                     <label for="tipo_edit">Tipo: <span style="color: red;">*</span></label>
                     <select id="tipo_edit" name="tipo_edit" required>
                         <option value="" disabled>Selecione...</option>
@@ -148,15 +189,15 @@
                         <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
                     </select>
                 </div>
+
                 <div class="form-group" style="flex: 1;">
                     <label for="telefone_edit">Telefone:</label>
                     <input type="text" id="telefone_edit" name="telefone_edit">
                 </div>
                 <div class="form-group" style="flex: 1.5;">
-                    <label for="email_edit">E-mail:</label>
+                    <label for="email_edit">E-mail (Geral):</label>
                     <input type="email" id="email_edit" name="email_edit">
                 </div>
-
                 <div class="form-group" style="flex: 1;">
                     <label for="data_entrada_edit">Data Entrada: <span style="color: red;">*</span></label>
                     <input type="date" id="data_entrada_edit" name="data_entrada_edit" required>
@@ -164,6 +205,32 @@
                 <div class="form-group" style="flex: 1;">
                     <label for="data_saida_edit">Data Saída: <span style="color: red;">*</span></label>
                     <input type="date" id="data_saida_edit" name="data_saida_edit" required>
+                </div>
+                
+                <div class="form-group" style="flex: 2.5;">
+                    <label for="endereco_edit">Endereço:</label> <input type="text" id="endereco_edit" name="endereco_edit">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="bairro_edit">Bairro:</label> <input type="text" id="bairro_edit" name="bairro_edit">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="cidade_edit">Cidade:</label> <input type="text" id="cidade_edit" name="cidade_edit">
+                </div>
+                <div class="form-group" style="flex: 0.5;">
+                    <label for="estado_edit">Estado:</label> <input type="text" id="estado_edit" name="estado_edit" maxlength="2">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="cep_edit">CEP:</label> <input type="text" id="cep_edit" name="cep_edit">
+                </div>
+
+                <div class="form-group" style="flex: 1.5;">
+                    <label for="representante_legal_edit">Representante Legal:</label> <input type="text" id="representante_legal_edit" name="representante_legal_edit">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="representante_cpf_edit">CPF Representante:</label> <input type="text" id="representante_cpf_edit" name="representante_cpf_edit">
+                </div>
+                <div class="form-group" style="flex: 1.5;">
+                    <label for="representante_email_edit">Email Representante:</label> <input type="email" id="representante_email_edit" name="representante_email_edit">
                 </div>
 
                 <div class="modal-actions" style="flex-basis: 100%; margin-top: 25px;">

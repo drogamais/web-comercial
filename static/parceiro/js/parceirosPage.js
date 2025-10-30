@@ -1,4 +1,4 @@
-// static/parceiro/js/parceirosPage.js
+// MUDANÇAS EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/static/parceiro/js/parceirosPage.js
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- LÓGICA MODAL EDIÇÃO ---
@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Mapeia todos os inputs do modal de edição
         const inputs = {
+            // Campos existentes
             nomeAjustado: document.getElementById('nome_ajustado_edit'),
             cnpj: document.getElementById('cnpj_edit'),
             nomeFantasia: document.getElementById('nome_fantasia_edit'),
@@ -20,6 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
             dataEntrada: document.getElementById('data_entrada_edit'),
             dataSaida: document.getElementById('data_saida_edit'),
             // REMOVIDO: status: document.getElementById('status_edit') <-- ESTA LINHA FOI REMOVIDA
+            
+            // NOVOS CAMPOS ADICIONADOS
+            ie: document.getElementById('ie_edit'),
+            endereco: document.getElementById('endereco_edit'),
+            bairro: document.getElementById('bairro_edit'),
+            cidade: document.getElementById('cidade_edit'),
+            estado: document.getElementById('estado_edit'),
+            cep: document.getElementById('cep_edit'),
+            representanteLegal: document.getElementById('representante_legal_edit'),
+            representanteCpf: document.getElementById('representante_cpf_edit'),
+            representanteEmail: document.getElementById('representante_email_edit')
         };
 
         const showEditModal = (e) => {
@@ -30,7 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
             editForm.action = `/parceiro/editar/${parceiroId}`; // Rota de parceiro
 
             // Preenche todos os campos do formulário do modal
-            inputs.nomeAjustado.value = data.nomeAjustado || '';
+            // Campos existentes
+            // (Ajuste no data.nomeAjustado vindo do HTML)
+            inputs.nomeAjustado.value = data.nomeAjustado || ''; 
             inputs.cnpj.value = data.cnpj || '';
             inputs.nomeFantasia.value = data.nomeFantasia || '';
             inputs.razaoSocial.value = data.razaoSocial || '';
@@ -40,6 +54,19 @@ document.addEventListener('DOMContentLoaded', () => {
             inputs.dataEntrada.value = data.dataEntrada || '';
             inputs.dataSaida.value = data.dataSaida || '';
             // REMOVIDO: inputs.status.value = data.status || 'ativo'; // 'ativo' como padrão
+
+            // NOVOS CAMPOS ADICIONADOS
+            // (Os nomes no 'data' são convertidos para camelCase pelo DOM)
+            // ex: data-representante-legal -> data.representanteLegal
+            inputs.ie.value = data.ie || '';
+            inputs.endereco.value = data.endereco || '';
+            inputs.bairro.value = data.bairro || '';
+            inputs.cidade.value = data.cidade || '';
+            inputs.estado.value = data.estado || '';
+            inputs.cep.value = data.cep || '';
+            inputs.representanteLegal.value = data.representanteLegal || '';
+            inputs.representanteCpf.value = data.representanteCpf || '';
+            inputs.representanteEmail.value = data.representanteEmail || '';
 
             editModal.classList.add('show-modal');
         };
@@ -71,8 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const showDeleteModal = (e) => {
             const button = e.currentTarget;
             const parceiroId = button.dataset.id;
-            // 'data-nome' agora contém o 'nome_ajustado' (definido no HTML)
-            correctParceiroName = button.dataset.nome; 
+            // 'data-nome-ajustado' agora contém o 'nome_ajustado' (definido no HTML)
+            correctParceiroName = button.dataset.nome_ajustado; 
 
             deleteForm.action = `/parceiro/deletar/${parceiroId}`; // Rota de parceiro
             parceiroNameSpan.textContent = correctParceiroName;

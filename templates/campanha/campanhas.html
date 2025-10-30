@@ -29,7 +29,7 @@
                 <select name="parceiro_id" id="parceiro_id">
                     <option value="">(Nenhum)</option>
                     {% for p in parceiros %}
-                    <option value="{{ p.id }}">{{ p.nome }}</option>
+                    <option value="{{ p.id }}">{{ p.nome_ajustado }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -107,7 +107,7 @@
                     <select name="parceiro_id_edit" id="parceiro_id_edit">
                         <option value="">(Nenhum)</option>
                         {% for p in parceiros %}
-                        <option value="{{ p.id }}">{{ p.nome }}</option>
+                        <option value="{{ p.id }}">{{ p.nome_ajustado }}</option>
                         {% endfor %}
                     </select>
                 </div>

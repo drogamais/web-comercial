@@ -111,7 +111,7 @@ def get_all_campaigns():
     sql = text(f"""
         SELECT 
             c.*, 
-            p.nome as parceiro_nome 
+            p.nome_ajustado as parceiro_nome 
         FROM {DIM_CAMPANHA_TABLE} c
         LEFT JOIN {DIM_PARCEIRO_TABLE} p ON c.parceiro_id = p.id
         WHERE c.status = 1 
@@ -150,7 +150,7 @@ def get_campaign_by_id(campanha_id):
     sql = text(f"""
         SELECT 
             c.*, 
-            p.nome as parceiro_nome 
+            p.nome_ajustado as parceiro_nome 
         FROM {DIM_CAMPANHA_TABLE} c
         LEFT JOIN {DIM_PARCEIRO_TABLE} p ON c.parceiro_id = p.id
         WHERE c.id = :id

@@ -100,9 +100,26 @@ def update_campaign(campaign_id, nome, data_inicio, data_fim):
         conn.rollback()
         return 0, str(e)
 
+# #####################
+# # DELETE PERMANENTE
+# #####################
+# def delete_campaign(campaign_id):
+#     conn = get_db_connection()
+#     sql = text(f"DELETE FROM {DIM_CAMPANHA_TABLE} WHERE id = :id")
+#     try:
+#         result = conn.execute(sql, {"id": campaign_id})
+#         conn.commit()
+#         return result.rowcount, None
+#     except SQLAlchemyError as e:
+#         conn.rollback()
+#         return 0, str(e)
+    
+#####################
+# DELETE SOFT
+#####################
 def delete_campaign(campaign_id):
     conn = get_db_connection()
-    sql = text(f"DELETE FROM {DIM_CAMPANHA_TABLE} WHERE id = :id")
+    sql = text(f"UPDATE {DIM_CAMPANHA_TABLE} SET status = 0 WHERE id = :id")
     try:
         result = conn.execute(sql, {"id": campaign_id})
         conn.commit()

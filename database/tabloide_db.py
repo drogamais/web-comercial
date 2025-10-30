@@ -61,7 +61,7 @@ def get_active_tabloide_for_upload():
     today = datetime.date.today()
     sql = text(f"""
         SELECT * FROM {DIM_TABLOIDE_TABLE} 
-        WHERE status = 1 AND data_fim >= :today 
+        WHERE data_fim >= :today 
         ORDER BY data_inicio DESC
     """)
     try:
@@ -100,9 +100,26 @@ def update_tabloide(tabloide_id, nome, data_inicio, data_fim):
         conn.rollback()
         return 0, str(e)
 
+# #####################
+# # DELETE PERMANENTE
+# #####################
+# def delete_tabloide(tabloide_id):
+#     conn = get_db_connection()
+#     sql = text(f"DELETE FROM {DIM_TABLOIDE_TABLE} WHERE id = :id")
+#     try:
+#         result = conn.execute(sql, {"id": tabloide_id})
+#         conn.commit()
+#         return result.rowcount, None
+#     except SQLAlchemyError as e:
+#         conn.rollback()
+#         return 0, str(e)
+
+#####################
+# DELETE SOFT
+#####################
 def delete_tabloide(tabloide_id):
     conn = get_db_connection()
-    sql = text(f"DELETE FROM {DIM_TABLOIDE_TABLE} WHERE id = :id")
+    sql = text(f"UPDATE {DIM_TABLOIDE_TABLE} SET status = 0 WHERE id = :id")
     try:
         result = conn.execute(sql, {"id": tabloide_id})
         conn.commit()

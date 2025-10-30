@@ -190,7 +190,7 @@ def update_campaign(campaign_id, nome, data_inicio, data_fim, parceiro_id):
         return 0, str(e)
 
 # #####################
-# # DELETE PERMANENTE
+# # HARD DELETE
 # #####################
 # def delete_campaign(campaign_id):
 #     conn = get_db_connection()
@@ -204,7 +204,7 @@ def update_campaign(campaign_id, nome, data_inicio, data_fim, parceiro_id):
 #         return 0, str(e)
     
 #####################
-# DELETE SOFT
+# SOFT DELETE
 #####################
 def delete_campaign(campaign_id):
     conn = get_db_connection()

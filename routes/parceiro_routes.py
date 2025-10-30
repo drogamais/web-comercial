@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import database.parceiro_db as db
 
-# Campos principais do parceiro - AJUSTADOS PARA O SEU SCHEMA FINAL
+# Campos principais do parceiro
 PARCEIRO_FIELDS = (
     "nome_ajustado", "tipo", "cnpj", "nome_fantasia", "razao_social",
     "gestor", "telefone_gestor", "email_gestor"
@@ -35,13 +35,35 @@ def gestao_parceiros():
                 flash(f'Erro ao criar parceiro: {error}', 'danger')
             else:
                 flash('Parceiro criado com sucesso!', 'success')
+        # Após a criação, redireciona para a página de gerenciamento (GET)
         return redirect(url_for('parceiro.gestao_parceiros'))
 
-    parceiros = db.get_all_parceiros()
+    # Lógica para o método GET (Visualização e Filtro)
+    tipo_filtro = request.args.get('tipo') or None
+    status_filtro = request.args.get('status') # '1', '0' ou '' (Todos)
+    data_entrada_min_filtro = request.args.get('data_entrada_min') or None
+    data_saida_max_filtro = request.args.get('data_saida_max') or None
+    
+    parceiros = db.get_all_parceiros(
+        tipo=tipo_filtro,
+        status=status_filtro, 
+        data_entrada_min=data_entrada_min_filtro,
+        data_saida_max=data_saida_max_filtro
+    )
+    
+    # Define o valor de status_filtro para o template:
+    # Se status_filtro for None (primeira carga da página), define para '1' (Ativo).
+    # Caso contrário, usa o valor da URL ('0', '1', ou '').
+    status_filtro_display = status_filtro if status_filtro is not None else ''
+    
     return render_template(
         'parceiro/parceiros.html',
         active_page='parceiros_gestao',
-        parceiros=parceiros
+        parceiros=parceiros,
+        tipo_filtro=tipo_filtro,
+        status_filtro=status_filtro_display, 
+        data_entrada_min_filtro=data_entrada_min_filtro,
+        data_saida_max_filtro=data_saida_max_filtro
     )
 
 @parceiro_bp.route('/editar/<int:parceiro_id>', methods=['POST'])

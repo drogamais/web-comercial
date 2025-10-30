@@ -17,7 +17,7 @@
         {% endif %}
     {% endwith %}
 
-    <div class="filter-container">
+    <div class="filter-container" style="margin-top: 20px;">
         <h2>Novo Parceiro</h2>
         <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;">
             
@@ -39,7 +39,7 @@
                 <label for="cnpj">CNPJ: <span style="color: red;">*</span></label>
                 <input type="text" id="cnpj" name="cnpj" required>
             </div>
-
+            
             <div class="form-group" style="flex: 1.5;">
                 <label for="nome_fantasia">Nome Fantasia:</label>
                 <input type="text" id="nome_fantasia" name="nome_fantasia">
@@ -49,38 +49,75 @@
                 <label for="razao_social">Razão Social: <span style="color: red;">*</span></label>
                 <input type="text" id="razao_social" name="razao_social" required>
             </div>
-
+            
             <div class="form-group" style="flex: 1;">
                 <label for="gestor">Gestor:</label>
                 <input type="text" id="gestor" name="gestor">
             </div>
-
+            
             <div class="form-group" style="flex: 1;">
                 <label for="telefone_gestor">Telefone Gestor:</label>
                 <input type="text" id="telefone_gestor" name="telefone_gestor">
             </div>
-
+            
             <div class="form-group" style="flex: 1.5;">
                 <label for="email_gestor">E-mail Gestor:</label>
                 <input type="email" id="email_gestor" name="email_gestor">
             </div>
-
+            
             <div class="form-group" style="flex: 1;">
                 <label for="data_entrada">Data Entrada: <span style="color: red;">*</span></label>
                 <input type="date" id="data_entrada" name="data_entrada" required>
             </div>
-
+            
             <div class="form-group" style="flex: 1;">
                 <label for="data_saida">Data Saída: <span style="color: red;">*</span></label>
                 <input type="date" id="data_saida" name="data_saida" required>
-            </div>         
+            </div> 
             
             <div class="form-group" style="flex: 1; justify-content: flex-end; align-self: flex-end;">
-                 <button type="submit" style="height: 38px;">Criar Parceiro</button>
+                <button type="submit" style="height: 38px;">Criar Parceiro</button>
             </div>
         </form>
     </div>
+    
+    <div class="filter-container">
+        <h2>Filtrar Parceiros</h2>
+        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="get" class="filter-form" style="align-items: flex-end; gap: 10px;" autocomplete="off">
+            
+            <div class="form-group" style="flex: 1; min-width: 150px;">
+                <label for="tipo_filtro">Tipo:</label>
+                <select id="tipo_filtro" name="tipo">
+                    <option value="" {{ 'selected' if tipo_filtro == '' or tipo_filtro is none else '' }}>Todos</option>
+                    <option value="INDUSTRIA" {{ 'selected' if tipo_filtro == 'INDUSTRIA' else '' }}>INDUSTRIA</option>
+                    <option value="DISTRIBUIDOR" {{ 'selected' if tipo_filtro == 'DISTRIBUIDOR' else '' }}>DISTRIBUIDOR</option>
+                </select>
+            </div>
 
+            <div class="form-group" style="flex: 1; min-width: 150px;">
+                <label for="status_filtro">Status:</label>
+                <select id="status_filtro" name="status">
+                    <option value="" {{ 'selected' if status_filtro == '' or status_filtro is none else '' }}>Todos</option>
+                    <option value="1" {{ 'selected' if status_filtro == '1' else '' }}>ATIVO</option>
+                    <option value="0" {{ 'selected' if status_filtro == '0' else '' }}>INATIVO</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="flex: 1; min-width: 100px;">
+                <label for="data_entrada_min">Data Entrada (Min):</label>
+                <input type="date" id="data_entrada_min" name="data_entrada_min" value="{{ data_entrada_min_filtro or '' }}">
+            </div>
+            
+            <div class="form-group" style="flex: 1; min-width: 100px;">
+                <label for="data_saida_max">Data Saída (Max):</label>
+                <input type="date" id="data_saida_max" name="data_saida_max" value="{{ data_saida_max_filtro or '' }}">
+            </div>
+            
+            <div class="form-group" style="flex: 0.8; min-width: 120px;">
+                <button type="submit" class="button-filter" style="height: 38px;">Aplicar Filtro</button>
+            </div>
+        </form>
+    </div>
 
     <h2>Parceiros Cadastrados</h2>
     {% if parceiros %}

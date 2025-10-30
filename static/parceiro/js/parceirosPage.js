@@ -8,30 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const editButtons = document.querySelectorAll('.btn-edit');
         const editForm = document.getElementById('edit-form');
         
-        // Mapeia todos os inputs do modal de edição
+        // Mapeia TODOS os inputs que existem no modal de edição
         const inputs = {
-            // Campos existentes
+            // Campos presentes no esquema FINAL do banco de dados
             nomeAjustado: document.getElementById('nome_ajustado_edit'),
             cnpj: document.getElementById('cnpj_edit'),
             nomeFantasia: document.getElementById('nome_fantasia_edit'),
             razaoSocial: document.getElementById('razao_social_edit'),
             tipo: document.getElementById('tipo_edit'),
-            email: document.getElementById('email_edit'),
-            telefone: document.getElementById('telefone_edit'),
+            gestor: document.getElementById('gestor_edit'), 
+            emailGestor: document.getElementById('email_gestor_edit'), 
+            telefoneGestor: document.getElementById('telefone_gestor_edit'), 
             dataEntrada: document.getElementById('data_entrada_edit'),
-            dataSaida: document.getElementById('data_saida_edit'),
-            // REMOVIDO: status: document.getElementById('status_edit') <-- ESTA LINHA FOI REMOVIDA
-            
-            // NOVOS CAMPOS ADICIONADOS
-            ie: document.getElementById('ie_edit'),
-            endereco: document.getElementById('endereco_edit'),
-            bairro: document.getElementById('bairro_edit'),
-            cidade: document.getElementById('cidade_edit'),
-            estado: document.getElementById('estado_edit'),
-            cep: document.getElementById('cep_edit'),
-            representanteLegal: document.getElementById('representante_legal_edit'),
-            representanteCpf: document.getElementById('representante_cpf_edit'),
-            representanteEmail: document.getElementById('representante_email_edit')
+            dataSaida: document.getElementById('data_saida_edit')
         };
 
         const showEditModal = (e) => {
@@ -39,34 +28,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = button.dataset; // Pega todos os atributos data-*
             const parceiroId = data.id;
 
-            editForm.action = `/parceiro/editar/${parceiroId}`; // Rota de parceiro
+            editForm.action = `/parceiro/editar/${parceiroId}`; 
 
             // Preenche todos os campos do formulário do modal
-            // Campos existentes
-            // (Ajuste no data.nomeAjustado vindo do HTML)
             inputs.nomeAjustado.value = data.nomeAjustado || ''; 
             inputs.cnpj.value = data.cnpj || '';
             inputs.nomeFantasia.value = data.nomeFantasia || '';
             inputs.razaoSocial.value = data.razaoSocial || '';
             inputs.tipo.value = data.tipo || '';
-            inputs.email.value = data.email || '';
-            inputs.telefone.value = data.telefone || '';
             inputs.dataEntrada.value = data.dataEntrada || '';
             inputs.dataSaida.value = data.dataSaida || '';
-            // REMOVIDO: inputs.status.value = data.status || 'ativo'; // 'ativo' como padrão
-
-            // NOVOS CAMPOS ADICIONADOS
-            // (Os nomes no 'data' são convertidos para camelCase pelo DOM)
-            // ex: data-representante-legal -> data.representanteLegal
-            inputs.ie.value = data.ie || '';
-            inputs.endereco.value = data.endereco || '';
-            inputs.bairro.value = data.bairro || '';
-            inputs.cidade.value = data.cidade || '';
-            inputs.estado.value = data.estado || '';
-            inputs.cep.value = data.cep || '';
-            inputs.representanteLegal.value = data.representanteLegal || '';
-            inputs.representanteCpf.value = data.representanteCpf || '';
-            inputs.representanteEmail.value = data.representanteEmail || '';
+            
+            // Campos de contato
+            inputs.gestor.value = data.gestor || ''; 
+            inputs.telefoneGestor.value = data.telefoneGestor || ''; 
+            inputs.emailGestor.value = data.emailGestor || ''; 
 
             editModal.classList.add('show-modal');
         };
@@ -83,14 +59,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA MODAL DELEÇÃO ( permanece a mesma) ---
+    // --- LÓGICA MODAL DELEÇÃO (sem alterações) ---
     const deleteModal = document.getElementById('delete-modal');
     if (deleteModal) {
         const deleteButtons = document.querySelectorAll('.btn-delete');
         const deleteForm = document.getElementById('delete-form');
         const deleteModalBtnCancel = document.getElementById('delete-modal-btn-cancel');
         const deleteModalBtnConfirm = document.getElementById('delete-modal-btn-confirm');
-        const parceiroNameSpan = document.getElementById('delete-modal-parceiro-name'); // ID atualizado
+        const parceiroNameSpan = document.getElementById('delete-modal-parceiro-name'); 
         const deleteInput = document.getElementById('delete-modal-input');
 
         let correctParceiroName = '';
@@ -98,10 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const showDeleteModal = (e) => {
             const button = e.currentTarget;
             const parceiroId = button.dataset.id;
-            // 'data-nome-ajustado' agora contém o 'nome_ajustado' (definido no HTML)
-            correctParceiroName = button.dataset.nome_ajustado; 
+            correctParceiroName = button.dataset.nomeAjustado; 
 
-            deleteForm.action = `/parceiro/deletar/${parceiroId}`; // Rota de parceiro
+            deleteForm.action = `/parceiro/deletar/${parceiroId}`; 
             parceiroNameSpan.textContent = correctParceiroName;
             deleteInput.value = '';
             deleteModalBtnConfirm.disabled = true;

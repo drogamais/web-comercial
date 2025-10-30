@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import database.parceiro_db as db
 
-# Campos principais do parceiro
+# Campos principais do parceiro - AJUSTADOS PARA O SEU SCHEMA FINAL
 PARCEIRO_FIELDS = (
     "nome_ajustado", "tipo", "cnpj", "nome_fantasia", "razao_social",
-    "telefone_gestor", "gestor", "email_gestor"
+    "gestor", "telefone_gestor", "email_gestor"
 )
 
 parceiro_bp = Blueprint(

@@ -10,6 +10,7 @@ def create_tables():
     if conn is None:
         return
     try:
+        # Tabela FINAL com os campos DEFINITIVOS (incluindo o UNIQUE INDEX)
         sql_create = text(f"""
             CREATE TABLE IF NOT EXISTS {DIM_PARCEIRO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -25,7 +26,8 @@ def create_tables():
                 data_saida DATE DEFAULT NULL,
                 status TINYINT DEFAULT 1,
                 data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP 
-                    ON UPDATE CURRENT_TIMESTAMP
+                    ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE INDEX unique_parceiro_nome_data (nome_ajustado, data_entrada, data_saida)
             )
         """)
         conn.execute(sql_create)

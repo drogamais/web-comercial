@@ -9,11 +9,15 @@
 {% block content %}
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>Gerenciar Produtos da Campanha: {{ campanha.nome }}</h1>
-        <a href="{{ url_for('campanha.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
-            &#x2B07; Baixar Modelo da Planilha
-        </a>
 
-        <div style="display: flex; gap: 15px; margin-top: 20px;">
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div>
+                <a href="{{ url_for('campanha.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
+                    &#x2B07; Baixar Modelo da Planilha
+                </a>
+            </div>
+        
+
             <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60;">
                 Exportar Excel (.xlsx)
             </button>   
@@ -75,7 +79,7 @@
                 Validar GTINs
             </button>
 
-            <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #d1f312;">
+            <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #312f2f;">
                 Limpar Validações
             </button>
             

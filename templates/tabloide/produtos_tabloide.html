@@ -9,14 +9,21 @@
 
 {% block content %}
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1>Gerenciar Produtos do Tabloide: {{ tabloide.nome }}</h1>
+        <h1>Gerenciar Produtos do Tabloide: <br> {{ tabloide.nome }}</h1>
 
-        <div style="display: flex; gap: 15px; margin-top: 20px;">
-            <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60; min-width: 150px;">
-                Exportar Excel
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div>
+                <a href="{{ url_for('tabloide.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
+                    &#x2B07; Baixar Modelo da Planilha
+                </a>
+            </div>
+
+            <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60; min-width: 150px; margin: 0;">
+                Exportar Excel (.xlsx)
             </button>
         </div>
     </div>
+    
     <a href="{{ url_for('tabloide.gestao_tabloides') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Tabloides</a>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -71,11 +78,7 @@
             <button type="submit" formaction="{{ url_for('tabloide_produtos.atualizar_produtos', tabloide_id=tabloide.id) }}" style="flex: 1; min-width: 150px;">Salvar Alterações</button>
             <button type="button" id="btn-validar-formato" class="button-filter" style="flex: 1; min-width: 150px;">Validar Formato</button>
             <button type="button" id="btn-validar-gtins" class="button-filter" style="flex: 1; background-color: #f39c12; min-width: 150px;">Validar GTINs</button>
-            <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #d1f312; min-width: 150px;">Limpar Validações</button>
-           <div class="form-group" style="flex: 1.5; min-width: 150px;">
-                <label for="password-bulk-delete">Senha p/ Deletar:</label>
-                <input type="password" id="password-bulk-delete" name="confirmation_password_bulk" autocomplete="off" style="height: 38px;">
-            </div>
+            <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #312f2f; min-width: 150px;">Limpar Validações</button>
             <button type="button" id="btn-show-delete-bulk-modal" class="button-danger" 
                     style="flex: 1; margin: 0; max-width: none; min-width: 150px;" disabled 
                     data-delete-action="{{ url_for('tabloide_produtos.deletar_produtos', tabloide_id=tabloide.id) }}">

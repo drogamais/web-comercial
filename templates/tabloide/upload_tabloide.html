@@ -4,6 +4,9 @@
 
 {% block content %}
     <h1>Processar Planilha de Tabloide</h1>
+    <a href="{{ url_for('tabloide.download_modelo') }}" class="button-filter" style="margin: 0; max-width: 250px; text-decoration: none;">
+        &#x2B07; Baixar Modelo da Planilha
+    </a>
     <p>Selecione o tabloide, arraste o arquivo Excel para a área abaixo e clique em processar.</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

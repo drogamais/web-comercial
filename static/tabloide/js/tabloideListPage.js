@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataInicioInput = document.getElementById('data_inicio_edit');
     const dataFimInput = document.getElementById('data_fim_edit');
 
+    // ... (código do modal de edição permanece o mesmo) ...
     // Função para mostrar o modal
     const showModal = (e) => {
         const button = e.currentTarget;
@@ -50,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+
     // --- LÓGICA PARA O MODAL DE DELEÇÃO ---
     const deleteModal = document.getElementById('delete-modal');
     if (deleteModal) {
@@ -59,18 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteModalBtnConfirm = document.getElementById('delete-modal-btn-confirm'); 
         const campaignNameSpan = document.getElementById('delete-modal-campaign-name');
         const deleteInput = document.getElementById('delete-modal-input'); 
-        // ADICIONADO: Pega o input de senha
         const passwordInput = document.getElementById('delete-modal-password');
-        const REQUIRED_PASSWORD = '123'; // Senha hardcoded para validação no front-end
 
         let correctCampaignName = ''; 
         
-        // NOVO: Função para verificar se a confirmação de nome e senha estão corretas
+        // ALTERAÇÃO: Esta função agora verifica APENAS o nome
         const checkConfirmationStatus = () => {
              const isNameMatch = deleteInput.value === correctCampaignName;
-             // Verifica se o elemento existe antes de tentar ler o valor
-             const isPasswordMatch = passwordInput && passwordInput.value === REQUIRED_PASSWORD;
-             deleteModalBtnConfirm.disabled = !(isNameMatch && isPasswordMatch);
+             // Habilita o botão APENAS se o nome bater
+             deleteModalBtnConfirm.disabled = !isNameMatch;
         };
         
         // Função para mostrar o modal de deleção
@@ -85,8 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
             campaignNameSpan.textContent = correctCampaignName;
 
             deleteInput.value = '';
-            // ADICIONADO: Limpa a senha ao abrir
             if (passwordInput) passwordInput.value = '';
+            
+            // Garante que o botão comece desabilitado
             deleteModalBtnConfirm.disabled = true;
 
             deleteModal.classList.add('show-modal');
@@ -97,13 +97,21 @@ document.addEventListener('DOMContentLoaded', () => {
             correctCampaignName = ''; 
         };
 
-        // ALTERADO: Troca o listener antigo pelos novos
+        // ALTERAÇÃO: Listener apenas no input do NOME
         deleteInput.addEventListener('input', checkConfirmationStatus);
-        // ADICIONADO: Listener para o campo de senha
-        if (passwordInput) passwordInput.addEventListener('input', checkConfirmationStatus);
+        
+        // O listener de senha foi removido daqui
 
         deleteButtons.forEach(button => {
             button.addEventListener('click', showDeleteModal);
+        });
+        
+        // (Listeners de fechar o modal permanecem os mesmos)
+        deleteModalBtnCancel.addEventListener('click', closeDeleteModal);
+        deleteModal.addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeDeleteModal();
+            }
         });
     }
 });

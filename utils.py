@@ -2,7 +2,7 @@
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 
-DELETE_PASSWORD = 'comercial'
+DELETE_PASSWORD = "comercial"
 
 def allowed_file(filename):
     return '.' in filename and \

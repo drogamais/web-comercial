@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LÓGICA MODAL EDIÇÃO ---
     const editModal = document.getElementById('edit-modal');
     if (editModal) {
+        // ... (código do modal de edição permanece o mesmo) ...
         const modalBtnCancel = document.getElementById('modal-btn-cancel');
         const editButtons = document.querySelectorAll('.btn-edit');
         const editForm = document.getElementById('edit-form');
@@ -69,15 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const parceiroNameSpan = document.getElementById('delete-modal-parceiro-name'); 
         const nameInput = document.getElementById('delete-modal-input');
         const passwordInput = document.getElementById('delete-modal-password'); // NOVO
-        const REQUIRED_PASSWORD = '123'; // Senha hardcoded
 
         let correctParceiroName = '';
         
-        // Função para verificar se a confirmação de nome e senha estão corretas
+        // ALTERAÇÃO: Esta função agora verifica APENAS o nome
         const checkConfirmationStatus = () => {
              const isNameMatch = nameInput.value === correctParceiroName;
-             const isPasswordMatch = passwordInput.value === REQUIRED_PASSWORD;
-             deleteModalBtnConfirm.disabled = !(isNameMatch && isPasswordMatch);
+             // Habilita o botão APENAS se o nome bater
+             deleteModalBtnConfirm.disabled = !isNameMatch;
         };
 
         const showDeleteModal = (e) => {
@@ -91,6 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Limpa todos os campos ao abrir
             nameInput.value = '';
             passwordInput.value = '';
+            
+            // Garante que o botão comece desabilitado
             deleteModalBtnConfirm.disabled = true;
             deleteModal.classList.add('show-modal');
         };
@@ -100,9 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
             correctParceiroName = '';
         };
 
-        // Adiciona listeners para ambos os campos de validação
+        // ALTERAÇÃO: Listener apenas no input do NOME
         nameInput.addEventListener('input', checkConfirmationStatus);
-        passwordInput.addEventListener('input', checkConfirmationStatus);
+        
+        // O listener de senha foi removido daqui
 
         deleteButtons.forEach(button => button.addEventListener('click', showDeleteModal));
         deleteModalBtnCancel.addEventListener('click', closeDeleteModal);

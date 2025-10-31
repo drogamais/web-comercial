@@ -100,11 +100,14 @@
 
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2>Confirmar Exclusão</h2> <p>Para confirmar a exclusão, por favor digite o nome do tabloide no campo abaixo:</p>
+            <h2>Confirmar Exclusão</h2> 
+            
+            <p>Para habilitar a confirmação, digite o nome exato da campanha no campo abaixo:</p>
             
             <p class="delete-modal-campaign-name-label">Nome: <strong id="delete-modal-campaign-name"></strong></p>
             
             <div class="form-group" style="text-align: left; margin-top: 15px;">
+                <label for="delete-modal-input">Digite o nome para confirmar:</label>
                 <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
             </div>
 
@@ -113,7 +116,7 @@
             <form id="delete-form" method="post" action="">
                 <div class="modal-actions" style="margin-top: 25px;">
                     <button id="delete-modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
-                    <button id="delete-modal-btn-confirm" type="submit" class="modal-button-danger">Confirmar</button>
+                    <button id="delete-modal-btn-confirm" type="submit" class="modal-button-danger" disabled>Confirmar</button>
                 </div>
             </form>
         </div>

@@ -50,7 +50,7 @@ def _cadastrar_parceiro_embedded(data):
     #    Assumindo que 'email_gestor' é o 'email' do usuário
     #    e 'gestor' é o 'name' do usuário.
     user_email = data.get("email_gestor")
-    user_name = data.get("gestor") or data.get("nome_ajustado") # Usa Gestor, ou o Nome Ajustado
+    user_name = data.get("nome_fantasia") # Usa Gestor, ou o Nome Ajustado
 
     if not user_email:
         return False, "O campo 'E-mail Gestor' é obrigatório para a API."
@@ -62,18 +62,18 @@ def _cadastrar_parceiro_embedded(data):
     email_de_teste = f"teste.script.{timestamp}@exemplo.com"
 
     payload = {
-        # "email": user_email,
-        # "name": user_name,
-        # "role": 1, # <<< USANDO O VALOR PADRÃO 1
-        # "department": data.get("tipo"), # Mapeando 'Tipo' (INDUSTRIA) para 'department'
-        # "expirationDate": expiration_date_iso, # Usa a data de saída
+        "email": user_email,
+        "name": user_name,
+        "role": 1, # <<< USANDO O VALOR PADRÃO 1
+        "department": data.get("tipo"), # Mapeando 'Tipo' (INDUSTRIA) para 'department'
+        "expirationDate": expiration_date_iso, # Usa a data de saída
         
-        "email": email_de_teste, # Email agora é único
-        "name": f"Usuario Teste Script {timestamp}",
-        "role": 1,
-        "department": "INDUSTRIA",
-        "expirationDate": "2025-12-31T00:00:00Z",
-        "canExportReport": True,
+        # "email": email_de_teste, # Email agora é único
+        # "name": f"Usuario Teste Script {timestamp}",
+        # "role": 1,
+        # "department": "INDUSTRIA",
+        # "expirationDate": "2025-12-31T00:00:00Z",
+        # "canExportReport": True,
         # O resto dos valores padrão
         "reportLandingPage": None, 
         "windowsAdUser": None, 
@@ -95,8 +95,9 @@ def _cadastrar_parceiro_embedded(data):
 
     # 2. Configure os Headers de autenticação (Bearer Token)
     headers = {
-        "Authorization": f"Bearer {EMBEDDED_API_KEY}",
-        "Content-Type": "application/json"
+        "X-API-Key": EMBEDDED_API_KEY, # <-- CORRIGIDO
+        "Content-Type": "application/json",
+        "Accept": "application/json" # É bom adicionar este também
     }
 
     try:

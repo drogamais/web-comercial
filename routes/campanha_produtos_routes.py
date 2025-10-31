@@ -8,8 +8,7 @@ from flask import (
 import database.campanha_db as db_campanha
 import database.campanha_produtos_db as db_campanha_produtos
 import database.common_db as db_common
-from utils import allowed_file, pad_barcode, clean_barcode
-from config import DELETE_PASSWORD
+from utils import allowed_file, pad_barcode, clean_barcode, DELETE_PASSWORD
 
 campanha_produtos_bp = Blueprint(
     'campanha_produtos',

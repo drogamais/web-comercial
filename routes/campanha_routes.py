@@ -8,8 +8,7 @@ from flask import (
 import os
 import database.campanha_db as db_campanha # Para gerenciar campanhas
 import database.parceiro_db as db_parceiro # Para buscar parceiros
-from utils import allowed_file
-from config import DELETE_PASSWORD
+from utils import DELETE_PASSWORD
 
 # Cria o Blueprint de Campanha com prefixo de URL
 campanha_bp = Blueprint(

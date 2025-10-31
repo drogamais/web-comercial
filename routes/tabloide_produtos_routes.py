@@ -8,8 +8,7 @@ from flask import (
 import database.tabloide_db as db_tabloide
 import database.tabloide_produtos_db as db_tabloide_produtos
 import database.common_db as db_common
-from utils import allowed_file, pad_barcode, clean_barcode
-from config import DELETE_PASSWORD
+from utils import allowed_file, pad_barcode, clean_barcode, DELETE_PASSWORD
 
 tabloide_produtos_bp = Blueprint(
     'tabloide_produtos',

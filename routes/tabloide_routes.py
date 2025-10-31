@@ -7,8 +7,7 @@ from flask import (
 )
 import os
 import database.tabloide_db as db_tabloide
-from utils import allowed_file
-from config import DELETE_PASSWORD
+from utils import DELETE_PASSWORD
 
 # Cria o Blueprint de Tabloide
 tabloide_bp = Blueprint(

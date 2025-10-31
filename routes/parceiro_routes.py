@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import database.parceiro_db as db
-from config import DELETE_PASSWORD
+from utils import DELETE_PASSWORD
 
 # Campos principais do parceiro
 PARCEIRO_FIELDS = (

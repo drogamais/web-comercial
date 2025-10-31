@@ -100,26 +100,12 @@ def update_tabloide(tabloide_id, nome, data_inicio, data_fim):
         conn.rollback()
         return 0, str(e)
 
-# #####################
-# # HARD DELETE
-# #####################
-# def delete_tabloide(tabloide_id):
-#     conn = get_db_connection()
-#     sql = text(f"DELETE FROM {DIM_TABLOIDE_TABLE} WHERE id = :id")
-#     try:
-#         result = conn.execute(sql, {"id": tabloide_id})
-#         conn.commit()
-#         return result.rowcount, None
-#     except SQLAlchemyError as e:
-#         conn.rollback()
-#         return 0, str(e)
-
 #####################
-# SOFT DELETE
+# HARD DELETE
 #####################
 def delete_tabloide(tabloide_id):
     conn = get_db_connection()
-    sql = text(f"UPDATE {DIM_TABLOIDE_TABLE} SET status = 0 WHERE id = :id")
+    sql = text(f"DELETE FROM {DIM_TABLOIDE_TABLE} WHERE id = :id")
     try:
         result = conn.execute(sql, {"id": tabloide_id})
         conn.commit()
@@ -127,3 +113,17 @@ def delete_tabloide(tabloide_id):
     except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
+
+# #####################
+# # SOFT DELETE
+# #####################
+# def delete_tabloide(tabloide_id):
+#     conn = get_db_connection()
+#     sql = text(f"UPDATE {DIM_TABLOIDE_TABLE} SET status = 0 WHERE id = :id")
+#     try:
+#         result = conn.execute(sql, {"id": tabloide_id})
+#         conn.commit()
+#         return result.rowcount, None
+#     except SQLAlchemyError as e:
+#         conn.rollback()
+#         return 0, str(e)

@@ -82,7 +82,7 @@ def deletar_campanha(campaign_id):
     # --- NOVO: Verificação de Senha ---
     confirmation_password = request.form.get('confirmation_password')
     if confirmation_password != DELETE_PASSWORD:
-        flash('Senha de confirmação incorreta.', 'danger')
+        flash(f'Senha de confirmação incorreta.', 'danger')
         return redirect(url_for('campanha.gestao_campanhas'))
     # --- FIM NOVO ---
     

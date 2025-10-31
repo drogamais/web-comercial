@@ -240,18 +240,19 @@
 
             <p class="delete-modal-parceiro-name-label">Nome Ajustado: <strong id="delete-modal-parceiro-name"></strong></p>
 
-            <div class="form-group" style="text-align: left; margin-top: 15px;">
-                <label for="delete-modal-input">Digite o nome para confirmar:</label>
-                <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
-            </div>
-            
-            <div class="form-group" style="text-align: left; margin-top: 15px;">
-                <label for="delete-modal-password">Senha de Confirmação:</label>
-                <input type="password" id="delete-modal-password" name="confirmation_password" autocomplete="off">
-            </div>
-
-            <p class="delete-modal-info-text">(Isso irá excluir permanentemente o parceiro.)</p>
             <form id="delete-form" method="post" action="">
+                <div class="form-group" style="text-align: left; margin-top: 15px;">
+                    <label for="delete-modal-input">Digite o nome para confirmar:</label>
+                    <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">
+                </div>
+                
+                <div class="form-group" style="text-align: left; margin-top: 15px;">
+                    <label for="delete-modal-password">Senha de Confirmação:</label>
+                    <input type="password" id="delete-modal-password" name="confirmation_password" autocomplete="off">
+                </div>
+
+                <p class="delete-modal-info-text">(Isso irá excluir permanentemente o parceiro.)</p>
+                
                 <div class="modal-actions" style="margin-top: 25px;">
                     <button id="delete-modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
                     <button id="delete-modal-btn-confirm" type="submit" class="modal-button-danger" disabled>Confirmar</button>

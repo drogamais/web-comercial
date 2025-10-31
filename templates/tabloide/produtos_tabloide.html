@@ -95,19 +95,19 @@
     <h2>Adicionar Novo Produto</h2>
     <div class="filter-container">
         <form action="{{ url_for('tabloide_produtos.adicionar_produto', tabloide_id=tabloide.id) }}" method="post" class="filter-form">
-            <div class="form-group" style="flex: 1.5;">
+            <div class="form-group" style="flex: 1.5 1 180px;">
                 <label>Cód. Barras:</label>
                 <input type="text" name="codigo_barras">
             </div>
-            <div class="form-group" style="flex: 3;">
+            <div class="form-group" style="flex: 3 1 500px;">
                 <label>Descrição:</label>
                 <input type="text" name="descricao">
             </div>
-            <div class="form-group" style="flex: 1.5;">
+            <div class="form-group" style="flex: 1.5 1 180px;">
                 <label>Laboratório:</label>
                 <input type="text" name="laboratorio">
             </div>
-            <div class="form-group" style="flex: 1.5;">
+            <div class="form-group" style="flex: 1.5 1 180px;">
                 <label>Tipo de Preço:</label>
                 <select name="tipo_preco">
                     <option value="">Selecione...</option>
@@ -129,7 +129,11 @@
             </div>
             <div class="form-group" style="flex: 1;">
                 <label>Tipo Regra:</label>
-                <input type="text" name="tipo_regra">
+                <select name="tipo_regra">
+                    <option value="">Selecione...</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Multiplo">Multiplo</option>
+                </select>
             </div>
             <div class="form-group" style="flex: 1;">
                 <label>Preço APP:</label>

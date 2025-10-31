@@ -99,15 +99,15 @@
     <h2>Adicionar Novo Produto</h2>
     <div class="filter-container">
         <form action="{{ url_for('campanha_produtos.adicionar_produto', campanha_id=campanha.id) }}" method="post" class="filter-form">
-            <div class="form-group" style="flex: 1.5;">
+            <div class="form-group" style="flex: 1.5 1 200px;">
                 <label>Cód. Barras:</label>
                 <input type="text" name="codigo_barras">
             </div>
-            <div class="form-group" style="flex: 3;">
+            <div class="form-group" style="flex: 4 1 600px;">
                 <label>Descrição:</label>
                 <input type="text" name="descricao">
             </div>
-            <div class="form-group" style="flex: 0.8;">
+            <div class="form-group" style="flex: 0.8 1 200px;">
                 <label>Pontos:</label>
                 <input type="number" step="1" name="pontuacao">
             </div>

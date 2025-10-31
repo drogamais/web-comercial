@@ -127,12 +127,11 @@
         </form>
     </div>
 
-    <div id="delete-bulk-modal" class="modal">
+    <div id="delete-bulk-modal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-button" id="delete-bulk-modal-btn-close">&times;</span>
-            <h2>Confirmação de Deleção em Massa</h2>
-            <p>Você está prestes a **deletar permanentemente** <span id="delete-bulk-modal-count">0</span> produto(s) selecionado(s). Esta ação é irreversível.</p>
-            <p>Para confirmar a exclusão, por favor, digite a sua senha no campo abaixo.</p>
+            <h2>Confirmação de Exclusão</h2>
+            <p>Você está prestes a <strong>deletar permanentemente</strong> <br> <span id="delete-bulk-modal-count">0</span> produto(s) selecionado(s). <br> Esta ação é irreversível.</p>
 
             <form id="delete-bulk-form" method="post">
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
@@ -141,7 +140,7 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" id="delete-bulk-modal-btn-cancel" class="button-filter">Cancelar</button>
-                    <button type="submit" id="delete-bulk-modal-btn-confirm" class="button-danger">Confirmar Exclusão</button>
+                    <button type="submit" id="delete-bulk-modal-btn-confirm" class="button-danger" disabled>Confirmar</button>
                 </div>
             </form>
         </div>

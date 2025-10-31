@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import database.parceiro_db as db
 from utils import DELETE_PASSWORD
-from config import EMBEDDED_API_KEY
+#from config import EMBEDDED_API_KEY
 import requests 
 import json     
-from datetime import datetime 
+from datetime import datetime
+import time
 
 # Campos principais do parceiro
 PARCEIRO_FIELDS = (
@@ -21,7 +22,8 @@ parceiro_bp = Blueprint(
 
 # --- URL da API POWEREMBEDDED ---
 
-EMBEDDED_API_URL = "https://api.powerembedded.com.br/v1/partner" # <<< URL CORRETA
+EMBEDDED_API_URL = "https://api.powerembedded.com.br/api/user"
+EMBEDDED_API_KEY = "eyJPcmdJZCI6Ijc5MTVmZmU1LWE4MWUtNDA4Ni04MDNkLTQzM2M4OTJkZDc4NSIsIkFwaUtleSI6IkFBXzM2OVpvQlRNc04yczBwbjJpY2RHZC1PdlNrN2ZVTlJuaEo4NGdOMWcifQ"
 # ----------------------------------------
 
 def _get_form_data(form, sufixo=""):
@@ -32,48 +34,63 @@ def _get_form_data(form, sufixo=""):
     data["status"] = 1
     return data
 
-# <<< NOVO: Função para chamar a API Embedded >>>
 def _cadastrar_parceiro_embedded(data):
-    """
-    Tenta cadastrar o parceiro na API PowerEmbedded.
-    Retorna (True, None) em sucesso.
-    Retorna (False, "mensagem_de_erro") em falha.
-    """
-    
-    # --- NOVO: Formatar as datas para o padrão ISO 8601 ---
-    # A API espera "2024-10-31T00:00:00Z"
-    # O formulário envia "2024-10-31"
-    try:
-        start_date_iso = None
-        if data.get("data_entrada"):
-            # Converte '2024-10-31' para um objeto datetime
-            dt_start = datetime.strptime(data.get("data_entrada"), '%Y-%m-%d')
-            # Formata para '2024-10-31T00:00:00Z' (Padrão Zulu/UTC)
-            start_date_iso = dt_start.strftime('%Y-%m-%dT00:00:00Z')
 
-        end_date_iso = None
+    try:
+        expiration_date_iso = None
         if data.get("data_saida"):
             dt_end = datetime.strptime(data.get("data_saida"), '%Y-%m-%d')
-            end_date_iso = dt_end.strftime('%Y-%m-%dT00:00:00Z')
+            expiration_date_iso = dt_end.strftime('%Y-%m-%dT00:00:00Z')
     
     except ValueError as e:
         return False, f"Formato de data inválido. Use AAAA-MM-DD. Erro: {e}"
     # --- FIM DA FORMATAÇÃO ---
 
-    # 1. Mapeie os dados (Payload corrigido conforme a API)
-    #    Campos da API: name, document, type, trade_name, company_name,
-    #    manager, manager_phone, manager_email, start_date, end_date
+    # 1. Mapear os dados do Formulário para o Payload de 'api/user'
+    #    Assumindo que 'email_gestor' é o 'email' do usuário
+    #    e 'gestor' é o 'name' do usuário.
+    user_email = data.get("email_gestor")
+    user_name = data.get("gestor") or data.get("nome_ajustado") # Usa Gestor, ou o Nome Ajustado
+
+    if not user_email:
+        return False, "O campo 'E-mail Gestor' é obrigatório para a API."
+
+    if not user_name:
+        return False, "O campo 'Gestor' ou 'Nome Ajustado' é obrigatório para a API."
+
+    timestamp = int(time.time())
+    email_de_teste = f"teste.script.{timestamp}@exemplo.com"
+
     payload = {
-        "name": data.get("nome_ajustado"),
-        "document": data.get("cnpj"),
-        "type": data.get("tipo"),
-        "trade_name": data.get("nome_fantasia"),
-        "company_name": data.get("razao_social"),
-        "manager": data.get("gestor"),
-        "manager_phone": data.get("telefone_gestor"),
-        "manager_email": data.get("email_gestor"),
-        "start_date": start_date_iso, # <<< Usando a data formatada
-        "end_date": end_date_iso     # <<< Usando a data formatada (pode ser None)
+        # "email": user_email,
+        # "name": user_name,
+        # "role": 1, # <<< USANDO O VALOR PADRÃO 1
+        # "department": data.get("tipo"), # Mapeando 'Tipo' (INDUSTRIA) para 'department'
+        # "expirationDate": expiration_date_iso, # Usa a data de saída
+        
+        "email": email_de_teste, # Email agora é único
+        "name": f"Usuario Teste Script {timestamp}",
+        "role": 1,
+        "department": "INDUSTRIA",
+        "expirationDate": "2025-12-31T00:00:00Z",
+        "canExportReport": True,
+        # O resto dos valores padrão
+        "reportLandingPage": None, 
+        "windowsAdUser": None, 
+        "bypassFirewall": False,
+        "canEditReport": False, 
+        "canCreateReport": False, 
+        "canOverwriteReport": False,
+        "canRefreshDataset": False, 
+        "canCreateSubscription": False, 
+        "canDownloadPbix": False,
+        "canExportReportWithHiddenPages": False, 
+        "canCreateNewUsers": False,
+        "canStartCapacityByDemand": False, 
+        "canDisplayVisualHeaders": True,
+        "canExportReportOtherPages": False, 
+        "accessReportAnyTime": True,
+        "sendWelcomeEmail": True
     }
 
     # 2. Configure os Headers de autenticação (Bearer Token)
@@ -83,26 +100,26 @@ def _cadastrar_parceiro_embedded(data):
     }
 
     try:
-        # 3. Faça a chamada POST para a API
+        # 3. Faça a chamada POST para a API (agora em /api/user)
         response = requests.post(EMBEDDED_API_URL, headers=headers, json=payload, timeout=10)
 
-        # 4. Verifique se a API respondeu com sucesso (201 Created)
-        if response.status_code == 201:
+        # 4. Verifique se a API respondeu com sucesso
+        if response.status_code == 200: # Rota 'user' responde com 200 (OK)
             return True, None # Sucesso
+        elif response.status_code == 401:
+            return False, "API Erro 401: Não Autorizado. Verifique sua Chave de API (Token)."
         else:
-            # A API retornou um erro
+            # A API retornou outro erro
             try:
-                # Tenta pegar o erro específico da API
                 error_details = response.json().get("message", "Erro desconhecido")
             except json.JSONDecodeError:
-                error_details = response.text # Se a resposta não for JSON
+                error_details = response.text
             
             return False, f"API Embedded Erro {response.status_code}: {error_details}"
 
     except requests.exceptions.RequestException as e:
         # Erro de conexão, timeout, etc.
         return False, f"Falha ao conectar na API Embedded: {e}"
-
 
 @parceiro_bp.route('/gerenciar', methods=['GET', 'POST'])
 def gestao_parceiros():
@@ -113,21 +130,18 @@ def gestao_parceiros():
             flash('O campo "Nome Ajustado" é obrigatório.', 'danger')
             return redirect(url_for('parceiro.gestao_parceiros'))
 
-        # --- LÓGICA DA API ADICIONADA AQUI ---
+        # --- LÓGICA DA API (AGORA USANDO /api/user) ---
         try:
-            # 1. Tenta cadastrar na API primeiro
             sucesso_api, erro_api = _cadastrar_parceiro_embedded(data)
             
             if not sucesso_api:
-                # Se a API falhar, mostra o erro e NÃO salva no banco local
-                flash(f'Erro ao cadastrar parceiro no sistema Embedded: {erro_api}', 'danger')
+                flash(f'Erro ao cadastrar parceiro (usuário) no sistema Embedded: {erro_api}', 'danger')
                 return redirect(url_for('parceiro.gestao_parceiros'))
 
             # 2. Se a API funcionou, salva no banco local
             error_db = db.add_parceiro(**data)
             
             if error_db:
-                # Isso é um problema: funcionou na API, mas falhou localmente
                 flash(f'Parceiro salvo na API, mas falhou ao salvar localmente: {error_db}', 'danger')
             else:
                 flash('Parceiro criado com sucesso (Sincronizado com Embedded)!', 'success')

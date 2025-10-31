@@ -74,7 +74,6 @@ def _cadastrar_parceiro_embedded(data):
         # "department": "INDUSTRIA",
         # "expirationDate": "2025-12-31T00:00:00Z",
         # "canExportReport": True,
-        # O resto dos valores padrão
         "reportLandingPage": None, 
         "windowsAdUser": None, 
         "bypassFirewall": False,

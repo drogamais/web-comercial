@@ -31,6 +31,7 @@
     width: 90%;
     transform: translateY(-20px);
     transition: transform 0.3s ease;
+    position: relative;
 }
 
 .modal-overlay.show-modal .modal-content {
@@ -47,7 +48,8 @@
 .modal-actions {
     display: flex;
     justify-content: center;
-    gap: 15px;
+    gap: 60px;
+    margin-top: 40px;
 }
 
 .modal-actions button {
@@ -89,4 +91,30 @@
 }
 .modal-button-danger:hover {
     background-color: #c0392b;
+}
+
+.modal-actions .button-filter,
+.modal-actions .button-danger {
+    display: inline-block;  /* Remove o 'display: block' */
+    width: 110px;           /* Define uma largura fixa igual aos outros botões de modal */
+    flex: 0 0 110px;        /* Garante o comportamento correto no flex */
+    margin: 0;              /* Remove a margem do .button-danger */
+    max-width: none;        /* Remove o max-width do .button-danger */
+    gap: 20px;
+}
+
+.close-button {
+    position: absolute;   /* Faz o 'X' flutuar */
+    top: 10px;            /* Distância do topo */
+    right: 15px;           /* Distância da direita */
+    font-size: 28px;      /* Tamanho maior */
+    font-weight: bold;
+    color: #aaa;           /* Cor cinza */
+    cursor: pointer;
+    line-height: 1;       /* Remove altura extra da linha */
+    transition: color 0.2s ease;
+}
+
+.close-button:hover {
+    color: #333;           /* Escurece ao passar o mouse */
 }

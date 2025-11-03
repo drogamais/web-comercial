@@ -1,3 +1,5 @@
+# database/parceiro_db.py
+
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
 from database.common_db import get_db_connection
@@ -13,6 +15,7 @@ def create_tables():
         sql_create = text(f"""
             CREATE TABLE IF NOT EXISTS {DIM_PARCEIRO_TABLE} (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                api_user_id VARCHAR(50) DEFAULT NULL, 
                 nome_ajustado VARCHAR(255) NOT NULL,
                 tipo VARCHAR(100) DEFAULT NULL,
                 cnpj VARCHAR(20) DEFAULT NULL,
@@ -25,10 +28,23 @@ def create_tables():
                 data_saida DATE DEFAULT NULL,
                 status TINYINT DEFAULT 1,
                 data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP 
-                    ON UPDATE CURRENT_TIMESTAMP
+                    ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_api_user_id (api_user_id) 
             )
         """)
         conn.execute(sql_create)
+        
+        # --- NOVO: Garante que a coluna exista em tabelas antigas ---
+        try:
+            sql_alter = text(f"""
+                ALTER TABLE {DIM_PARCEIRO_TABLE} 
+                ADD COLUMN IF NOT EXISTS api_user_id VARCHAR(50) DEFAULT NULL AFTER id
+            """)
+            conn.execute(sql_alter)
+        except SQLAlchemyError as e_alter:
+            # Ignora erros se a coluna já existir
+            print(f"Aviso ao alterar tabela: {e_alter}")
+
         conn.commit()
     except SQLAlchemyError as e:
         print(f"Erro ao criar tabela base {DIM_PARCEIRO_TABLE}: {e}")
@@ -43,6 +59,7 @@ def add_parceiro(**data):
     conn = get_db_connection()
 
     # Gera automaticamente a lista de colunas e placeholders
+    # Garante que 'api_user_id' esteja incluído se existir em 'data'
     columns = ", ".join(data.keys())
     placeholders = ", ".join([f":{key}" for key in data.keys()])
 
@@ -72,19 +89,17 @@ def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_
         params["tipo"] = tipo
         
     # 2. Filtro por Status
-    # Se status for None (sem filtro na URL) ou '1', filtra por ativo (1)
     if status is None or status == '1': 
         where_clauses.append("status = 1") 
-    elif status == '0': # Se for '0', filtra por inativo (0)
+    elif status == '0': 
         where_clauses.append("status = 0")
-    # Se status for '' (Todos), a cláusula é ignorada, mostrando todos os status
         
-    # 3. Filtro por Data Entrada (Data mínima)
+    # 3. Filtro por Data Entrada
     if data_entrada_min:
         where_clauses.append("data_entrada >= :data_entrada_min")
         params["data_entrada_min"] = data_entrada_min
         
-    # 4. Filtro por Data Saída (Data máxima)
+    # 4. Filtro por Data Saída
     if data_saida_max:
         where_clauses.append("data_saida <= :data_saida_max")
         params["data_saida_max"] = data_saida_max
@@ -107,6 +122,7 @@ def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_
 
 def get_parceiro_by_id(parceiro_id):
     conn = get_db_connection()
+    # Busca pelo ID local (auto-increment)
     sql = text(f"SELECT * FROM {DIM_PARCEIRO_TABLE} WHERE id = :id")
     try:
         cursor = conn.execute(sql, {"id": parceiro_id})
@@ -121,11 +137,14 @@ def get_parceiro_by_id(parceiro_id):
 def update_parceiro(parceiro_id, **data):
     """
     Atualiza um parceiro existente.
-    Usa **data para atualizar qualquer campo dinamicamente.
     """
     conn = get_db_connection()
 
-    # Gera automaticamente "coluna = :coluna" para cada campo
+    # Remove 'api_user_id' dos dados de atualização,
+    # pois não queremos atualizar essa chave, apenas usá-la.
+    # (Embora aqui estejamos atualizando pelo 'id' local)
+    data.pop('api_user_id', None) 
+
     set_clause = ", ". join([f"{key} = :{key}" for key in data.keys()])
     sql = text(f"""
         UPDATE {DIM_PARCEIRO_TABLE}
@@ -143,9 +162,6 @@ def update_parceiro(parceiro_id, **data):
         return 0, str(e)
 
 
-######################
-#  HARD DELETE
-######################
 def delete_parceiro(parceiro_id):
     conn = get_db_connection()
     sql = text(f"DELETE FROM {DIM_PARCEIRO_TABLE} WHERE id = :id")
@@ -156,17 +172,3 @@ def delete_parceiro(parceiro_id):
     except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    
-# #######################
-# #   SOFT DELETE
-# #######################
-# def delete_parceiro(parceiro_id):
-#     conn = get_db_connection()
-#     sql = text(f"UPDATE {DIM_PARCEIRO_TABLE} SET status = 0 WHERE id = :id")
-#     try:
-#         result = conn.execute(sql, {"id": parceiro_id})
-#         conn.commit()
-#         return result.rowcount, None
-#     except SQLAlchemyError as e:
-#         conn.rollback()
-#         return 0, str(e)

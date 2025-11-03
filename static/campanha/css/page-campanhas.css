@@ -139,3 +139,32 @@ tr.row-error-price input {
     background-color: #fff0f0 !important; 
     border-color: #ff9999;
 }
+
+/* --- NOVO: Wrapper para botões de validação --- */
+.button-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Faz o wrapper ocupar o espaço no flex container */
+    min-width: 150px;
+}
+
+/* Texto de descrição acima dos botões */
+.button-description-text {
+    font-size: 11px; /* Texto pequeno */
+    color: #555;      /* Cor cinza */
+    margin-top: 0;
+    margin-bottom: 5px; /* Espaço entre o texto e o botão */
+    text-align: center;
+    min-height: 26px; /* Altura para 2 linhas, alinhando os botões */
+    line-height: 1.3;
+}
+
+/* Garante que os botões dentro do wrapper ocupem 100% */
+.button-wrapper .button-filter,
+.button-wrapper .button-danger,
+.button-wrapper button { /* Adicionado 'button' genérico */
+    width: 100%;
+    margin: 0;
+    max-width: none;
+    flex: 1; /* Garante que o botão salvar também se estique */
+}

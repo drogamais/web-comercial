@@ -74,16 +74,33 @@
             </tbody>
         </table>
         
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
-            <button type="submit" formaction="{{ url_for('tabloide_produtos.atualizar_produtos', tabloide_id=tabloide.id) }}" style="flex: 1; min-width: 150px;">Salvar Alterações</button>
-            <button type="button" id="btn-validar-preco" class="button-filter" style="flex: 1; min-width: 150px;">Validar Preço</button>
-            <button type="button" id="btn-validar-gtins" class="button-filter" style="flex: 1; background-color: #f39c12; min-width: 150px;">Validar GTINs</button>
-            <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #312f2f; min-width: 150px;">Limpar Validações</button>
-            <button type="button" id="btn-show-delete-bulk-modal" class="button-danger" 
-                    style="flex: 1; margin: 0; max-width: none; min-width: 150px;" disabled 
-                    data-delete-action="{{ url_for('tabloide_produtos.deletar_produtos', tabloide_id=tabloide.id) }}">
-                Deletar Selecionados
-            </button>
+        <div style="display: flex; gap: 10px; align-items: flex-start; margin-top: 20px;">
+            
+            <div class="button-wrapper">
+                <button type="submit" formaction="{{ url_for('tabloide_produtos.atualizar_produtos', tabloide_id=tabloide.id) }}">Salvar Alterações</button>
+            </div>
+            
+            <div class="button-wrapper">
+                <p class="button-description-text">Valida se o desconto é menor que o preço normal</p>
+                <button type="button" id="btn-validar-formato" class="button-filter">Validar Formato</button>
+            </div>
+
+            <div class="button-wrapper">
+                <p class="button-description-text">Valida se está cadastrado no plugpharma com GTIN principal</p>
+                <button type="button" id="btn-validar-gtins" class="button-filter" style="background-color: #f39c12;">Validar GTINs</button>
+            </div>
+
+            <div class="button-wrapper">
+                <button type="button" id="btn-limpar-validacoes" class="button-filter" style="background-color: #312f2f;">Limpar Validações</button>
+            </div>
+            
+            <div class="button-wrapper">
+                <button type="button" id="btn-show-delete-bulk-modal" class="button-danger" 
+                        disabled 
+                        data-delete-action="{{ url_for('tabloide_produtos.deletar_produtos', tabloide_id=tabloide.id) }}">
+                    Deletar Selecionados
+                </button>
+            </div>
         </div>
     </form>
     {% else %}

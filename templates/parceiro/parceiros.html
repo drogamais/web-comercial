@@ -15,7 +15,8 @@
                         tipo=tipo_filtro or '', 
                         nome_fantasia=nome_fantasia_filtro or '', 
                         data_entrada_min=data_entrada_min_filtro or '', 
-                        data_saida_max=data_saida_max_filtro or '') }}" 
+                        data_saida_max=data_saida_max_filtro or '',
+                        sort_expiring='1' if sort_expiring_filtro else '') }}" 
                 class="button-filter" 
                 style="background-color: #27ae60; text-decoration: none; max-width: 250px; margin: 0;">
                 &#x2B07; Exportar Parceiros (Excel)
@@ -35,9 +36,9 @@
         <h2>Novo Parceiro</h2>
         <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;">
             
-            <div class="form-group" style="flex: 1.5 1 350px;">
-                <label for="nome_ajustado">Nome Ajustado: <span style="color: red;">*</span></label>
-                <input type="text" id="nome_ajustado" name="nome_ajustado" required>
+            <div class="form-group" style="flex: 1.5 1 300px;">
+                <label for="nome_fantasia">Nome Fantasia: <span style="color: red;">*</span></label>
+                <input type="text" id="nome_fantasia" name="nome_fantasia" required>
             </div>
             
             <div class="form-group" style="flex: 1;">
@@ -48,15 +49,15 @@
                     <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
                 </select>
             </div>
-
+            
             <div class="form-group" style="flex: 1 1 150px;">
                 <label for="cnpj">CNPJ: <span style="color: red;">*</span></label>
                 <input type="text" id="cnpj" name="cnpj" required>
             </div>
             
-            <div class="form-group" style="flex: 1.5 1 300px;">
-                <label for="nome_fantasia">Nome Fantasia: <span style="color: red;">*</span></label>
-                <input type="text" id="nome_fantasia" name="nome_fantasia" required>
+            <div class="form-group" style="flex: 1.5 1 350px;">
+                <label for="nome_ajustado">Nome Ajustado: <span style="color: red;">*</span></label>
+                <input type="text" id="nome_ajustado" name="nome_ajustado" required>
             </div>
             
             <div class="form-group" style="flex: 1.5 1 300px;">
@@ -85,8 +86,8 @@
             </div>
             
             <div class="form-group" style="flex: 1;">
-                <label for="data_saida">Data Saída: <span style="color: red;">*</span></label>
-                <input type="date" id="data_saida" name="data_saida" required>
+                <label for="data_saida">Data Saída: </label>
+                <input type="date" id="data_saida" name="data_saida">
             </div> 
             
             <div class="form-group" style="flex: 1; justify-content: flex-end; align-self: flex-end;">
@@ -122,6 +123,14 @@
                 <label for="data_saida_max">Data Saída (Max):</label>
                 <input type="date" id="data_saida_max" name="data_saida_max" value="{{ data_saida_max_filtro or '' }}">
             </div>
+
+            <div class="form-group" style="flex: 1.2; min-width: 150px;">
+                <label for="sort_expiring_filtro">Ordenar por:</label>
+                <select id="sort_expiring_filtro" name="sort_expiring">
+                    <option value="0" {{ 'selected' if not sort_expiring_filtro else '' }}>Nome (Padrão)</option>
+                    <option value="1" {{ 'selected' if sort_expiring_filtro else '' }}>Vencimento (Mais Próximo)</option>
+                </select>
+            </div>
             
             <div class="form-group" style="flex: 0.8; min-width: 120px;">
                 <button type="submit" class="button-filter" style="height: 38px;">Aplicar Filtro</button>
@@ -134,7 +143,7 @@
     <table style="table-layout: auto;">
         <thead>
             <tr>
-                <th style="width: 22%;">Nome Ajustado</th>
+                <th style="width: 22%;">Nome Fantasia</th>
                 <th style="width: 18%;">Email Gestor</th>
                 <th style="width: 12%;">Tipo</th>
 
@@ -145,8 +154,8 @@
         </thead>
         <tbody>
             {% for p in parceiros %}
-            <tr>
-                <td>{{ p.nome_ajustado }}</td>
+            <tr {% if p.id in expiring_ids_set %}class="row-expiring"{% endif %}>
+                <td>{{ p.nome_fantasia }}</td>
                 <td>{{ p.email_gestor }}</td>
                 <td>{{ p.tipo }}</td>
 
@@ -221,8 +230,8 @@
                 </div>
 
                 <div class="form-group" style="flex: 1.5;">
-                    <label for="nome_fantasia_edit">Nome Fantasia:</label>
-                    <input type="text" id="nome_fantasia_edit" name="nome_fantasia_edit">
+                    <label for="nome_fantasia_edit">Nome Fantasia: <span style="color: red;">*</label>
+                    <input type="text" id="nome_fantasia_edit" name="nome_fantasia_edit" required>
                 </div>
 
                 <div class="form-group" style="flex: 1.5;">
@@ -231,17 +240,17 @@
                 </div>
                 
                 <div class="form-group" style="flex: 1;">
-                    <label for="gestor_edit">Gestor:</label>
-                    <input type="text" id="gestor_edit" name="gestor_edit">
+                    <label for="gestor_edit">Gestor: <span style="color: red;">*</label>
+                    <input type="text" id="gestor_edit" name="gestor_edit" required>
                 </div>
 
                 <div class="form-group" style="flex: 1;">
-                    <label for="telefone_gestor_edit">Telefone Gestor:</label>
-                    <input type="text" id="telefone_gestor_edit" name="telefone_gestor_edit">
+                    <label for="telefone_gestor_edit">Telefone Gestor: <span style="color: red;">*</label>
+                    <input type="text" id="telefone_gestor_edit" name="telefone_gestor_edit" required>
                 </div>
 
                 <div class="form-group" style="flex: 1.5;">
-                    <label for="email_gestor_edit">E-mail Gestor:</label>
+                    <label for="email_gestor_edit">E-mail Gestor: <span style="color: red;">*</label>
                     <input type="email" id="email_gestor_edit" name="email_gestor_edit" readonly 
                            style="background-color: #eee; cursor: not-allowed;">
                 </div>
@@ -250,8 +259,8 @@
                     <input type="date" id="data_entrada_edit" name="data_entrada_edit" required>
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label for="data_saida_edit">Data Saída: <span style="color: red;">*</span></label>
-                    <input type="date" id="data_saida_edit" name="data_saida_edit" required>
+                    <label for="data_saida_edit">Data Saída: </span></label>
+                    <input type="date" id="data_saida_edit" name="data_saida_edit">
                 </div>
                 
                 <div class="modal-actions" style="flex-basis: 100%; margin-top: 25px;">

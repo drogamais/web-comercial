@@ -3,6 +3,7 @@
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
 from database.common_db import get_db_connection
+import datetime # <-- ADICIONADO
 
 DIM_PARCEIRO_TABLE = "bronze_parceiros"
 
@@ -67,7 +68,7 @@ def add_parceiro(**data):
         return str(e)
 
 
-def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_max=None, nome_fantasia=None):
+def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_max=None, nome_fantasia=None, sort_by_expiration=False):
     conn = get_db_connection()
     sql_base = f"SELECT * FROM {DIM_PARCEIRO_TABLE}"
     where_clauses = []
@@ -106,7 +107,10 @@ def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_
     if where_clauses:
         where_str = " WHERE " + " AND ".join(where_clauses)
     
-    sql = text(f"{sql_base} {where_str} ORDER BY nome_ajustado ASC")
+    # 6. Lógica de Ordenação (MODIFICADO)
+    order_by_clause = "ORDER BY data_saida ASC" if sort_by_expiration else "ORDER BY nome_ajustado ASC"
+    
+    sql = text(f"{sql_base} {where_str} {order_by_clause}")
     
     try:
         cursor = conn.execute(sql, params)
@@ -116,6 +120,35 @@ def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_
     except SQLAlchemyError as e:
         print(f"Erro ao buscar parceiros: {e}")
         return []
+
+# --- NOVA FUNÇÃO ---
+def get_expiring_parceiros(days_ahead=30):
+    """Busca parceiros ATIVOS que expiram nos próximos 'days_ahead' dias."""
+    conn = get_db_connection()
+    if conn is None: return []
+
+    today = datetime.date.today()
+    expiration_limit_date = today + datetime.timedelta(days=days_ahead)
+
+    sql = text(f"""
+        SELECT * FROM {DIM_PARCEIRO_TABLE}
+        WHERE 
+            status = 1 
+            AND data_saida >= :today 
+            AND data_saida <= :limit_date
+        ORDER BY data_saida ASC
+    """)
+    
+    try:
+        params = {"today": today, "limit_date": expiration_limit_date}
+        cursor = conn.execute(sql, params)
+        results = cursor.mappings().fetchall()
+        cursor.close()
+        return results
+    except SQLAlchemyError as e:
+        print(f"Erro ao buscar parceiros expirando: {e}")
+        return []
+# --- FIM NOVA FUNÇÃO ---
 
 
 def get_parceiro_by_id(parceiro_id):

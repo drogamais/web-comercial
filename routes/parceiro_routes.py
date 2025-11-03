@@ -27,18 +27,18 @@ def exportar_parceiros():
     try:
         # 1. Busca os mesmos filtros que a página principal usa
         tipo_filtro = request.args.get('tipo') or None
-        # status_filtro = request.args.get('status') # REMOVIDO
-        nome_fantasia_filtro = request.args.get('nome_fantasia') or None # ADICIONADO
+        nome_fantasia_filtro = request.args.get('nome_fantasia') or None 
         data_entrada_min_filtro = request.args.get('data_entrada_min') or None
         data_saida_max_filtro = request.args.get('data_saida_max') or None
-        
+        sort_expiring_filtro = request.args.get('sort_expiring') == '1' # ADICIONADO
+
         # 2. Busca os dados do banco (respeitando os filtros)
         parceiros_data = db.get_all_parceiros(
             tipo=tipo_filtro,
-            # status=status_filtro, # REMOVIDO
-            nome_fantasia=nome_fantasia_filtro, # ADICIONADO
+            nome_fantasia=nome_fantasia_filtro, 
             data_entrada_min=data_entrada_min_filtro,
-            data_saida_max=data_saida_max_filtro
+            data_saida_max=data_saida_max_filtro,
+            sort_by_expiration=sort_expiring_filtro # ADICIONADO
         )
 
         if not parceiros_data:
@@ -147,39 +147,47 @@ def gestao_parceiros():
     # --- LÓGICA GET (exibição) ---
     # MODIFICADO: Trocado status_filtro_display por nome_fantasia_filtro
     (parceiros, tipo_filtro, nome_fantasia_filtro, 
-     data_entrada_min_filtro, data_saida_max_filtro) = _get_parceiros_filtrados(request)
+     data_entrada_min_filtro, data_saida_max_filtro,
+     sort_expiring_filtro, expiring_ids_set) = _get_parceiros_filtrados(request) # <-- MODIFICADO
     
     return render_template(
         'parceiro/parceiros.html',
         active_page='parceiros_gestao',
         parceiros=parceiros,
         tipo_filtro=tipo_filtro,
-        # status_filtro=status_filtro_display, # REMOVIDO
-        nome_fantasia_filtro=nome_fantasia_filtro, # ADICIONADO
+        nome_fantasia_filtro=nome_fantasia_filtro, 
         data_entrada_min_filtro=data_entrada_min_filtro,
-        data_saida_max_filtro=data_saida_max_filtro
+        data_saida_max_filtro=data_saida_max_filtro,
+        sort_expiring_filtro=sort_expiring_filtro, # <-- ADICIONADO
+        expiring_ids_set=expiring_ids_set          # <-- ADICIONADO
     )
 
 def _get_parceiros_filtrados(request_obj):
     """Função auxiliar para buscar parceiros filtrados (usado no GET)."""
     tipo_filtro = request_obj.args.get('tipo') or None
-    # status_filtro = request_obj.args.get('status') # REMOVIDO
-    nome_fantasia_filtro = request_obj.args.get('nome_fantasia') or None # ADICIONADO
+    nome_fantasia_filtro = request_obj.args.get('nome_fantasia') or None 
     data_entrada_min_filtro = request_obj.args.get('data_entrada_min') or None
     data_saida_max_filtro = request_obj.args.get('data_saida_max') or None
+    sort_expiring_filtro = request_obj.args.get('sort_expiring') == '1' # <-- ADICIONADO
     
+    # --- ADICIONADO ---
+    # Busca os IDs dos parceiros que vencem em 30 dias para destacar
+    expiring_partners = db.get_expiring_parceiros(days_ahead=30)
+    expiring_ids_set = {p['id'] for p in expiring_partners}
+    # --- FIM ADICIONADO ---
+
     parceiros = db.get_all_parceiros(
         tipo=tipo_filtro,
-        # status=status_filtro, # REMOVIDO (deixará a DB function usar o default)
-        nome_fantasia=nome_fantasia_filtro, # ADICIONADO
+        nome_fantasia=nome_fantasia_filtro, 
         data_entrada_min=data_entrada_min_filtro,
-        data_saida_max=data_saida_max_filtro
+        data_saida_max=data_saida_max_filtro,
+        sort_by_expiration=sort_expiring_filtro # <-- ADICIONADO
     )
     
-    # status_filtro_display = status_filtro if status_filtro is not None else '' # REMOVIDO
     # Retorna o nome_fantasia_filtro para preencher o campo de busca
     return (parceiros, tipo_filtro, nome_fantasia_filtro, 
-            data_entrada_min_filtro, data_saida_max_filtro)
+            data_entrada_min_filtro, data_saida_max_filtro,
+            sort_expiring_filtro, expiring_ids_set) # <-- MODIFICADO
 
 
 # --- ROTA DE EDIÇÃO (UPDATE) ---

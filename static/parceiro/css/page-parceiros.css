@@ -71,3 +71,15 @@
 .modal-button-danger:disabled:hover {
     background-color: #cccccc;
 }
+
+/* --- NOVO: Estilo para linha de parceiro expirando --- */
+tr.row-expiring {
+    background-color: #f8d7da !important; /* Vermelho claro (cor do alert-danger) */
+    border-color: #f5c6cb;
+}
+tr.row-expiring:hover {
+    background-color: #f1c6c9 !important; /* Um pouco mais escuro no hover */
+}
+tr.row-expiring td {
+    color: #721c24; /* Texto vermelho escuro */
+}

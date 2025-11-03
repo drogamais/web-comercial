@@ -72,7 +72,36 @@
             </div>
         </div>
     </div>
-{% endblock %}
+
+    {% if expiring_partners %}
+    <div id="expiring-partner-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px; border-top: 5px solid #e74c3c;">
+            <h2 style="margin-top: 0; color: #c0392b;">Aviso de Vencimento</h2>
+            <p>Os seguintes parceiros irão vencer nos próximos 30 dias:</p>
+            
+            <ul style="text-align: left; list-style-type: none; padding-left: 0; max-height: 200px; overflow-y: auto; background: #fdfbfb; border: 1px solid #f5c6cb; border-radius: 4px; padding: 10px;">
+                {% for partner in expiring_partners %}
+                    <li style="padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <strong>{{ partner.nome_ajustado }}</strong>
+                        <span style="float: right; font-weight: bold; color: #c0392b;">
+                            Vence em: {{ partner.data_saida.strftime('%d/%m/%Y') }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+            
+            <div class="modal-actions" style="margin-top: 25px; justify-content: space-around;">
+                <button type="button" class="modal-button-cancel" style="background-color: #f1f1f1;">Fechar</button>
+                <a href="{{ url_for('parceiro.gestao_parceiros', sort_expiring='1') }}" 
+                   class="modal-button-confirm" 
+                   style="text-decoration: none; width: 150px; padding: 10px 0; display: flex; align-items: center; justify-content: center;">
+                    Ver Parceiros
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endblock %}
 
 {% block scripts %}
     {{ super() }}

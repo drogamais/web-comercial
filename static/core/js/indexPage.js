@@ -5,9 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalOverlays = document.querySelectorAll('.modal-overlay');
     const modalCloseButtons = document.querySelectorAll('.modal-overlay .modal-button-cancel');
 
-    // Abrir Modais
+    // Abrir Modais (por clique)
     modalTriggers.forEach(button => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault(); // Impede que o <a> suba a página
             const modalId = button.dataset.modalTarget; // Pega o ID (ex: "#campanha-modal")
             const targetModal = document.querySelector(modalId);
             if (targetModal) {
@@ -37,4 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    const expiringModal = document.getElementById('expiring-partner-modal');
+    if (expiringModal) {
+        // Atraso leve para garantir que a transição de CSS funcione
+        setTimeout(() => {
+            expiringModal.classList.add('show-modal');
+        }, 100); 
+    }
 });

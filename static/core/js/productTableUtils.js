@@ -40,36 +40,64 @@ window.ProductTableUtils = (function() {
 
         if (!normalInput || !desconto1Input) return; // Precisa pelo menos do normal e do primeiro desconto
 
-        const precoNormal = parseFloat(normalInput.value.replace(',', '.')); // Trata vírgula
-        const precoDesconto1 = parseFloat(desconto1Input.value.replace(',', '.'));
-        const precoDesconto2 = desconto2Input ? parseFloat(desconto2Input.value.replace(',', '.')) : NaN;
+        const precoNormalStr = normalInput.value.trim();
+        const precoDesconto1Str = desconto1Input.value.trim();
+        const precoDesconto2Str = desconto2Input ? desconto2Input.value.trim() : "";
 
-        // Limpa erro anterior de preço
-        row.classList.remove('row-error-price');
+        // --- INÍCIO DA MODIFICAÇÃO ---
 
+        // 1. Limpa classes de validação de preço anteriores (vermelho e verde)
+        row.classList.remove('row-error-price', 'row-valid');
+
+        // 2. Se o Preco Normal estiver vazio, não podemos comparar. Deixa a linha neutra.
+        if (precoNormalStr === '') {
+             return; // Deixa neutro
+        }
+        
+        const precoNormal = parseFloat(precoNormalStr.replace(',', '.'));
+
+        // 3. Se Preco Normal não for um número válido (ex: "abc"), também deixa neutro.
+        if (isNaN(precoNormal)) {
+            return; 
+        }
+
+        // 4. Se chegamos aqui, Preco Normal é um número. Vamos validar os descontos.
+        const precoDesconto1 = parseFloat(precoDesconto1Str.replace(',', '.'));
+        const precoDesconto2 = desconto2Input ? parseFloat(precoDesconto2Str.replace(',', '.')) : NaN;
+        
         let isError = false;
 
         // Valida PrecoNormal vs PrecoDesconto1 (se PrecoDesconto1 for um número válido)
-        if (!isNaN(precoNormal) && !isNaN(precoDesconto1)) {
+        if (!isNaN(precoDesconto1)) {
             if (precoDesconto1 > precoNormal) {
                 isError = true;
             }
         }
 
-        // Se NÃO houve erro e PrecoDesconto1 está VAZIO/INVÁLIDO,
-        // valida PrecoNormal vs PrecoDesconto2 (se existir e for um número válido)
-        if (!isError && (isNaN(precoDesconto1) || desconto1Input.value.trim() === '') && desconto2Input && !isNaN(precoDesconto2)) {
-             if (!isNaN(precoNormal)) {
-                if (precoDesconto2 > precoNormal) {
-                    isError = true;
-                }
+        // Valida PrecoNormal vs PrecoDesconto2 (se PrecoDesconto2 for um número válido)
+        if (desconto2Input && !isNaN(precoDesconto2)) {
+             if (precoDesconto2 > precoNormal) {
+                isError = true;
              }
         }
 
-        // Aplica a classe de erro se necessário
+        // 5. Aplica a classe de erro (vermelho) ou de sucesso (verde)
         if (isError) {
             row.classList.add('row-error-price');
+        } else {
+            // Se não houve erro (e o preço normal é um número), é válido.
+            row.classList.add('row-valid');
         }
+        // --- FIM DA MODIFICAÇÃO ---
+    }
+
+    // --- FUNÇÕES DE VALIDAÇÃO GERAL ---
+
+    function validarTodosCodigos(tableBody) {
+        const todosBarcodes = tableBody.querySelectorAll('.barcode-input');
+        todosBarcodes.forEach(input => {
+            validarLinhaFormatoCodigo(input);
+        });
     }
 
     function validarTodosPrecos(tableBody, config) {
@@ -135,7 +163,7 @@ window.ProductTableUtils = (function() {
         initInputValidation(tableBody, config);
 
         // 4. Botão Validar Formato
-        initValidateFormatButton(tableBody, config);
+        initValidatePrecoButton(tableBody, config);
 
         // 5. Botão Limpar Validações
         initClearValidationButton(tableBody);
@@ -219,12 +247,27 @@ window.ProductTableUtils = (function() {
         });
     }
 
-    function initValidateFormatButton(tableBody, config) {
-        const validatePrecoBtn = document.getElementById('btn-validar-preco'); // Assume ID padrão
-        if (validatePrecoBtn) {
-            validatePrecoBtn.addEventListener('click', () => {
+    function initValidatePrecoButton(tableBody, config) {
+        // NOTA: Os templates HTML (produtos_campanha.html e produtos_tabloide.html)
+        // têm um botão com ID "btn-validar-formato". O código aqui procura por "btn-validar-preco".
+        // Isso é um bug no código que você me enviou.
+        // Vou corrigir para procurar o ID "btn-validar-formato" que existe no HTML.
+        
+        const validateBtn = document.getElementById('btn-validar-formato'); // CORRIGIDO de 'btn-validar-preco'
+        if (validateBtn) {
+            validateBtn.addEventListener('click', () => {
+                // Ao clicar em "Validar Formato", validamos ambos: códigos e preços.
+                validarTodosCodigos(tableBody);
                 validarTodosPrecos(tableBody, config);
             });
+        } else {
+            // Fallback se o botão 'btn-validar-preco' realmente existir em algum lugar
+            const validatePrecoBtn = document.getElementById('btn-validar-preco');
+             if (validatePrecoBtn) {
+                validatePrecoBtn.addEventListener('click', () => {
+                    validarTodosPrecos(tableBody, config);
+                });
+            }
         }
     }
 
@@ -237,6 +280,7 @@ window.ProductTableUtils = (function() {
                     row.classList.remove(
                         'row-error-length', 'row-error-price',
                         'row-valid', 'row-invalid'
+                        // 'row-valid' já está incluído, então a limpeza funcionará
                     );
                 });
             });

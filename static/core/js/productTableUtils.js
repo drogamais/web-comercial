@@ -40,45 +40,40 @@ window.ProductTableUtils = (function() {
 
         if (!normalInput || !desconto1Input) return; // Precisa pelo menos do normal e do primeiro desconto
 
-        const precoNormalStr = normalInput.value.trim();
-        const precoDesconto1Str = desconto1Input.value.trim();
-        const precoDesconto2Str = desconto2Input ? desconto2Input.value.trim() : "";
+        const getPrice = (el) => {
+            if (!el) return NaN; // Se o elemento não existir
+            const val = el.value.replace(',', '.').trim();
+            if (val === "") return 0; // "null" (string vazia) conta como 0
+            return parseFloat(val); // Retorna o número ou NaN se for "abc"
+        };
 
-        // --- INÍCIO DA MODIFICAÇÃO ---
+        const precoNormal = getPrice(normalInput);
+        const precoDesconto1 = getPrice(desconto1Input);
+        const precoDesconto2 = getPrice(desconto2Input); // getPrice(null) retorna NaN, o que é ok
 
-        // 1. Limpa classes de validação de preço anteriores (vermelho e verde)
+        // 2. Limpa classes de validação de preço anteriores (vermelho E verde)
+        // Isso previne que a linha fique verde (do GTIN) e vermelha (do Preço) ao mesmo tempo.
+        // As validações de GTIN (`row-invalid`) serão tratadas pelo botão "Validar GTINs".
         row.classList.remove('row-error-price', 'row-valid');
 
-        // 2. Se o Preco Normal estiver vazio, não podemos comparar. Deixa a linha neutra.
-        if (precoNormalStr === '') {
-             return; // Deixa neutro
-        }
-        
-        const precoNormal = parseFloat(precoNormalStr.replace(',', '.'));
-
-        // 3. Se Preco Normal não for um número válido (ex: "abc"), também deixa neutro.
+        // 3. Se Preco Normal for "abc" (NaN), não podemos comparar.
+        // (Nota: 0 não é NaN, então campos vazios (agora 0) serão validados)
         if (isNaN(precoNormal)) {
-            return; 
+             return; // Deixa neutro, pois não é um número válido para comparar
         }
 
-        // 4. Se chegamos aqui, Preco Normal é um número. Vamos validar os descontos.
-        const precoDesconto1 = parseFloat(precoDesconto1Str.replace(',', '.'));
-        const precoDesconto2 = desconto2Input ? parseFloat(precoDesconto2Str.replace(',', '.')) : NaN;
-        
+        // 4. Se chegamos aqui, Preco Normal é um número (incluindo 0).
         let isError = false;
 
         // Valida PrecoNormal vs PrecoDesconto1 (se PrecoDesconto1 for um número válido)
-        if (!isNaN(precoDesconto1)) {
-            if (precoDesconto1 > precoNormal) {
-                isError = true;
-            }
+        if (!isNaN(precoDesconto1) && precoDesconto1 > precoNormal) {
+            isError = true;
         }
 
         // Valida PrecoNormal vs PrecoDesconto2 (se PrecoDesconto2 for um número válido)
-        if (desconto2Input && !isNaN(precoDesconto2)) {
-             if (precoDesconto2 > precoNormal) {
-                isError = true;
-             }
+        // Só executa se não houver erro no Desconto1
+        if (!isError && desconto2Input && !isNaN(precoDesconto2) && precoDesconto2 > precoNormal) {
+             isError = true;
         }
 
         // 5. Aplica a classe de erro (vermelho) ou de sucesso (verde)
@@ -86,6 +81,7 @@ window.ProductTableUtils = (function() {
             row.classList.add('row-error-price');
         } else {
             // Se não houve erro (e o preço normal é um número), é válido.
+            // Usamos 'row-valid' que já tem o estilo verde definido.
             row.classList.add('row-valid');
         }
         // --- FIM DA MODIFICAÇÃO ---

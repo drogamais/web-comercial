@@ -124,9 +124,12 @@
     <table style="table-layout: auto;">
         <thead>
             <tr>
-                <th style="width: 25%;">Nome Ajustado</th>
-                <th style="width: 15%;">CNPJ</th>
-                <th style="width: 15%;">Tipo</th>
+                <th style="width: 22%;">Nome Ajustado</th>
+                <th style="width: 18%;">Email Gestor</th>
+                <th style="width: 12%;">Tipo</th>
+
+                <th style="width: 6%; text-align: center;">Senha Definida?</th>
+
                 <th style="width: 20%;" class="th-parceiro-acoes">Ações</th>
             </tr>
         </thead>
@@ -134,8 +137,17 @@
             {% for p in parceiros %}
             <tr>
                 <td>{{ p.nome_ajustado }}</td>
-                <td>{{ p.cnpj }}</td>
+                <td>{{ p.email_gestor }}</td>
                 <td>{{ p.tipo }}</td>
+
+                <td style="text-align: center; font-size: 1.2em; font-weight: bold;">
+                    {% if p.senha_definida == 1 %}
+                        <span style="color: #27ae60;" title="Senha definida">✓</span>
+                    {% else %}
+                        <span style="color: #e74c3c;" title="Senha NÃO definida">✗</span>
+                    {% endif %}
+                </td>
+
                 <td>
                     <div class="action-buttons-container">
                         <button type="button" class="btn-edit button-filter btn-editar-parceiro"
@@ -151,6 +163,13 @@
                                 data-data-entrada="{{ p.data_entrada.strftime('%Y-%m-%d') if p.data_entrada else '' }}"
                                 data-data-saida="{{ p.data_saida.strftime('%Y-%m-%d') if p.data_saida else '' }}">
                             Editar
+                        </button>
+
+                        <button type="button" class="btn-senha button-filter"
+                                style="background-color: #34495e;"
+                                data-id="{{ p.id }}"
+                                data-email="{{ p.email_gestor }}">
+                            Senha
                         </button>
 
                         <button type="button" class="button-danger btn-delete btn-deletar-parceiro"
@@ -228,6 +247,35 @@
                 <div class="modal-actions" style="flex-basis: 100%; margin-top: 25px;">
                     <button id="modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
                     <button type="submit" class="modal-button-confirm">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="senha-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-button" id="senha-modal-btn-close">&times;</span>
+            <h2>Definir Nova Senha</h2> 
+
+            <p>Você está definindo uma nova senha para o usuário:</p>
+            <p class="delete-modal-parceiro-name-label" style="border-color: #34495e;">
+                Email: <strong id="senha-modal-email" style="color: #34495e;"></strong>
+            </p>
+
+            <form id="senha-form" method="post" action="">
+                <div class="form-group" style="text-align: left; margin-top: 15px;">
+                    <label for="nova_senha">Nova Senha:</label>
+                    <input type="password" id="nova_senha" name="nova_senha" required>
+                </div>
+
+                <div class="form-group" style="text-align: left; margin-top: 15px;">
+                    <label for="confirmar_senha">Confirmar Senha:</label>
+                    <input type="password" id="confirmar_senha" name="confirmar_senha" required>
+                </div>
+
+                <div class="modal-actions" style="margin-top: 25px;">
+                    <button id="senha-modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
+                    <button id="senha-modal-btn-confirm" type="submit" class="modal-button-confirm" style="background-color: #34495e;">Confirmar</button>
                 </div>
             </form>
         </div>

@@ -169,3 +169,47 @@ def deletar_parceiro(parceiro_id):
         flash(f'Um erro inesperado ocorreu ao deletar: {e}', 'danger')
 
     return redirect(url_for('parceiro.gestao_parceiros'))
+
+# --- ROTA DE DEFINIR SENHA (MODIFICADA) ---
+@parceiro_bp.route('/definir-senha/<int:parceiro_id>', methods=['POST'])
+def definir_senha(parceiro_id):
+    
+    nova_senha = request.form.get('nova_senha')
+    confirmar_senha = request.form.get('confirmar_senha')
+
+    if not nova_senha or not confirmar_senha:
+        flash('Por favor, preencha os dois campos de senha.', 'danger')
+        return redirect(url_for('parceiro.gestao_parceiros'))
+
+    if nova_senha != confirmar_senha:
+        flash('As senhas não conferem.', 'danger')
+        return redirect(url_for('parceiro.gestao_parceiros'))
+
+    parceiro = db.get_parceiro_by_id(parceiro_id)
+    if not parceiro or not parceiro.get('email_gestor'):
+        flash('Parceiro não encontrado ou sem email cadastrado.', 'danger')
+        return redirect(url_for('parceiro.gestao_parceiros'))
+        
+    email_do_parceiro = parceiro.get('email_gestor')
+
+    try:
+        # 1. Chama o serviço para definir a senha na API
+        sucesso_api, erro_api = api_service.definir_senha_usuario(email_do_parceiro, nova_senha)
+
+        if not sucesso_api:
+            flash(f'Erro ao definir senha na API Embedded: {erro_api}', 'danger')
+        else:
+            # --- ATUALIZAÇÃO AQUI ---
+            # 2. Se a API funcionou, marca a flag no banco local
+            error_db = db.set_senha_definida_flag(parceiro_id)
+            
+            if error_db:
+                 flash(f'Senha atualizada na API, mas falhou ao marcar status no banco local: {error_db}', 'warning')
+            else:
+                 flash(f'Senha do usuário {email_do_parceiro} atualizada com sucesso!', 'success')
+            # --- FIM DA ATUALIZAÇÃO ---
+
+    except Exception as e:
+        flash(f'Um erro inesperado ocorreu ao definir a senha: {e}', 'danger')
+
+    return redirect(url_for('parceiro.gestao_parceiros'))

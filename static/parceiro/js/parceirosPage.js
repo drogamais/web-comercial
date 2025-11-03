@@ -113,4 +113,47 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.target === deleteModal) closeDeleteModal();
         });
     }
+
+    // --- LÓGICA MODAL DEFINIR SENHA ---
+    const senhaModal = document.getElementById('senha-modal');
+    if (senhaModal) {
+        const senhaButtons = document.querySelectorAll('.btn-senha');
+        const senhaForm = document.getElementById('senha-form');
+        const senhaModalEmail = document.getElementById('senha-modal-email');
+        const senhaModalBtnClose = document.getElementById('senha-modal-btn-close');
+        const senhaModalBtnCancel = document.getElementById('senha-modal-btn-cancel');
+        const novaSenhaInput = document.getElementById('nova_senha');
+        const confirmarSenhaInput = document.getElementById('confirmar_senha');
+
+        const showSenhaModal = (e) => {
+            const button = e.currentTarget;
+            const parceiroId = button.dataset.id;
+            const email = button.dataset.email;
+
+            // Define a action do formulário para a nova rota
+            senhaForm.action = `/parceiro/definir-senha/${parceiroId}`;
+            
+            // Limpa campos antigos
+            senhaModalEmail.textContent = email || 'Email não encontrado';
+            novaSenhaInput.value = '';
+            confirmarSenhaInput.value = '';
+
+            senhaModal.classList.add('show-modal');
+        };
+
+        const closeSenhaModal = () => {
+            senhaModal.classList.remove('show-modal');
+            senhaForm.action = '';
+            novaSenhaInput.value = '';
+            confirmarSenhaInput.value = '';
+        };
+
+        senhaButtons.forEach(button => button.addEventListener('click', showSenhaModal));
+        senhaModalBtnClose.addEventListener('click', closeSenhaModal);
+        senhaModalBtnCancel.addEventListener('click', closeSenhaModal);
+        
+        senhaModal.addEventListener('click', (event) => {
+            if (event.target === senhaModal) closeSenhaModal();
+        });
+    }
 });

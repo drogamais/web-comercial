@@ -39,7 +39,8 @@ def _build_api_payload(data, api_user_id=None):
     payload = {
         "name": user_name,
         "email": user_email,
-        "role": 2, # Assumindo 2 = Visualizador
+        #1: administrador, 2:Contribuidor, 3:Visualizador
+        "role": 3,
         "department": data.get("tipo"),
         "expirationDate": expiration_date_iso,
         "reportLandingPage": None, "windowsAdUser": None, "bypassFirewall": False,
@@ -274,3 +275,42 @@ def criar_parceiro_completo(data):
     # 3. Se tudo deu certo, retorna o ID do usuário
     api_id = api_response.get('id') if api_response else None
     return api_id, None
+
+# --- (UPDATE) FUNÇÃO DE DEFINIR SENHA ---
+def definir_senha_usuario(email, nova_senha):
+    """Tenta ATUALIZAR (PUT) a senha de um usuário."""
+    
+    if not email or not nova_senha:
+        return False, "Email ou nova senha não fornecidos."
+
+    # Endpoint para mudar a senha
+    api_url_change_pass = f"{EMBEDDED_API_URL}/change-password"
+    headers = _get_api_headers()
+    
+    # Payload esperado
+    payload = {
+        "email": email,
+        "password": nova_senha
+    }
+
+    try:
+        response = requests.put(api_url_change_pass, headers=headers, json=payload, timeout=10)
+
+        # 200 OK é o sucesso
+        if response.status_code == 200:
+            return True, None
+        elif response.status_code == 401:
+            return False, "API Erro 401 (ChangePass): Não Autorizado."
+        elif response.status_code == 403:
+             return False, "API Erro 403 (ChangePass): Proibido. Sua chave não tem permissão para alterar senhas."
+        elif response.status_code == 400:
+             try:
+                error_details = response.json().get("errors", response.text)
+             except json.JSONDecodeError:
+                error_details = response.text
+             return False, f"API Erro 400 (ChangePass): {error_details}"
+        else:
+            return False, f"API Erro {response.status_code} (ChangePass): Erro desconhecido."
+
+    except requests.exceptions.RequestException as e:
+        return False, f"Falha ao conectar na API (ChangePass): {e}"

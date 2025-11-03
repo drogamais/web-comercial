@@ -27,23 +27,13 @@ def create_tables():
                 data_entrada DATE DEFAULT NULL,
                 data_saida DATE DEFAULT NULL,
                 status TINYINT DEFAULT 1,
+                `senha_definida` TINYINT(1) NOT NULL DEFAULT '0',
                 data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP 
                     ON UPDATE CURRENT_TIMESTAMP,
                 INDEX idx_api_user_id (api_user_id) 
             )
         """)
         conn.execute(sql_create)
-        
-        # --- NOVO: Garante que a coluna exista em tabelas antigas ---
-        try:
-            sql_alter = text(f"""
-                ALTER TABLE {DIM_PARCEIRO_TABLE} 
-                ADD COLUMN IF NOT EXISTS api_user_id VARCHAR(50) DEFAULT NULL AFTER id
-            """)
-            conn.execute(sql_alter)
-        except SQLAlchemyError as e_alter:
-            # Ignora erros se a coluna já existir
-            print(f"Aviso ao alterar tabela: {e_alter}")
 
         conn.commit()
     except SQLAlchemyError as e:
@@ -160,6 +150,21 @@ def update_parceiro(parceiro_id, **data):
     except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
+    
+def set_senha_definida_flag(parceiro_id):
+    """Marca a flag 'senha_definida' como 1 (true) para um parceiro."""
+    conn = get_db_connection()
+    if conn is None:
+        return "Falha na conexão com o banco"
+
+    sql = text(f"UPDATE {DIM_PARCEIRO_TABLE} SET senha_definida = 1 WHERE id = :id")
+    try:
+        conn.execute(sql, {"id": parceiro_id})
+        conn.commit()
+        return None
+    except SQLAlchemyError as e:
+        conn.rollback()
+        return str(e)
 
 
 def delete_parceiro(parceiro_id):
@@ -172,3 +177,4 @@ def delete_parceiro(parceiro_id):
     except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
+    

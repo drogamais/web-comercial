@@ -13,7 +13,7 @@
         <div>
             <a href="{{ url_for('parceiro.exportar_parceiros', 
                         tipo=tipo_filtro or '', 
-                        status=status_filtro or '', 
+                        nome_fantasia=nome_fantasia_filtro or '', 
                         data_entrada_min=data_entrada_min_filtro or '', 
                         data_saida_max=data_saida_max_filtro or '') }}" 
                 class="button-filter" 
@@ -99,13 +99,9 @@
         <h2>Filtrar Parceiros</h2>
         <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="get" class="filter-form" style="align-items: flex-end; gap: 10px;" autocomplete="off">
             
-            <div class="form-group" style="flex: 1; min-width: 150px;">
-                <label for="status_filtro">Status:</label>
-                <select id="status_filtro" name="status">
-                    <option value="" {{ 'selected' if status_filtro == '' or status_filtro is none else '' }}>Todos</option>
-                    <option value="1" {{ 'selected' if status_filtro == '1' else '' }}>ATIVO</option>
-                    <option value="0" {{ 'selected' if status_filtro == '0' else '' }}>INATIVO</option>
-                </select>
+            <div class="form-group" style="flex: 1.5; min-width: 200px;">
+                <label for="nome_fantasia_filtro">Nome Fantasia:</label>
+                <input type="text" id="nome_fantasia_filtro" name="nome_fantasia" value="{{ nome_fantasia_filtro or '' }}" autocomplete="off">
             </div>
             
             <div class="form-group" style="flex: 1; min-width: 150px;">

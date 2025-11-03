@@ -67,7 +67,7 @@ def add_parceiro(**data):
         return str(e)
 
 
-def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_max=None):
+def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_max=None, nome_fantasia=None):
     conn = get_db_connection()
     sql_base = f"SELECT * FROM {DIM_PARCEIRO_TABLE}"
     where_clauses = []
@@ -79,6 +79,8 @@ def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_
         params["tipo"] = tipo
         
     # 2. Filtro por Status
+    # (A rota não vai mais passar 'status' pelo filtro,
+    # então 'status' será None, caindo no 'status = 1' por padrão)
     if status is None or status == '1': 
         where_clauses.append("status = 1") 
     elif status == '0': 
@@ -93,6 +95,12 @@ def get_all_parceiros(tipo=None, status=None, data_entrada_min=None, data_saida_
     if data_saida_max:
         where_clauses.append("data_saida <= :data_saida_max")
         params["data_saida_max"] = data_saida_max
+    
+    # 5. Filtro por Nome Fantasia (NOVO)
+    if nome_fantasia:
+        # Usamos LOWER() na coluna e no parâmetro para garantir a busca case-insensitive
+        where_clauses.append("LOWER(nome_fantasia) LIKE :nome_fantasia")
+        params["nome_fantasia"] = f"%{nome_fantasia.lower()}%"
     
     where_str = ""
     if where_clauses:
@@ -177,4 +185,3 @@ def delete_parceiro(parceiro_id):
     except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
-    

@@ -7,7 +7,21 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Gerenciar Parceiros</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Gerenciar Parceiros</h1>
+        
+        <div>
+            <a href="{{ url_for('parceiro.exportar_parceiros', 
+                        tipo=tipo_filtro or '', 
+                        status=status_filtro or '', 
+                        data_entrada_min=data_entrada_min_filtro or '', 
+                        data_saida_max=data_saida_max_filtro or '') }}" 
+                class="button-filter" 
+                style="background-color: #27ae60; text-decoration: none; max-width: 250px; margin: 0;">
+                &#x2B07; Exportar Parceiros (Excel)
+            </a>
+        </div>
+    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -86,15 +100,6 @@
         <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="get" class="filter-form" style="align-items: flex-end; gap: 10px;" autocomplete="off">
             
             <div class="form-group" style="flex: 1; min-width: 150px;">
-                <label for="tipo_filtro">Tipo:</label>
-                <select id="tipo_filtro" name="tipo">
-                    <option value="" {{ 'selected' if tipo_filtro == '' or tipo_filtro is none else '' }}>Todos</option>
-                    <option value="INDUSTRIA" {{ 'selected' if tipo_filtro == 'INDUSTRIA' else '' }}>INDUSTRIA</option>
-                    <option value="DISTRIBUIDOR" {{ 'selected' if tipo_filtro == 'DISTRIBUIDOR' else '' }}>DISTRIBUIDOR</option>
-                </select>
-            </div>
-
-            <div class="form-group" style="flex: 1; min-width: 150px;">
                 <label for="status_filtro">Status:</label>
                 <select id="status_filtro" name="status">
                     <option value="" {{ 'selected' if status_filtro == '' or status_filtro is none else '' }}>Todos</option>
@@ -103,6 +108,15 @@
                 </select>
             </div>
             
+            <div class="form-group" style="flex: 1; min-width: 150px;">
+                <label for="tipo_filtro">Tipo:</label>
+                <select id="tipo_filtro" name="tipo">
+                    <option value="" {{ 'selected' if tipo_filtro == '' or tipo_filtro is none else '' }}>Todos</option>
+                    <option value="INDUSTRIA" {{ 'selected' if tipo_filtro == 'INDUSTRIA' else '' }}>INDUSTRIA</option>
+                    <option value="DISTRIBUIDOR" {{ 'selected' if tipo_filtro == 'DISTRIBUIDOR' else '' }}>DISTRIBUIDOR</option>
+                </select>
+            </div>
+
             <div class="form-group" style="flex: 1; min-width: 100px;">
                 <label for="data_entrada_min">Data Entrada (Min):</label>
                 <input type="date" id="data_entrada_min" name="data_entrada_min" value="{{ data_entrada_min_filtro or '' }}">

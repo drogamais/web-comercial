@@ -1,4 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+#
+# No topo do arquivo, adicione estas importações:
+#
+import io
+import pandas as pd
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 import database.parceiro_db as db
 from utils import DELETE_PASSWORD
 import services.parceiros_embedded_service as api_service
@@ -16,6 +21,82 @@ parceiro_bp = Blueprint(
     static_folder='static',
     url_prefix='/parceiro'
 )
+
+# --- NOVO: ROTA PARA EXPORTAR PARCEIROS ---
+@parceiro_bp.route('/exportar')
+def exportar_parceiros():
+    try:
+        # 1. Busca os mesmos filtros que a página principal usa
+        tipo_filtro = request.args.get('tipo') or None
+        status_filtro = request.args.get('status')
+        data_entrada_min_filtro = request.args.get('data_entrada_min') or None
+        data_saida_max_filtro = request.args.get('data_saida_max') or None
+        
+        # 2. Busca os dados do banco (respeitando os filtros)
+        parceiros_data = db.get_all_parceiros(
+            tipo=tipo_filtro,
+            status=status_filtro, 
+            data_entrada_min=data_entrada_min_filtro,
+            data_saida_max=data_saida_max_filtro
+        )
+
+        if not parceiros_data:
+            flash('Nenhum parceiro encontrado para exportar (com base nos filtros atuais).', 'warning')
+            return redirect(url_for('parceiro.gestao_parceiros'))
+
+        # 3. Converte os dados para um DataFrame do Pandas
+        #    (Convertemos de RowMapping para dict para o Pandas)
+        parceiros_list = [dict(row) for row in parceiros_data]
+        df = pd.DataFrame(parceiros_list)
+
+        # 4. Limpa e Renomeia as colunas para um relatório amigável
+        #    (Mapeia 1/0 para Sim/Não)
+        if 'status' in df.columns:
+            df['status'] = df['status'].apply(lambda x: 'Ativo' if x == 1 else 'Inativo')
+        
+        if 'senha_definida' in df.columns:
+             df['senha_definida'] = df['senha_definida'].apply(lambda x: 'Sim' if x == 1 else 'Não')
+
+        # Define a ordem e os nomes das colunas no Excel
+        colunas_exportar = {
+            "id": "ID Local",
+            "api_user_id": "ID API (Embedded)",
+            "nome_ajustado": "Nome Ajustado",
+            "nome_fantasia": "Nome Fantasia",
+            "razao_social": "Razão Social",
+            "cnpj": "CNPJ",
+            "tipo": "Tipo (Canal)",
+            "gestor": "Gestor (Contato)",
+            "email_gestor": "Email Gestor",
+            "telefone_gestor": "Telefone Gestor",
+            "data_entrada": "Data Entrada",
+            "data_saida": "Data Saída",
+            "status": "Status",
+            "senha_definida": "Senha Definida",
+            "data_atualizacao": "Última Atualização"
+        }
+        
+        # Filtra o DataFrame para ter apenas as colunas que queremos e na ordem certa
+        df_final = df[list(colunas_exportar.keys())].rename(columns=colunas_exportar)
+
+        # 5. Cria o arquivo Excel em memória
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_final.to_excel(writer, index=False, sheet_name='Parceiros')
+        
+        output.seek(0) # Volta ao início do arquivo em memória
+
+        # 6. Envia o arquivo para o usuário
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="export_parceiros.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    except Exception as e:
+        flash(f'Ocorreu um erro ao gerar o arquivo Excel: {e}', 'danger')
+        return redirect(url_for('parceiro.gestao_parceiros'))
 
 def _get_form_data(form, sufixo=""):
     """Extrai e normaliza os dados do formulário."""

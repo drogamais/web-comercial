@@ -22,6 +22,10 @@ parceiro_bp = Blueprint(
 # --- URL da API POWEREMBEDDED ---
 EMBEDDED_API_URL = "https://api.powerembedded.com.br/api/user"
 EMBEDDED_API_KEY = "eyJPcmdJZCI6Ijc5MTVmZmU1LWE4MWUtNDA4Ni04MDNkLTQzM2M4OTJkZDc4NSIsIkFwaUtleSI6IkFBXzM2OVpvQlRNc04yczBwbjJpY2RHZC1PdlNrN2ZVTlJuaEo4NGdOMWcifQ"
+
+# --- NOVO: ID DO GRUPO "Parceiros" ---
+# !!! ATENÇÃO: Substitua este valor pelo ID (GUID) real do seu grupo "Parceiros" !!!
+PARCEIROS_GROUP_ID = "3c4761f3-89ef-4642-92ee-b30d214b92d5" 
 # ----------------------------------------
 
 def _get_form_data(form, sufixo=""):
@@ -62,8 +66,7 @@ def _build_api_payload(data, api_user_id=None):
     payload = {
         "name": user_name,
         "email": user_email,
-        # role... 1: Administrador, 2: Contribuidor, 3: Vizualizador
-        "role": 3,
+        "role": 2, # Assumindo 2 = Visualizador
         "department": data.get("tipo"),
         "expirationDate": expiration_date_iso,
         "reportLandingPage": None, "windowsAdUser": None, "bypassFirewall": False,
@@ -107,14 +110,14 @@ def _cadastrar_parceiro_embedded(data):
 
         # --- PASSO 2: SUCESSO! Agora busca o usuário (GET) usando o filtro de email ---
         user_email_param = payload['email']
-        get_url = f"{EMBEDDED_API_URL}?email={user_email_param}" 
+        get_url = f"{EMBEDDED_API_URL}?email={user_email_param}" #
         
         get_response = requests.get(get_url, headers=headers, timeout=10)
 
         if get_response.status_code == 200:
             try:
                 response_data = get_response.json()
-                user_list = response_data.get('data')
+                user_list = response_data.get('data') #
 
                 if user_list and len(user_list) > 0:
                     user_data = user_list[0]
@@ -134,6 +137,46 @@ def _cadastrar_parceiro_embedded(data):
 
     except requests.exceptions.RequestException as e:
         return None, f"Falha de conexão com a API: {e}"
+
+# --- NOVO: FUNÇÃO PARA VINCULAR GRUPO ---
+def _link_user_to_group(user_email, group_id):
+    """Tenta VINCULAR (PUT) um usuário a um grupo."""
+    if not user_email or not group_id:
+        return False, "Email do usuário ou ID do Grupo não fornecido."
+
+    # Endpoint para vincular usuário a grupos
+    api_url_link = f"{EMBEDDED_API_URL}/link-groups"
+    headers = _get_api_headers()
+    
+    # Payload esperado pela API
+    payload = {
+        "userEmail": user_email,
+        "groups": [group_id]
+    }
+
+    try:
+        response = requests.put(api_url_link, headers=headers, json=payload, timeout=10)
+
+        # 200 OK é o código de sucesso
+        if response.status_code == 200:
+            return True, None # Sucesso
+        elif response.status_code == 401:
+            return False, "API Erro 401 (Link Group): Não Autorizado."
+        elif response.status_code == 403:
+            return False, "API Erro 403 (Link Group): Proibido. Sua chave não tem permissão para vincular grupos."
+        elif response.status_code == 400: #
+            try:
+                error_details = response.json().get("errors", response.text)
+            except json.JSONDecodeError:
+                error_details = response.text
+            return False, f"API Erro 400 (Link Group): {error_details}"
+        else:
+            return False, f"API Erro {response.status_code} (Link Group): Erro desconhecido."
+    
+    except requests.exceptions.RequestException as e:
+        return False, f"Falha de conexão com a API (Link Group): {e}"
+# --- FIM DA NOVA FUNÇÃO ---
+
 
 # --- (UPDATE) FUNÇÃO DE ATUALIZAÇÃO NA API ---
 def _atualizar_parceiro_embedded(parceiro_id, new_data):
@@ -189,7 +232,7 @@ def _deletar_parceiro_embedded(parceiro_id):
     
     if not email:
         print(f"Aviso: Parceiro local ID {parceiro_id} não tem 'email'. Pulando deleção na API.")
-        return True, None # Permite a deleção local
+        return True, None 
 
     identificador_api = email 
     api_url_delete = f"{EMBEDDED_API_URL}/{identificador_api}"
@@ -199,7 +242,6 @@ def _deletar_parceiro_embedded(parceiro_id):
         response = requests.delete(api_url_delete, headers=headers, timeout=10)
 
         if response.status_code in [200, 204, 404]:
-            # 404 (Não encontrado) é sucesso, pois o usuário não existe mais.
             return True, None
         elif response.status_code == 401:
             return False, "API Erro 401: Não Autorizado."
@@ -222,17 +264,14 @@ def _deletar_parceiro_embedded(parceiro_id):
         return False, f"Falha ao conectar na API Embedded: {e}"
 
 
-# --- NOVO: FUNÇÃO DE ROLLBACK (REVERSÃO) ---
+# --- FUNÇÃO DE ROLLBACK (REVERSÃO) ---
 def _rollback_api_creation(email):
-    """
-    Tenta deletar um usuário da API usando o email. 
-    Usado para reverter um cadastro quando o banco local falha.
-    """
+    """Tenta deletar um usuário da API usando o email."""
     if not email:
         return False
         
     print(f"--- ROLLBACK ---")
-    print(f"Tentando deletar usuário '{email}' da API devido à falha no banco local.")
+    print(f"Tentando deletar usuário '{email}' da API devido à falha na operação.")
     
     api_url_delete = f"{EMBEDDED_API_URL}/{email}"
     headers = _get_api_headers()
@@ -247,7 +286,7 @@ def _rollback_api_creation(email):
     except Exception as e:
         print(f"ROLLBACK: Exceção ao tentar deletar '{email}': {e}")
         return False
-# --- FIM DA NOVA FUNÇÃO ---
+# --- FIM DA FUNÇÃO DE ROLLBACK ---
 
 
 # --- ROTA DE GESTÃO (GET e POST/CREATE) ---
@@ -255,6 +294,7 @@ def _rollback_api_creation(email):
 def gestao_parceiros():
     if request.method == 'POST':
         data = _get_form_data(request.form)
+        user_email_para_api = data.get('email_gestor')
 
         if not data["nome_ajustado"]:
             flash('O campo "Nome Ajustado" é obrigatório.', 'danger')
@@ -268,29 +308,37 @@ def gestao_parceiros():
                 flash(f'Erro ao cadastrar parceiro na API Embedded: {erro_api}', 'danger')
                 return redirect(url_for('parceiro.gestao_parceiros'))
 
-            # 2. Prepara dados para o banco local
+            # --- LÓGICA DE VINCULAR GRUPO ADICIONADA AQUI ---
+            # 2. Tenta vincular ao grupo "Parceiros"
+            if not PARCEIROS_GROUP_ID or "COLOQUE_O_ID_DO_GRUPO_AQUI" in PARCEIROS_GROUP_ID:
+                flash('ID do Grupo "Parceiros" não configurado no código (PARCEIROS_GROUP_ID). Pulando vinculação.', 'warning')
+            else:
+                sucesso_link, erro_link = _link_user_to_group(user_email_para_api, PARCEIROS_GROUP_ID)
+                
+                if erro_link:
+                    # Se falhar ao vincular, desfaz a criação do usuário
+                    _rollback_api_creation(user_email_para_api)
+                    flash(f'Erro ao vincular usuário ao grupo: {erro_link}. O cadastro do usuário foi revertido.', 'danger')
+                    return redirect(url_for('parceiro.gestao_parceiros'))
+            # --- FIM DA LÓGICA DE GRUPO ---
+
+            # 3. Se API+Link funcionou, prepara para salvar no banco local
             api_id = api_response.get('id') if api_response else None
             data['api_user_id'] = api_id 
             
-            # 3. Tenta salvar no banco local
             error_db = db.add_parceiro(**data)
             
-            # --- LÓGICA DE ROLLBACK APLICADA AQUI ---
             if error_db:
-                # FALHA NO BANCO LOCAL (Ex: UNIQUE constraint)
-                flash(f'Falha ao salvar parceiro localmente: {error_db}', 'danger')
-                
-                # 4. TENTA REVERTER (ROLLBACK) A CRIAÇÃO NA API
-                if _rollback_api_creation(data.get('email_gestor')):
-                    flash('REVERSÃO: O usuário criado na API foi removido para manter a consistência.', 'warning')
-                else:
-                    flash('FALHA DE REVERSÃO: O usuário foi criado na API, mas falhou ao salvar localmente E falhou ao ser revertido. Contate o admin.', 'danger')
+                # Se falhar no banco, desfaz a criação do usuário na API
+                _rollback_api_creation(user_email_para_api)
+                flash(f'Parceiro salvo na API, mas falhou ao salvar localmente: {error_db}. O cadastro na API foi revertido.', 'danger')
             else:
-                # SUCESSO COMPLETO
-                flash('Parceiro criado com sucesso (Sincronizado com Embedded)!', 'success')
+                flash('Parceiro criado e vinculado ao grupo com sucesso!', 'success')
         
         except Exception as e:
-            flash(f'Um erro inesperado ocorreu: {e}', 'danger')
+            # Se algo inesperado acontecer, tenta reverter
+            _rollback_api_creation(user_email_para_api)
+            flash(f'Um erro inesperado ocorreu: {e}. O cadastro foi revertido.', 'danger')
             
         return redirect(url_for('parceiro.gestao_parceiros'))
 
@@ -337,14 +385,12 @@ def editar_parceiro(parceiro_id):
         flash('O campo "Nome Ajustado" é obrigatório para a edição.', 'danger')
         return redirect(url_for('parceiro.gestao_parceiros'))
         
-    # Pega o email antigo ANTES de tentar atualizar
     parceiro_atual = db.get_parceiro_by_id(parceiro_id)
     email_antigo = parceiro_atual.get('email_gestor')
     email_novo = data.get('email_gestor')
     
     if email_antigo != email_novo:
         flash('Não é permitido alterar o "E-mail Gestor". A alteração do email foi ignorada.', 'warning')
-        # Força o email de volta a ser o antigo
         data['email_gestor'] = email_antigo
 
     try:
@@ -377,14 +423,12 @@ def deletar_parceiro(parceiro_id):
         return redirect(url_for('parceiro.gestao_parceiros'))
     
     try:
-        # Tenta deletar da API primeiro
         sucesso_api, erro_api = _deletar_parceiro_embedded(parceiro_id)
         
         if not sucesso_api:
             flash(f'Erro ao deletar parceiro na API Embedded: {erro_api}', 'danger')
             return redirect(url_for('parceiro.gestao_parceiros'))
 
-        # Se a API funcionou, deleta do banco local
         _, error_db = db.delete_parceiro(parceiro_id)
         
         if error_db:

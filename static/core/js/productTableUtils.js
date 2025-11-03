@@ -72,15 +72,6 @@ window.ProductTableUtils = (function() {
         }
     }
 
-    // --- FUNÇÕES DE VALIDAÇÃO GERAL ---
-
-    function validarTodosCodigos(tableBody) {
-        const todosBarcodes = tableBody.querySelectorAll('.barcode-input');
-        todosBarcodes.forEach(input => {
-            validarLinhaFormatoCodigo(input);
-        });
-    }
-
     function validarTodosPrecos(tableBody, config) {
         // Pega um dos inputs de preço de cada linha para iniciar a validação da linha
         const inputsParaValidar = tableBody.querySelectorAll(config.precoNormalSelector);
@@ -229,10 +220,9 @@ window.ProductTableUtils = (function() {
     }
 
     function initValidateFormatButton(tableBody, config) {
-        const validateFormatoBtn = document.getElementById('btn-validar-formato'); // Assume ID padrão
-        if (validateFormatoBtn) {
-            validateFormatoBtn.addEventListener('click', () => {
-                validarTodosCodigos(tableBody);
+        const validatePrecoBtn = document.getElementById('btn-validar-preco'); // Assume ID padrão
+        if (validatePrecoBtn) {
+            validatePrecoBtn.addEventListener('click', () => {
                 validarTodosPrecos(tableBody, config);
             });
         }

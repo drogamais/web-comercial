@@ -1,11 +1,11 @@
 import requests
 import json
 from datetime import datetime
+from config import EMBEDDED_API_KEY
 
 # --- CONFIGURAÇÕES DA API ---
 # Todas as constantes da API ficam aqui
 EMBEDDED_API_URL = "https://api.powerembedded.com.br/api/user"
-EMBEDDED_API_KEY = "eyJPcmdJZCI6Ijc5MTVmZmU1LWE4MWUtNDA4Ni04MDNkLTQzM2M4OTJkZDc4NSIsIkFwaUtleSI6IkFBXzM2OVpvQlRNc04yczBwbjJpY2RHZC1PdlNrN2ZVTlJuaEo4NGdOMWcifQ"
 PARCEIROS_GROUP_ID = "3c4761f3-89ef-4642-92ee-b30d214b92d5" 
 # -----------------------------
 

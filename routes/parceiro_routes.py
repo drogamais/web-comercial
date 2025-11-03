@@ -1,10 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import database.parceiro_db as db
 from utils import DELETE_PASSWORD
-import requests 
-import json     
-from datetime import datetime
-import time
+import services.parceiros_embedded_service as api_service
+# -----------
 
 # Campos principais do parceiro
 PARCEIRO_FIELDS = (
@@ -19,15 +17,6 @@ parceiro_bp = Blueprint(
     url_prefix='/parceiro'
 )
 
-# --- URL da API POWEREMBEDDED ---
-EMBEDDED_API_URL = "https://api.powerembedded.com.br/api/user"
-EMBEDDED_API_KEY = "eyJPcmdJZCI6Ijc5MTVmZmU1LWE4MWUtNDA4Ni04MDNkLTQzM2M4OTJkZDc4NSIsIkFwaUtleSI6IkFBXzM2OVpvQlRNc04yczBwbjJpY2RHZC1PdlNrN2ZVTlJuaEo4NGdOMWcifQ"
-
-# --- NOVO: ID DO GRUPO "Parceiros" ---
-# !!! ATENÇÃO: Substitua este valor pelo ID (GUID) real do seu grupo "Parceiros" !!!
-PARCEIROS_GROUP_ID = "3c4761f3-89ef-4642-92ee-b30d214b92d5" 
-# ----------------------------------------
-
 def _get_form_data(form, sufixo=""):
     """Extrai e normaliza os dados do formulário."""
     data = {field: (form.get(f"{field}{sufixo}") or None) for field in PARCEIRO_FIELDS}
@@ -36,308 +25,39 @@ def _get_form_data(form, sufixo=""):
     data["status"] = 1
     return data
 
-def _get_api_headers():
-    """Retorna os headers de autenticação padrão para a API."""
-    return {
-        "X-API-Key": EMBEDDED_API_KEY,
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-    }
-
-def _build_api_payload(data, api_user_id=None):
-    """Monta o payload de dados para a API a partir dos dados do formulário."""
-    try:
-        expiration_date_iso = None
-        if data.get("data_saida"):
-            dt_end = datetime.strptime(data.get("data_saida"), '%Y-%m-%d')
-            expiration_date_iso = dt_end.strftime('%Y-%m-%dT00:00:00Z')
-    
-    except ValueError as e:
-        raise ValueError(f"Formato de data inválido. Use AAAA-MM-DD. Erro: {e}")
-
-    user_email = data.get("email_gestor")
-    user_name = data.get("nome_fantasia") 
-
-    if not user_email:
-        raise ValueError("O campo 'E-mail Gestor' é obrigatório para a API.")
-    if not user_name:
-        raise ValueError("O campo 'Nome Fantasia' é obrigatório para a API.")
-
-    payload = {
-        "name": user_name,
-        "email": user_email,
-        "role": 2, # Assumindo 2 = Visualizador
-        "department": data.get("tipo"),
-        "expirationDate": expiration_date_iso,
-        "reportLandingPage": None, "windowsAdUser": None, "bypassFirewall": False,
-        "canEditReport": False, "canCreateReport": False, "canOverwriteReport": False,
-        "canRefreshDataset": False, "canCreateSubscription": False, "canDownloadPbix": False,
-        "canExportReportWithHiddenPages": False, "canCreateNewUsers": False,
-        "canStartCapacityByDemand": False, "canDisplayVisualHeaders": True,
-        "canExportReportOtherPages": False, "accessReportAnyTime": True,
-        "sendWelcomeEmail": True
-    }
-    
-    if api_user_id:
-        payload["id"] = api_user_id
-
-    return payload
-
-# --- (CREATE) FUNÇÃO DE CADASTRO NA API ---
-def _cadastrar_parceiro_embedded(data):
-    """
-    Tenta CRIAR (POST) um novo usuário, e depois BUSCAR (GET com filtro)
-    para capturar o ID retornado.
-    """
-    headers = _get_api_headers()
-    try:
-        payload = _build_api_payload(data, api_user_id=None) 
-    except ValueError as e:
-        return None, str(e) 
-
-    try:
-        # --- PASSO 1: Tenta CRIAR o usuário (POST) ---
-        response = requests.post(EMBEDDED_API_URL, headers=headers, json=payload, timeout=10)
-
-        if response.status_code != 200:
-            if response.status_code == 401:
-                return None, "API Erro 401: Não Autorizado. Verifique sua Chave de API (Token)."
-            try:
-                error_details = response.json().get("message", response.text)
-            except json.JSONDecodeError:
-                error_details = response.text
-            return None, f"API Embedded Erro {response.status_code} (POST): {error_details}"
-
-        # --- PASSO 2: SUCESSO! Agora busca o usuário (GET) usando o filtro de email ---
-        user_email_param = payload['email']
-        get_url = f"{EMBEDDED_API_URL}?email={user_email_param}" #
-        
-        get_response = requests.get(get_url, headers=headers, timeout=10)
-
-        if get_response.status_code == 200:
-            try:
-                response_data = get_response.json()
-                user_list = response_data.get('data') #
-
-                if user_list and len(user_list) > 0:
-                    user_data = user_list[0]
-                    api_id = user_data.get('id')
-                    
-                    if api_id:
-                        return {"id": api_id}, None
-                    else:
-                        return None, "API criou e listou o usuário, mas ele veio sem 'id' no JSON."
-                else:
-                    return None, f"API criou o usuário (POST 200), mas a busca (GET) por '{user_email_param}' não o encontrou."
-
-            except (json.JSONDecodeError, KeyError, IndexError) as e:
-                return None, f"API criou o usuário, mas a resposta GET foi inválida: {e}"
-        else:
-            return None, f"API criou o usuário (POST 200 OK), mas falhou ao buscá-lo (GET {get_response.status_code}). Verifique as permissões da sua chave."
-
-    except requests.exceptions.RequestException as e:
-        return None, f"Falha de conexão com a API: {e}"
-
-# --- NOVO: FUNÇÃO PARA VINCULAR GRUPO ---
-def _link_user_to_group(user_email, group_id):
-    """Tenta VINCULAR (PUT) um usuário a um grupo."""
-    if not user_email or not group_id:
-        return False, "Email do usuário ou ID do Grupo não fornecido."
-
-    # Endpoint para vincular usuário a grupos
-    api_url_link = f"{EMBEDDED_API_URL}/link-groups"
-    headers = _get_api_headers()
-    
-    # Payload esperado pela API
-    payload = {
-        "userEmail": user_email,
-        "groups": [group_id]
-    }
-
-    try:
-        response = requests.put(api_url_link, headers=headers, json=payload, timeout=10)
-
-        # 200 OK é o código de sucesso
-        if response.status_code == 200:
-            return True, None # Sucesso
-        elif response.status_code == 401:
-            return False, "API Erro 401 (Link Group): Não Autorizado."
-        elif response.status_code == 403:
-            return False, "API Erro 403 (Link Group): Proibido. Sua chave não tem permissão para vincular grupos."
-        elif response.status_code == 400: #
-            try:
-                error_details = response.json().get("errors", response.text)
-            except json.JSONDecodeError:
-                error_details = response.text
-            return False, f"API Erro 400 (Link Group): {error_details}"
-        else:
-            return False, f"API Erro {response.status_code} (Link Group): Erro desconhecido."
-    
-    except requests.exceptions.RequestException as e:
-        return False, f"Falha de conexão com a API (Link Group): {e}"
-# --- FIM DA NOVA FUNÇÃO ---
-
-
-# --- (UPDATE) FUNÇÃO DE ATUALIZAÇÃO NA API ---
-def _atualizar_parceiro_embedded(parceiro_id, new_data):
-    """Tenta ATUALIZAR (PUT) um usuário existente na API Embedded."""
-    
-    parceiro_atual = db.get_parceiro_by_id(parceiro_id)
-    if not parceiro_atual:
-        return False, "Parceiro não encontrado no banco de dados local."
-    
-    api_user_id = parceiro_atual.get('api_user_id')
-    if not api_user_id:
-        print(f"Aviso: Parceiro local ID {parceiro_id} não tem 'api_user_id'. Pulando atualização na API.")
-        return True, None 
-
-    try:
-        payload = _build_api_payload(new_data, api_user_id=api_user_id)
-        headers = _get_api_headers()
-    except ValueError as e:
-        return False, str(e)
-
-    api_url_update = EMBEDDED_API_URL # PUT /api/user
-
-    try:
-        response = requests.put(api_url_update, headers=headers, json=payload, timeout=10)
-
-        if response.status_code in [200, 204]:
-            return True, None
-        elif response.status_code == 401:
-            return False, "API Erro 401: Não Autorizado."
-        elif response.status_code == 403:
-             return False, "API Erro 403: Proibido. Sua chave não tem permissão para ATUALIZAR (PUT) usuários."
-        elif response.status_code == 404:
-            return False, f"API Erro 404: Usuário com ID '{api_user_id}' não encontrado na API."
-        else:
-            try:
-                error_details = response.json().get("message", response.text)
-            except json.JSONDecodeError:
-                error_details = response.text
-            return False, f"API Embedded Erro {response.status_code} (PUT): {error_details}"
-
-    except requests.exceptions.RequestException as e:
-        return False, f"Falha ao conectar na API Embedded: {e}"
-
-# --- (DELETE) FUNÇÃO DE DELEÇÃO NA API ---
-def _deletar_parceiro_embedded(parceiro_id):
-    """Tenta DELETAR (DELETE) um usuário existente na API Embedded."""
-    
-    parceiro = db.get_parceiro_by_id(parceiro_id)
-    if not parceiro:
-        return False, "Parceiro não encontrado no banco local."
-    
-    email = parceiro.get('email_gestor')
-    
-    if not email:
-        print(f"Aviso: Parceiro local ID {parceiro_id} não tem 'email'. Pulando deleção na API.")
-        return True, None 
-
-    identificador_api = email 
-    api_url_delete = f"{EMBEDDED_API_URL}/{identificador_api}"
-    headers = _get_api_headers()
-
-    try:
-        response = requests.delete(api_url_delete, headers=headers, timeout=10)
-
-        if response.status_code in [200, 204, 404]:
-            return True, None
-        elif response.status_code == 401:
-            return False, "API Erro 401: Não Autorizado."
-        elif response.status_code == 403:
-             return False, "API Erro 403: Proibido. Sua chave não tem permissão para DELETAR usuários."
-        elif response.status_code == 400:
-            try:
-                error_details = response.json().get("errors", response.text)
-            except json.JSONDecodeError:
-                error_details = response.text
-            return False, f"API Embedded Erro 400 (DELETE): {error_details}"
-        else:
-            try:
-                error_details = response.json().get("message", response.text)
-            except json.JSONDecodeError:
-                error_details = response.text
-            return False, f"API Embedded Erro {response.status_code} (DELETE): {error_details}"
-
-    except requests.exceptions.RequestException as e:
-        return False, f"Falha ao conectar na API Embedded: {e}"
-
-
-# --- FUNÇÃO DE ROLLBACK (REVERSÃO) ---
-def _rollback_api_creation(email):
-    """Tenta deletar um usuário da API usando o email."""
-    if not email:
-        return False
-        
-    print(f"--- ROLLBACK ---")
-    print(f"Tentando deletar usuário '{email}' da API devido à falha na operação.")
-    
-    api_url_delete = f"{EMBEDDED_API_URL}/{email}"
-    headers = _get_api_headers()
-    try:
-        response = requests.delete(api_url_delete, headers=headers, timeout=5)
-        if response.status_code in [200, 204, 404]:
-            print(f"ROLLBACK: Sucesso ao deletar '{email}'.")
-            return True
-        else:
-            print(f"ROLLBACK: Falha ao deletar '{email}'. API retornou {response.status_code}.")
-            return False
-    except Exception as e:
-        print(f"ROLLBACK: Exceção ao tentar deletar '{email}': {e}")
-        return False
-# --- FIM DA FUNÇÃO DE ROLLBACK ---
-
-
 # --- ROTA DE GESTÃO (GET e POST/CREATE) ---
 @parceiro_bp.route('/gerenciar', methods=['GET', 'POST'])
 def gestao_parceiros():
     if request.method == 'POST':
         data = _get_form_data(request.form)
-        user_email_para_api = data.get('email_gestor')
+        user_email_para_api = data.get('email_gestor') # Guardamos para o rollback
 
         if not data["nome_ajustado"]:
             flash('O campo "Nome Ajustado" é obrigatório.', 'danger')
             return redirect(url_for('parceiro.gestao_parceiros'))
 
         try:
-            # 1. Tenta salvar na API (com POST-then-GET)
-            api_response, erro_api = _cadastrar_parceiro_embedded(data)
+            # 1. Chama o serviço para fazer todo o processo da API
+            api_id, erro_api = api_service.criar_parceiro_completo(data)
             
             if erro_api:
                 flash(f'Erro ao cadastrar parceiro na API Embedded: {erro_api}', 'danger')
                 return redirect(url_for('parceiro.gestao_parceiros'))
 
-            # --- LÓGICA DE VINCULAR GRUPO ADICIONADA AQUI ---
-            # 2. Tenta vincular ao grupo "Parceiros"
-            if not PARCEIROS_GROUP_ID or "COLOQUE_O_ID_DO_GRUPO_AQUI" in PARCEIROS_GROUP_ID:
-                flash('ID do Grupo "Parceiros" não configurado no código (PARCEIROS_GROUP_ID). Pulando vinculação.', 'warning')
-            else:
-                sucesso_link, erro_link = _link_user_to_group(user_email_para_api, PARCEIROS_GROUP_ID)
-                
-                if erro_link:
-                    # Se falhar ao vincular, desfaz a criação do usuário
-                    _rollback_api_creation(user_email_para_api)
-                    flash(f'Erro ao vincular usuário ao grupo: {erro_link}. O cadastro do usuário foi revertido.', 'danger')
-                    return redirect(url_for('parceiro.gestao_parceiros'))
-            # --- FIM DA LÓGICA DE GRUPO ---
-
-            # 3. Se API+Link funcionou, prepara para salvar no banco local
-            api_id = api_response.get('id') if api_response else None
+            # 2. Se a API funcionou, salva no banco local
             data['api_user_id'] = api_id 
-            
             error_db = db.add_parceiro(**data)
             
             if error_db:
                 # Se falhar no banco, desfaz a criação do usuário na API
-                _rollback_api_creation(user_email_para_api)
+                api_service.rollback_criacao_usuario(user_email_para_api)
                 flash(f'Parceiro salvo na API, mas falhou ao salvar localmente: {error_db}. O cadastro na API foi revertido.', 'danger')
             else:
                 flash('Parceiro criado e vinculado ao grupo com sucesso!', 'success')
         
         except Exception as e:
             # Se algo inesperado acontecer, tenta reverter
-            _rollback_api_creation(user_email_para_api)
+            api_service.rollback_criacao_usuario(user_email_para_api)
             flash(f'Um erro inesperado ocorreu: {e}. O cadastro foi revertido.', 'danger')
             
         return redirect(url_for('parceiro.gestao_parceiros'))
@@ -387,6 +107,7 @@ def editar_parceiro(parceiro_id):
         
     parceiro_atual = db.get_parceiro_by_id(parceiro_id)
     email_antigo = parceiro_atual.get('email_gestor')
+    api_user_id = parceiro_atual.get('api_user_id') # Pega o ID da API
     email_novo = data.get('email_gestor')
     
     if email_antigo != email_novo:
@@ -394,12 +115,14 @@ def editar_parceiro(parceiro_id):
         data['email_gestor'] = email_antigo
 
     try:
-        sucesso_api, erro_api = _atualizar_parceiro_embedded(parceiro_id, data)
+        # Chama o serviço de atualização
+        sucesso_api, erro_api = api_service.atualizar_usuario(api_user_id, data)
 
         if not sucesso_api:
             flash(f'Erro ao atualizar parceiro na API Embedded: {erro_api}', 'danger')
             return redirect(url_for('parceiro.gestao_parceiros'))
 
+        # Atualiza o banco local
         _, error_db = db.update_parceiro(parceiro_id, **data)
         
         if error_db:
@@ -422,13 +145,19 @@ def deletar_parceiro(parceiro_id):
         flash('Senha de confirmação incorreta.', 'danger')
         return redirect(url_for('parceiro.gestao_parceiros'))
     
+    # Pega o email ANTES de deletar o parceiro do banco
+    parceiro = db.get_parceiro_by_id(parceiro_id)
+    email_para_deletar = parceiro.get('email_gestor') if parceiro else None
+
     try:
-        sucesso_api, erro_api = _deletar_parceiro_embedded(parceiro_id)
+        # Tenta deletar da API primeiro
+        sucesso_api, erro_api = api_service.deletar_usuario(email_para_deletar)
         
         if not sucesso_api:
             flash(f'Erro ao deletar parceiro na API Embedded: {erro_api}', 'danger')
             return redirect(url_for('parceiro.gestao_parceiros'))
 
+        # Se a API funcionou, deleta do banco local
         _, error_db = db.delete_parceiro(parceiro_id)
         
         if error_db:

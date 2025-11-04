@@ -253,56 +253,61 @@ def deletar_produtos(campanha_id):
 @campanha_produtos_bp.route('/<int:campanha_id>/produtos/validar_gtins', methods=['POST'])
 def validar_gtins(campanha_id):
     data = request.get_json()
-    gtins_raw = data.get('gtins', [])
+    products_data = data.get('products', []) # Espera [{id: '1', gtin: '123'}]
 
-    if not gtins_raw:
-        return jsonify({"error": "Nenhum GTIN enviado"}), 400
+    if not products_data:
+        return jsonify({"error": "Nenhum produto enviado"}), 400
 
-    # 1. USANDO clean_barcode para limpar e obter o GTIN sem padding
-    gtins_para_validar_raw = [clean_barcode(gtin) for gtin in gtins_raw if gtin and str(gtin).strip()]
-    gtins_para_validar_raw = [g for g in gtins_para_validar_raw if g]
-
-    if not gtins_para_validar_raw:
-         return jsonify({"valid_gtins": []})
-
-    # 2. Envia os GTINs RAW (sem padding) para a função de banco
-    validos_raw_set, error = db_common.validate_gtins_in_external_db(gtins_para_validar_raw)
-
-    if error:
-        return jsonify({"error": error}), 500
-
-    # 3. Retorna o set de GTINs válidos (que já estão no formato raw/cleaned)
-    return jsonify({"valid_gtins": list(validos_raw_set)})
-
-
-# --- NOVA ROTA PARA BUSCAR CODIGO INTERNO (CI) ---
-@campanha_produtos_bp.route('/<int:campanha_id>/produtos/buscar_cis', methods=['POST'])
-def buscar_codigos_internos(campanha_id):
-    data = request.get_json()
-    gtins_raw = data.get('gtins', [])
-
-    if not gtins_raw:
-        return jsonify({"error": "Nenhum GTIN enviado"}), 400
-
-    # 1. Limpa os GTINs
-    gtins_cleaned = [clean_barcode(gtin) for gtin in gtins_raw if gtin and str(gtin).strip()]
-    gtins_para_buscar = [g for g in gtins_cleaned if g]
+    # 1. Extrai GTINs para validação e busca de CI
+    #    Usa o GTIN limpo (sem padding)
+    gtins_map = {p['id']: clean_barcode(p['gtin']) for p in products_data if p.get('gtin') and p.get('id')}
+    gtins_para_buscar = list(set(gtins_map.values())) # Lista única de GTINs limpos
 
     if not gtins_para_buscar:
-         return jsonify({"ci_map": {}})
+        return jsonify({"valid_gtins": [], "updated_count": 0})
 
-    # 2. Busca os CIs (apenas para codigo_principal = 1)
-    ci_map_raw, error = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
+    # 2. Valida quais GTINs existem (para colorir a UI)
+    validos_raw_set, error_val = db_common.validate_gtins_in_external_db(gtins_para_buscar)
+    if error_val:
+        return jsonify({"error": f"Erro ao validar GTINs: {error_val}"}), 500
 
-    if error:
-        error_message = f"Erro ao buscar códigos internos: {error}"
-        print(f"Erro na rota buscar_codigos_internos: {error_message}")
-        return jsonify({"error": error_message}), 500
+    # 3. Busca os Códigos Internos (CI) para os GTINs (apenas os principais)
+    ci_map_raw, error_ci = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
+    if error_ci:
+        return jsonify({"error": f"Erro ao buscar CIs: {error_ci}"}), 500
 
-    # 3. Retorna o mapa {gtin_raw: codigo_interno}
-    return jsonify({"ci_map": ci_map_raw})
-# --- FIM NOVA ROTA ---
+    # 4. Prepara a lista para o update no banco
+    produtos_para_atualizar = []
+    for product_id, gtin_limpo in gtins_map.items():
+        # Só atualiza se o GTIN limpo foi encontrado no mapa de CIs principais
+        if gtin_limpo in ci_map_raw:
+            cb_normalizado = pad_barcode(gtin_limpo) # Calcula o GTIN de 14 dígitos
+            ci = ci_map_raw.get(gtin_limpo)
+            
+            # Tupla: (cb, cbn, ci, id)
+            produtos_para_atualizar.append((
+                gtin_limpo,       # codigo_barras (usamos o limpo/raw)
+                cb_normalizado, # codigo_barras_normalizado
+                ci,             # codigo_interno
+                product_id      # id
+            ))
 
+    # 5. Executa o Update no banco
+    updated_count = 0
+    if produtos_para_atualizar:
+        # Chama a nova função do DB
+        rowcount, error_update = db_campanha_produtos.update_product_ci_bulk(produtos_para_atualizar)
+        if error_update:
+            # Não falha a requisição inteira, apenas avisa no console
+            print(f"Erro ao atualizar CIs em campanha_produtos_db: {error_update}")
+        else:
+            updated_count = rowcount
+
+    # 6. Retorna a lista de GTINs válidos (para UI) e a contagem de updates
+    return jsonify({
+        "valid_gtins": list(validos_raw_set),
+        "updated_count": updated_count
+    })
 
 # --- NOVA ROTA DE EXPORTAÇÃO ---
 @campanha_produtos_bp.route('/<int:campanha_id>/exportar')

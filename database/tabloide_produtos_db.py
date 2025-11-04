@@ -159,3 +159,31 @@ def delete_products_by_tabloide_id(tabloide_id):
     except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
+    
+def update_product_ci_bulk(produtos_para_atualizar):
+    """
+    Atualiza GBC, GBC_Normalizado e Codigo_Interno em massa.
+    Espera uma lista de tuplas: (cb, cbn, ci, id)
+    """
+    conn = get_db_connection()
+    if not produtos_para_atualizar:
+        return 0, None
+    
+    sql = text(f"""
+        UPDATE {DIM_TABLOIDE_PRODUTO_TABLE} SET
+            codigo_barras = :cb, 
+            codigo_barras_normalizado = :cbn, 
+            codigo_interno = :ci
+        WHERE id = :id
+    """)
+    try:
+        produtos_dict = [
+            {"cb": p[0], "cbn": p[1], "ci": p[2], "id": p[3]}
+            for p in produtos_para_atualizar
+        ]
+        result = conn.execute(sql, produtos_dict)
+        conn.commit()
+        return result.rowcount, None
+    except SQLAlchemyError as e:
+        conn.rollback()
+        return 0, str(e)

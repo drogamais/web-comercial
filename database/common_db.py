@@ -61,7 +61,8 @@ def close_db_connection(e=None):
 
 def validate_gtins_in_external_db(gtin_list):
     """
-    Valida se os GTINs (códigos de barras RAW/limpos) existem na tabela externa.
+    Valida se os GTINs (códigos de barras RAW/limpos) existem na tabela externa
+    E SÃO O CÓDIGO PRINCIPAL (codigo_principal = 1).
     Retorna o set de GTINs válidos encontrados.
     """
     if not gtin_list:
@@ -77,8 +78,9 @@ def validate_gtins_in_external_db(gtin_list):
         sql_text = text(f"""
             SELECT codigo_barras AS gtin
             FROM bronze_plugpharma_produtos
-            -- NOTA: Não filtramos por codigo_principal=1 aqui, pois é apenas validação de EXISTÊNCIA.
-            WHERE `codigo_barras` IN ({",".join(placeholders)})
+            -- NOTA: Filtro ADICIONADO para alinhar com a regra de negócio
+            WHERE `codigo_principal` = 1 
+              AND `codigo_barras` IN ({",".join(placeholders)})
         """)
         
         # Cria o dicionário de parâmetros: {'gtin_0': '123', 'gtin_1': '456'}

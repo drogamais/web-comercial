@@ -348,7 +348,7 @@ window.ProductTableUtils = (function() {
         }
     }
 
-     function initValidateGtinButton(tableBody, config) {
+    function initValidateGtinButton(tableBody, config) {
         const validateGtinBtn = document.getElementById('btn-validar-gtins'); // Assume ID padrão
         if (!validateGtinBtn) return;
 
@@ -375,7 +375,26 @@ window.ProductTableUtils = (function() {
             validateGtinBtn.disabled = true;
 
             const allBarcodeInputs = tableBody.querySelectorAll('.barcode-input'); // Assume classe padrão
-            const gtins = Array.from(allBarcodeInputs).map(input => input.value.trim());
+            
+            // --- CORREÇÃO ESTÁ AQUI ---
+            // 1. Mapeia GTINs e IDs dos produtos
+            const productsData = Array.from(allBarcodeInputs).map(input => {
+                const row = input.closest('tr');
+                const checkbox = row.querySelector('.edit-checkbox');
+                const productId = checkbox ? checkbox.value : null;
+                return {
+                    id: productId,
+                    gtin: input.value.trim()
+                };
+            }).filter(p => p.id); // Envia apenas produtos que têm ID (ignora o "adicionar novo")
+
+            // Não envia nada se não houver o que validar
+            if (productsData.length === 0) {
+                validateGtinBtn.textContent = originalText;
+                validateGtinBtn.disabled = false;
+                return;
+            }
+            // --- FIM DA CORREÇÃO ---
 
             try {
                 const response = await fetch(apiUrl, { // Usa a URL construída
@@ -384,7 +403,8 @@ window.ProductTableUtils = (function() {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ gtins: gtins })
+                    // 2. Erro estava aqui: A variável agora é 'productsData'
+                    body: JSON.stringify({ products: productsData })
                 });
 
                 if (!response.ok) {
@@ -399,6 +419,7 @@ window.ProductTableUtils = (function() {
 
                 const validGtinSet = new Set(result.valid_gtins || []); // Garante que seja um array
 
+                // 3. A lógica de colorir a linha permanece a mesma
                 allBarcodeInputs.forEach(input => {
                     const gtin = input.value.trim();
                     const row = input.closest('tr');
@@ -414,6 +435,12 @@ window.ProductTableUtils = (function() {
                         row.classList.add('row-invalid');
                     }
                 });
+
+                // 4. Alerta o usuário sobre a atualização do CI no banco
+                if (result.updated_count > 0) {
+                    alert(`${result.updated_count} produto(s) tiveram o Código Interno atualizado no banco de dados.`);
+                }
+                // --- FIM DA MUDANÇA ---
 
             } catch (error) {
                 console.error("Falha ao validar GTINs:", error);

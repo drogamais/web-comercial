@@ -83,3 +83,19 @@ tr.row-expiring:hover {
 tr.row-expiring td {
     color: #721c24; /* Texto vermelho escuro */
 }
+
+/* --- Ajuste da lista no modal de senha --- */
+#senha-modal ul {
+    /* Coloca o ponto "para dentro" do texto */
+    list-style-position: inside;
+    
+    /* Remove o recuo padrão da lista */
+    padding-left: 0; 
+    
+    /* Adiciona margens para não ficar colado */
+    margin-top: 15px;
+    margin-bottom: 15px;
+    
+    /* (Opcional) Alinha o texto à esquerda, caso ele esteja centralizado */
+    text-align: left; 
+}

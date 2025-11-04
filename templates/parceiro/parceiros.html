@@ -100,12 +100,12 @@
         <h2>Filtrar Parceiros</h2>
         <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="get" class="filter-form" style="align-items: flex-end; gap: 10px;" autocomplete="off">
             
-            <div class="form-group" style="flex: 1.5; min-width: 200px;">
+            <div class="form-group" style="flex: 1.2; min-width: 180px;">
                 <label for="nome_fantasia_filtro">Nome Fantasia:</label>
                 <input type="text" id="nome_fantasia_filtro" name="nome_fantasia" value="{{ nome_fantasia_filtro or '' }}" autocomplete="off">
             </div>
             
-            <div class="form-group" style="flex: 1; min-width: 150px;">
+            <div class="form-group" style="flex: 0.8; min-width: 150px;">
                 <label for="tipo_filtro">Tipo:</label>
                 <select id="tipo_filtro" name="tipo">
                     <option value="" {{ 'selected' if tipo_filtro == '' or tipo_filtro is none else '' }}>Todos</option>
@@ -114,12 +114,12 @@
                 </select>
             </div>
 
-            <div class="form-group" style="flex: 1; min-width: 100px;">
+            <div class="form-group" style="flex: 0.8; min-width: 100px;">
                 <label for="data_entrada_min">Data Entrada (Min):</label>
                 <input type="date" id="data_entrada_min" name="data_entrada_min" value="{{ data_entrada_min_filtro or '' }}">
             </div>
             
-            <div class="form-group" style="flex: 1; min-width: 100px;">
+            <div class="form-group" style="flex: 0.8; min-width: 100px;">
                 <label for="data_saida_max">Data Saída (Max):</label>
                 <input type="date" id="data_saida_max" name="data_saida_max" value="{{ data_saida_max_filtro or '' }}">
             </div>
@@ -135,6 +135,14 @@
             <div class="form-group" style="flex: 0.8; min-width: 120px;">
                 <button type="submit" class="button-filter" style="height: 38px;">Aplicar Filtro</button>
             </div>
+
+            <div class="form-group" style="flex: 0.8; min-width: 120px; height: 38px">
+                <a href="{{ url_for('parceiro.gestao_parceiros') }}" 
+                   class="button-filter" 
+                   style="height: 38px; background-color: #7f8c8d; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                   Limpar Filtros
+                </a>
+            </div>   
         </form>
     </div>
 

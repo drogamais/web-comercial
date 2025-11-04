@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Validação simples de frontend
             if (!email || !nome) {
-                alert('Por favor, preencha pelo menos os campos "Nome Fantasia" e "E-mail Gestor" antes de criar.');
+                alert('Por favor, preencha todo os campo com *');
                 return;
             }
 

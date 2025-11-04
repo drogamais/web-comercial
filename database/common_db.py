@@ -60,6 +60,10 @@ def close_db_connection(e=None):
 # --- FUNÇÕES DE BANCO (Refatoradas para SQLAlchemy) ---
 
 def validate_gtins_in_external_db(gtin_list):
+    """
+    Valida se os GTINs (códigos de barras RAW/limpos) existem na tabela externa.
+    Retorna o set de GTINs válidos encontrados.
+    """
     if not gtin_list:
         return set(), None
 
@@ -73,7 +77,8 @@ def validate_gtins_in_external_db(gtin_list):
         sql_text = text(f"""
             SELECT codigo_barras AS gtin
             FROM bronze_plugpharma_produtos
-            WHERE codigo_principal = 1 AND `codigo_barras` IN ({",".join(placeholders)})
+            -- NOTA: Não filtramos por codigo_principal=1 aqui, pois é apenas validação de EXISTÊNCIA.
+            WHERE `codigo_barras` IN ({",".join(placeholders)})
         """)
         
         # Cria o dicionário de parâmetros: {'gtin_0': '123', 'gtin_1': '456'}
@@ -89,6 +94,10 @@ def validate_gtins_in_external_db(gtin_list):
 
 
 def get_codigo_interno_map_from_gtins(gtin_list):
+    """
+    Busca o codigo_interno a partir da lista de GTINs (códigos de barras RAW/limpos).
+    Requer que o GTIN seja o código principal (codigo_principal = 1).
+    """
     if not gtin_list:
         return {}, None
 
@@ -101,16 +110,18 @@ def get_codigo_interno_map_from_gtins(gtin_list):
         sql_text = text(f"""
             SELECT codigo_barras, codigo_interno
             FROM bronze_plugpharma_produtos
+            -- FIX: O filtro é mantido para garantir que o CI retornado seja o principal
             WHERE codigo_principal = 1 AND `codigo_barras` IN ({",".join(placeholders)})
         """)
         
         params = {f"gtin_{i}": gtin for i, gtin in enumerate(gtin_list)}
         
         cursor = conn.execute(sql_text, params)
-        # .mappings() permite acessar por nome da coluna, como dictionary=True
+        # Retorna um mapa {codigo_barras_raw: codigo_interno}
         validos_map = {row['codigo_barras']: row['codigo_interno'] for row in cursor.mappings().fetchall()}
         cursor.close()
         return validos_map, None
         
     except SQLAlchemyError as e:
         return None, str(e)
+

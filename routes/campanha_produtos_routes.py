@@ -63,24 +63,26 @@ def upload_page():
 
                 # --- LÓGICA DE BUSCA DO CODIGO_INTERNO E NORMALIZAÇÃO ---
                 gtins_raw_list = []
-                gtins_normalizados_map = {}
+                gtins_para_buscar_map = {} # Mapeia para garantir apenas códigos RAW únicos
+                
                 for g in df['codigo_barras'].tolist():
                     g_str = str(g) if g is not None else None
                     if g_str and g_str.strip():
                         gtins_raw_list.append(g_str)
-                        normalized = pad_barcode(g_str)
-                        if normalized:
-                            gtins_normalizados_map[g_str] = normalized
+                        cleaned = clean_barcode(g_str) # <-- AGORA USA CLEAN_BARCODE
+                        if cleaned:
+                            gtins_para_buscar_map[cleaned] = cleaned 
 
-                gtins_para_buscar = list(gtins_normalizados_map.values())
+                gtins_para_buscar_raw = list(gtins_para_buscar_map.keys()) # Lista de GTINs RAW únicos para buscar
 
-                if gtins_para_buscar:
-                    ci_map_normalizado, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
+                if gtins_para_buscar_raw:
+                    # FIX: Passa a lista RAW para o common_db
+                    ci_map_raw, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar_raw)
                     if err:
                         flash(f'Erro ao buscar códigos internos: {err}', 'warning')
-                        ci_map_normalizado = {}
+                        ci_map_raw = {}
                 else:
-                    ci_map_normalizado = {}
+                    ci_map_raw = {}
                 # --- FIM DA LÓGICA ---
 
                 produtos_para_inserir = []
@@ -88,7 +90,10 @@ def upload_page():
                     cb_raw = row.get('codigo_barras')
                     cb_raw_str = str(cb_raw) if cb_raw is not None else None
                     cb_normalizado = pad_barcode(cb_raw_str)
-                    ci = ci_map_normalizado.get(cb_normalizado) if cb_normalizado else None
+                    
+                    # FIX: Usa o GTIN LIMPO como chave para buscar o CI
+                    cb_cleaned = clean_barcode(cb_raw_str) 
+                    ci = ci_map_raw.get(cb_cleaned) if cb_cleaned else None
 
                     produtos_para_inserir.append((
                         campanha_id,
@@ -145,20 +150,21 @@ def produtos_por_campanha(campanha_id):
 def adicionar_produto(campanha_id):
     try:
         cb_raw = request.form.get('codigo_barras')
-        cb_normalizado = pad_barcode(cb_raw) # <-- NORMALIZA
+        cb_normalizado = pad_barcode(cb_raw) # <-- NORMALIZA (para salvar)
+        cb_cleaned = clean_barcode(cb_raw) # <-- GTIN LIMPO (para buscar CI)
         ci = None
 
-        if cb_normalizado: # Busca CI com código normalizado
-            ci_map_normalizado, err = db_common.get_codigo_interno_map_from_gtins([cb_normalizado])
+        if cb_cleaned: # Busca CI com código limpo
+            ci_map_raw, err = db_common.get_codigo_interno_map_from_gtins([cb_cleaned])
             if err:
                 flash(f'Aviso: Não foi possível buscar o Cód. Interno: {err}', 'warning')
-            ci = ci_map_normalizado.get(cb_normalizado)
+            ci = ci_map_raw.get(cb_cleaned)
 
         # Adiciona cb_normalizado à tupla
         dados_produto = (
             campanha_id,
             cb_raw,
-            cb_normalizado, # <-- CÓDIGO NORMALIZADO
+            cb_normalizado, # <-- CÓDIGO NORMALIZADO (salva no DB)
             ci, # Código interno
             request.form.get('descricao'),
             request.form.get('pontuacao') or None,
@@ -182,32 +188,36 @@ def atualizar_produtos(campanha_id):
         return redirect(url_for('campanha_produtos.produtos_por_campanha', campanha_id=campanha_id))
 
     gtins_raw_dict = {pid: request.form.get(f'codigo_barras_{pid}') for pid in selecionados}
-    # Calcula normalizados para todos os selecionados
-    gtins_normalizados_map = {pid: pad_barcode(gtins_raw_dict.get(pid)) for pid in selecionados}
-    gtins_para_buscar = [norm for norm in gtins_normalizados_map.values() if norm] # Apenas normalizados válidos
+    # FIX: Calcula GTINs RAW para pesquisa
+    gtins_cleaned_map = {pid: clean_barcode(gtins_raw_dict.get(pid)) for pid in selecionados}
+    gtins_para_buscar_raw = [cleaned for cleaned in gtins_cleaned_map.values() if cleaned] # Apenas RAW válidos
 
-    if gtins_para_buscar:
-        # Busca CIs usando os códigos normalizados
-        ci_map_normalizado, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
+    if gtins_para_buscar_raw:
+        # Busca CIs usando os códigos RAW
+        ci_map_raw, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar_raw)
         if err:
             flash(f'Erro ao buscar códigos internos: {err}', 'warning')
-            ci_map_normalizado = {}
+            ci_map_raw = {}
     else:
-        ci_map_normalizado = {}
+        ci_map_raw = {}
 
     produtos_para_atualizar = []
     for pid in selecionados:
         cb_raw = gtins_raw_dict.get(pid)
-        cb_normalizado = gtins_normalizados_map.get(pid) # Pega o normalizado já calculado
-        # Busca o CI correspondente ao código normalizado
-        ci = ci_map_normalizado.get(cb_normalizado) if cb_normalizado else None
+        cb_normalizado = pad_barcode(cb_raw) # Recalcula o normalizado (para salvar)
+        
+        # FIX: Pega o RAW GTIN para lookup
+        cb_cleaned = gtins_cleaned_map.get(pid) 
+        
+        # FIX: Busca o CI correspondente ao código RAW
+        ci = ci_map_raw.get(cb_cleaned) if cb_cleaned else None
 
         # Adiciona cb_normalizado à tupla para o UPDATE
         produtos_para_atualizar.append((
             cb_raw,
-            cb_normalizado, # <-- CÓDIGO NORMALIZADO
+            cb_normalizado, # <-- CÓDIGO NORMALIZADO (salva no DB)
             ci, # Código interno
-            request.form.get(f'descricao_{pid}'),
+            request.form.get('descricao_{}'.format(pid)),
             request.form.get(f'pontuacao_{pid}') or None,
             request.form.get(f'preco_normal_{pid}') or None,
             request.form.get(f'preco_desconto_{pid}') or None,
@@ -263,6 +273,35 @@ def validar_gtins(campanha_id):
 
     # 3. Retorna o set de GTINs válidos (que já estão no formato raw/cleaned)
     return jsonify({"valid_gtins": list(validos_raw_set)})
+
+
+# --- NOVA ROTA PARA BUSCAR CODIGO INTERNO (CI) ---
+@campanha_produtos_bp.route('/<int:campanha_id>/produtos/buscar_cis', methods=['POST'])
+def buscar_codigos_internos(campanha_id):
+    data = request.get_json()
+    gtins_raw = data.get('gtins', [])
+
+    if not gtins_raw:
+        return jsonify({"error": "Nenhum GTIN enviado"}), 400
+
+    # 1. Limpa os GTINs
+    gtins_cleaned = [clean_barcode(gtin) for gtin in gtins_raw if gtin and str(gtin).strip()]
+    gtins_para_buscar = [g for g in gtins_cleaned if g]
+
+    if not gtins_para_buscar:
+         return jsonify({"ci_map": {}})
+
+    # 2. Busca os CIs (apenas para codigo_principal = 1)
+    ci_map_raw, error = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar)
+
+    if error:
+        error_message = f"Erro ao buscar códigos internos: {error}"
+        print(f"Erro na rota buscar_codigos_internos: {error_message}")
+        return jsonify({"error": error_message}), 500
+
+    # 3. Retorna o mapa {gtin_raw: codigo_interno}
+    return jsonify({"ci_map": ci_map_raw})
+# --- FIM NOVA ROTA ---
 
 
 # --- NOVA ROTA DE EXPORTAÇÃO ---

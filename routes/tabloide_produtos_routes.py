@@ -365,16 +365,15 @@ def exportar_produtos(tabloide_id):
         # 4. Colunas (INCLUINDO CODIGO_INTERNO)
         colunas_exportar = {
             "codigo_interno": "Codigo Interno",
-            "codigo_barras": "Codigo Barras (Digitado)",
-            "codigo_barras_normalizado": "Codigo Barras (14 dig.)",
-            "descricao": "Descricao",
-            "laboratorio": "Laboratorio",
-            "tipo_preco": "Tipo Preco",
-            "preco_normal": "Preco Normal",
-            "preco_desconto": "Preco Geral",
-            "preco_desconto_cliente": "Preco Cliente+",
-            "preco_app": "Preco APP",
-            "tipo_regra": "Tipo Regra"
+            "codigo_barras": "GTIN",
+            "descricao": "DESCRIÇÃO",
+            "laboratorio": "LABORATÓRIO",
+            "tipo_preco": "TIPO DE PREÇO",
+            "preco_normal": "PREÇO NORMAL",
+            "preco_desconto": "PRECO DESCONTO GERAL",
+            "preco_desconto_cliente": "PREÇO DESCONTO CLIENTE+",
+            "tipo_regra": "TIPO REGRA",
+            "preco_app": "PREÇO APP"
         }
         
         # Filtra o DF para ter apenas as colunas que existem no DF e queremos

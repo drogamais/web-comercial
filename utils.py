@@ -2,6 +2,7 @@
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 
+#Coloquei na utils pois não é uma senha que viole a segurança do nosso banco de dados
 DELETE_PASSWORD = "com123"
 
 def allowed_file(filename):

@@ -330,14 +330,13 @@ def exportar_produtos(campanha_id):
         # 4. Definir e Renomear colunas (INCLUINDO CODIGO_INTERNO)
         colunas_exportar = {
             "codigo_interno": "Codigo Interno",
-            "codigo_barras": "Codigo Barras (Digitado)",
-            "codigo_barras_normalizado": "Codigo Barras (14 dig.)",
-            "descricao": "Descricao",
-            "pontuacao": "Pontos",
-            "preco_normal": "Preco Normal",
-            "preco_desconto": "Preco Desconto",
-            "rebaixe": "Rebaixe",
-            "qtd_limite": "Qtd Limite"
+            "codigo_barras": "CÓDIGO DE BARRAS",
+            "descricao": "DESCRIÇÃO",
+            "pontuacao": "PONTUAÇÃO",
+            "preco_normal": "PREÇO NORMAL",
+            "preco_desconto": "PREÇO COM DESCONTO",
+            "rebaixe": "REBAIXE",
+            "qtd_limite": "QTD LIMITE"
         }
         
         # Filtra o DF para ter apenas as colunas que existem no DF e queremos

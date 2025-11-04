@@ -4,7 +4,7 @@ import io
 import pandas as pd
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 import database.parceiro_db as db
-from utils import DELETE_PASSWORD
+from utils import DELETE_PASSWORD # <-- Importa a senha
 import services.parceiros_embedded_service as api_service
 # -----------
 
@@ -111,6 +111,7 @@ def _get_form_data(form, sufixo=""):
 @parceiro_bp.route('/gerenciar', methods=['GET', 'POST'])
 def gestao_parceiros():
     if request.method == 'POST':
+        
         data = _get_form_data(request.form)
         user_email_para_api = data.get('email_gestor') # Guardamos para o rollback
 
@@ -145,10 +146,9 @@ def gestao_parceiros():
         return redirect(url_for('parceiro.gestao_parceiros'))
 
     # --- LÓGICA GET (exibição) ---
-    # MODIFICADO: Trocado status_filtro_display por nome_fantasia_filtro
     (parceiros, tipo_filtro, nome_fantasia_filtro, 
      data_entrada_min_filtro, data_saida_max_filtro,
-     sort_expiring_filtro, expiring_ids_set) = _get_parceiros_filtrados(request) # <-- MODIFICADO
+     sort_expiring_filtro, expiring_ids_set) = _get_parceiros_filtrados(request)
     
     return render_template(
         'parceiro/parceiros.html',
@@ -158,8 +158,8 @@ def gestao_parceiros():
         nome_fantasia_filtro=nome_fantasia_filtro, 
         data_entrada_min_filtro=data_entrada_min_filtro,
         data_saida_max_filtro=data_saida_max_filtro,
-        sort_expiring_filtro=sort_expiring_filtro, # <-- ADICIONADO
-        expiring_ids_set=expiring_ids_set          # <-- ADICIONADO
+        sort_expiring_filtro=sort_expiring_filtro, 
+        expiring_ids_set=expiring_ids_set          
     )
 
 def _get_parceiros_filtrados(request_obj):
@@ -168,26 +168,22 @@ def _get_parceiros_filtrados(request_obj):
     nome_fantasia_filtro = request_obj.args.get('nome_fantasia') or None 
     data_entrada_min_filtro = request_obj.args.get('data_entrada_min') or None
     data_saida_max_filtro = request_obj.args.get('data_saida_max') or None
-    sort_expiring_filtro = request_obj.args.get('sort_expiring') == '1' # <-- ADICIONADO
+    sort_expiring_filtro = request_obj.args.get('sort_expiring') == '1'
     
-    # --- ADICIONADO ---
-    # Busca os IDs dos parceiros que vencem em 30 dias para destacar
     expiring_partners = db.get_expiring_parceiros(days_ahead=30)
     expiring_ids_set = {p['id'] for p in expiring_partners}
-    # --- FIM ADICIONADO ---
 
     parceiros = db.get_all_parceiros(
         tipo=tipo_filtro,
         nome_fantasia=nome_fantasia_filtro, 
         data_entrada_min=data_entrada_min_filtro,
         data_saida_max=data_saida_max_filtro,
-        sort_by_expiration=sort_expiring_filtro # <-- ADICIONADO
+        sort_by_expiration=sort_expiring_filtro
     )
     
-    # Retorna o nome_fantasia_filtro para preencher o campo de busca
     return (parceiros, tipo_filtro, nome_fantasia_filtro, 
             data_entrada_min_filtro, data_saida_max_filtro,
-            sort_expiring_filtro, expiring_ids_set) # <-- MODIFICADO
+            sort_expiring_filtro, expiring_ids_set) 
 
 
 # --- ROTA DE EDIÇÃO (UPDATE) ---
@@ -294,7 +290,6 @@ def definir_senha(parceiro_id):
         if not sucesso_api:
             flash(f'Erro ao definir senha na API Embedded: {erro_api}', 'danger')
         else:
-            # --- ATUALIZAÇÃO AQUI ---
             # 2. Se a API funcionou, marca a flag no banco local
             error_db = db.set_senha_definida_flag(parceiro_id)
             
@@ -302,7 +297,6 @@ def definir_senha(parceiro_id):
                  flash(f'Senha atualizada na API, mas falhou ao marcar status no banco local: {error_db}', 'warning')
             else:
                  flash(f'Senha do usuário {email_do_parceiro} atualizada com sucesso!', 'success')
-            # --- FIM DA ATUALIZAÇÃO ---
 
     except Exception as e:
         flash(f'Um erro inesperado ocorreu ao definir a senha: {e}', 'danger')

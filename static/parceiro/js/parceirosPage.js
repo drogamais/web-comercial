@@ -1,17 +1,75 @@
 // MUDANÇAS EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/static/parceiro/js/parceirosPage.js
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- LÓGICA MODAL DE CRIAÇÃO (NOVO) ---
+    const createConfirmModal = document.getElementById('create-confirm-modal');
+    const showCreateModalBtn = document.getElementById('btn-show-create-modal');
+    const createForm = document.getElementById('create-parceiro-form');
+    
+    if (createConfirmModal && showCreateModalBtn && createForm) {
+        const createModalBtnCancel = document.getElementById('create-modal-btn-cancel');
+        const createModalBtnConfirm = document.getElementById('create-modal-btn-confirm');
+        const createModalEmailSpan = document.getElementById('create-modal-email');
+        const emailGestorInput = document.getElementById('email_gestor'); // Input do formulário principal
+        const nomeFantasiaInput = document.getElementById('nome_fantasia'); // Outro campo obrigatório
+
+        // Função para mostrar o modal
+        const showCreateModal = (e) => {
+            e.preventDefault();
+            
+            const email = emailGestorInput.value.trim();
+            const nome = nomeFantasiaInput.value.trim();
+
+            // Validação simples de frontend
+            if (!email || !nome) {
+                alert('Por favor, preencha pelo menos os campos "Nome Fantasia" e "E-mail Gestor" antes de criar.');
+                return;
+            }
+
+            // Preenche os dados no modal
+            createModalEmailSpan.textContent = email;
+            // createModalPassword.value = ''; // REMOVIDO
+            createModalBtnConfirm.disabled = false; // Botão começa HABILITADO
+            
+            createConfirmModal.classList.add('show-modal');
+        };
+
+        // Função para fechar o modal
+        const closeCreateModal = () => {
+            createConfirmModal.classList.remove('show-modal');
+            // createModalPassword.value = ''; // REMOVIDO
+        };
+        
+        // Função para submeter o formulário
+        const handleConfirmCreation = (e) => {
+            e.preventDefault();
+
+            // Submete o formulário principal
+            createForm.submit();
+        };
+
+        // Listeners
+        showCreateModalBtn.addEventListener('click', showCreateModal);
+        createModalBtnCancel.addEventListener('click', closeCreateModal);
+        createConfirmModal.querySelector('.close-button').addEventListener('click', closeCreateModal);
+        // Listener de input da senha REMOVIDO
+        // createModalPassword.addEventListener('input', checkCreatePassword);
+        createModalBtnConfirm.addEventListener('click', handleConfirmCreation);
+        
+        createConfirmModal.addEventListener('click', (event) => {
+            if (event.target === createConfirmModal) closeCreateModal();
+        });
+    }
+
     // --- LÓGICA MODAL EDIÇÃO ---
     const editModal = document.getElementById('edit-modal');
     if (editModal) {
-        // ... (código do modal de edição permanece o mesmo) ...
         const modalBtnCancel = document.getElementById('modal-btn-cancel');
         const editButtons = document.querySelectorAll('.btn-edit');
         const editForm = document.getElementById('edit-form');
         
-        // Mapeia TODOS os inputs que existem no modal de edição
         const inputs = {
-            // Campos presentes no esquema FINAL do banco de dados
             nomeAjustado: document.getElementById('nome_ajustado_edit'),
             cnpj: document.getElementById('cnpj_edit'),
             nomeFantasia: document.getElementById('nome_fantasia_edit'),
@@ -26,12 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const showEditModal = (e) => {
             const button = e.currentTarget;
-            const data = button.dataset; // Pega todos os atributos data-*
+            const data = button.dataset;
             const parceiroId = data.id;
 
             editForm.action = `/parceiro/editar/${parceiroId}`; 
 
-            // Preenche todos os campos do formulário do modal
             inputs.nomeAjustado.value = data.nomeAjustado || ''; 
             inputs.cnpj.value = data.cnpj || '';
             inputs.nomeFantasia.value = data.nomeFantasia || '';
@@ -39,8 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             inputs.tipo.value = data.tipo || '';
             inputs.dataEntrada.value = data.dataEntrada || '';
             inputs.dataSaida.value = data.dataSaida || '';
-            
-            // Campos de contato
             inputs.gestor.value = data.gestor || ''; 
             inputs.telefoneGestor.value = data.telefoneGestor || ''; 
             inputs.emailGestor.value = data.emailGestor || ''; 
@@ -55,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
         editButtons.forEach(button => button.addEventListener('click', showEditModal));
         modalBtnCancel.addEventListener('click', closeEditModal);
         editModal.addEventListener('click', (event) => {
-            // Fecha só se clicar no overlay (fundo)
             if (event.target === editModal) closeEditModal();
         });
     }
@@ -69,14 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteModalBtnConfirm = document.getElementById('delete-modal-btn-confirm');
         const parceiroNameSpan = document.getElementById('delete-modal-parceiro-name'); 
         const nameInput = document.getElementById('delete-modal-input');
-        const passwordInput = document.getElementById('delete-modal-password'); // NOVO
+        const passwordInput = document.getElementById('delete-modal-password'); 
 
         let correctParceiroName = '';
         
-        // ALTERAÇÃO: Esta função agora verifica APENAS o nome
         const checkConfirmationStatus = () => {
              const isNameMatch = nameInput.value === correctParceiroName;
-             // Habilita o botão APENAS se o nome bater
              deleteModalBtnConfirm.disabled = !isNameMatch;
         };
 
@@ -88,11 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteForm.action = `/parceiro/deletar/${parceiroId}`; 
             parceiroNameSpan.textContent = correctParceiroName;
             
-            // Limpa todos os campos ao abrir
             nameInput.value = '';
             passwordInput.value = '';
             
-            // Garante que o botão comece desabilitado
             deleteModalBtnConfirm.disabled = true;
             deleteModal.classList.add('show-modal');
         };
@@ -102,11 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
             correctParceiroName = '';
         };
 
-        // ALTERAÇÃO: Listener apenas no input do NOME
         nameInput.addEventListener('input', checkConfirmationStatus);
         
-        // O listener de senha foi removido daqui
-
         deleteButtons.forEach(button => button.addEventListener('click', showDeleteModal));
         deleteModalBtnCancel.addEventListener('click', closeDeleteModal);
         deleteModal.addEventListener('click', (event) => {
@@ -130,10 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const parceiroId = button.dataset.id;
             const email = button.dataset.email;
 
-            // Define a action do formulário para a nova rota
             senhaForm.action = `/parceiro/definir-senha/${parceiroId}`;
             
-            // Limpa campos antigos
             senhaModalEmail.textContent = email || 'Email não encontrado';
             novaSenhaInput.value = '';
             confirmarSenhaInput.value = '';

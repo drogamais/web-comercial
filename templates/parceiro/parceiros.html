@@ -34,7 +34,7 @@
 
     <div class="filter-container" style="margin-top: 20px;">
         <h2>Novo Parceiro</h2>
-        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;">
+        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;" id="create-parceiro-form">
             
             <div class="form-group" style="flex: 1.5 1 300px;">
                 <label for="nome_fantasia">Nome Fantasia: <span style="color: red;">*</span></label>
@@ -91,7 +91,7 @@
             </div> 
             
             <div class="form-group" style="flex: 1; justify-content: flex-end; align-self: flex-end;">
-                <button type="submit" style="height: 38px;">Criar Parceiro</button>
+                <button type="button" id="btn-show-create-modal" style="height: 38px;">Criar Parceiro</button>
             </div>
         </form>
     </div>
@@ -326,6 +326,30 @@
                     <button id="delete-modal-btn-confirm" type="submit" class="modal-button-danger" disabled>Confirmar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="create-confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-button" id="create-modal-btn-close">&times;</span>
+            <h2>Confirmar Criação de Parceiro</h2> 
+            
+            <p>O e-mail gestor a ser cadastrado é:</p>
+            <p class="delete-modal-parceiro-name-label" style="border-color: #3498db;">
+                Email: <strong id="create-modal-email" style="color: #3498db;"></strong>
+            </p>
+            <p class="delete-modal-info-text" style="color: #c0392b; font-weight: bold;">
+                Atenção: A criação de um novo parceiro gera uma taxa na plataforma Embedded.
+            </p>
+            <p class="delete-modal-info-text" style="margin-top: -10px;">
+                O e-mail não poderá ser alterado após a criação.
+            </p>
+            <br>
+
+            <div class="modal-actions" style="margin-top: 25px;">
+                <button id="create-modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>
+                <button id="create-modal-btn-confirm" type="button" class="modal-button-confirm">Confirmar</button>
+            </div>
         </div>
     </div>
 

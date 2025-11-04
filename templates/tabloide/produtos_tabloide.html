@@ -18,9 +18,11 @@
                 </a>
             </div>
 
-            <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60; min-width: 150px; margin: 0;">
+            <a href="{{ url_for('tabloide_produtos.exportar_produtos', tabloide_id=tabloide.id) }}" 
+                class="button-filter" 
+                style="flex: 1; background-color: #27ae60; min-width: 150px; margin: 0; text-decoration: none; display: flex; align-items: center; justify-content: center;">
                 Exportar Excel (.xlsx)
-            </button>
+            </a>
         </div>
     </div>
     

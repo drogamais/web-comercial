@@ -18,9 +18,11 @@
             </div>
         
 
-            <button type="button" id="btn-export-excel" class="button-filter" style="flex: 1; background-color: #27ae60;">
+            <a href="{{ url_for('campanha_produtos.exportar_produtos', campanha_id=campanha.id) }}" 
+                class="button-filter" 
+                style="flex: 1; background-color: #27ae60; text-decoration: none; display: flex; align-items: center; justify-content: center;">
                 Exportar Excel (.xlsx)
-            </button>   
+            </a>   
         </div>
     </div>
     <a href="{{ url_for('campanha.gestao_campanhas') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Campanhas</a>

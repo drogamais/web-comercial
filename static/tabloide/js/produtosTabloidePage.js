@@ -10,30 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
             precoNormalSelector: 'input[name*="preco_normal_"]',
             precoDesconto1Selector: 'input[name*="preco_desconto_"]', // Corresponde ao Preço Geral
             precoDesconto2Selector: 'input[name*="preco_desconto_cliente_"]', // Corresponde ao Preço Cliente+
-            validateGtinUrl: '/tabloide/{id}/produtos/validar_gtins', // URL da API (com placeholder)
-            exportHeaders: [ // Cabeçalhos para o Excel
-                "Codigo Barras", "Descricao", "Laboratorio", "Tipo Preco",
-                "Preco Normal", "Preco Geral", "Preco Cliente+", "Tipo Regra", "Preço APP",
-            ],
-            exportValueSelectors: [ // Seletores na ordem dos cabeçalhos
-                { selector: 'input[name*="codigo_barras_"]', isNumeric: false },
-                { selector: 'input[name*="descricao_"]', isNumeric: false },
-                { selector: 'input[name*="laboratorio_"]', isNumeric: false },
-                { selector: 'input[name*="tipo_preco_"]', isNumeric: false },
-                { selector: 'input[name*="preco_normal_"]', isNumeric: true, isInteger: false },
-                { selector: 'input[name*="preco_desconto_"]', isNumeric: true, isInteger: false }, // Preço Geral
-                { selector: 'input[name*="preco_desconto_cliente_"]', isNumeric: true, isInteger: false }, // Preço Cliente+
-                { selector: 'input[name*="tipo_regra_"]', isNumeric: false },
-                { selector: 'input[name*="preco_app_"]', isNumeric: true, isInteger: false } // Preço App
-            ],
-            exportFormatConfig: [ // Formatação para colunas numéricas (índice baseado em exportHeaders)
-                { colIndex: 4, format: '#,##0.00' },          // Preco Normal
-                { colIndex: 5, format: '#,##0.00' },          // Preco Geral
-                { colIndex: 6, format: '#,##0.00' },          // Preco Cliente+
-                { colIndex: 8, format: '#,##0.00' }           // Preco App
-            ],
-            exportSheetName: 'Produtos Tabloide',
-            exportFileName: 'produtos_tabloide_export.xlsx'
+            validateGtinUrl: '/tabloide/{id}/produtos/validar_gtins' // URL da API (com placeholder)      
         };
 
         // Inicializa as funcionalidades da tabela IMEDIATAMENTE

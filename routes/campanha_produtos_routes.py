@@ -3,12 +3,13 @@
 import pandas as pd
 import numpy as np
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, jsonify
+    Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 )
 import database.campanha_db as db_campanha
 import database.campanha_produtos_db as db_campanha_produtos
 import database.common_db as db_common
 from utils import allowed_file, pad_barcode, clean_barcode, DELETE_PASSWORD
+import io # <-- ADICIONAR IMPORT
 
 campanha_produtos_bp = Blueprint(
     'campanha_produtos',
@@ -262,3 +263,56 @@ def validar_gtins(campanha_id):
 
     # 3. Retorna o set de GTINs válidos (que já estão no formato raw/cleaned)
     return jsonify({"valid_gtins": list(validos_raw_set)})
+
+
+# --- NOVA ROTA DE EXPORTAÇÃO ---
+@campanha_produtos_bp.route('/<int:campanha_id>/exportar')
+def exportar_produtos(campanha_id):
+    try:
+        # 1. Buscar nome da campanha (para nome do arq)
+        campanha = db_campanha.get_campaign_by_id(campanha_id)
+        campanha_nome = campanha.nome if campanha else f"campanha_{campanha_id}"
+        
+        # 2. Buscar dados dos produtos
+        produtos_data = db_campanha_produtos.get_products_by_campaign_id(campanha_id)
+        if not produtos_data:
+            flash('Nenhum produto encontrado para exportar.', 'warning')
+            return redirect(url_for('campanha_produtos.produtos_por_campanha', campanha_id=campanha_id))
+        
+        # 3. Converter para DataFrame
+        produtos_list = [dict(row) for row in produtos_data]
+        df = pd.DataFrame(produtos_list)
+
+        # 4. Definir e Renomear colunas (INCLUINDO CODIGO_INTERNO)
+        colunas_exportar = {
+            "codigo_interno": "Codigo Interno",
+            "codigo_barras": "Codigo Barras (Digitado)",
+            "codigo_barras_normalizado": "Codigo Barras (14 dig.)",
+            "descricao": "Descricao",
+            "pontuacao": "Pontos",
+            "preco_normal": "Preco Normal",
+            "preco_desconto": "Preco Desconto",
+            "rebaixe": "Rebaixe",
+            "qtd_limite": "Qtd Limite"
+        }
+        
+        # Filtra o DF para ter apenas as colunas que existem no DF e queremos
+        colunas_presentes = [col for col in colunas_exportar.keys() if col in df.columns]
+        df_final = df[colunas_presentes].rename(columns=colunas_exportar)
+
+        # 5. Criar arquivo em memória
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_final.to_excel(writer, index=False, sheet_name='Produtos Campanha')
+        output.seek(0)
+        
+        # 6. Enviar arquivo
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=f"export_produtos_campanha_{campanha_nome}.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except Exception as e:
+        flash(f'Ocorreu um erro ao gerar o arquivo Excel: {e}', 'danger')
+        return redirect(url_for('campanha_produtos.produtos_por_campanha', campanha_id=campanha_id))

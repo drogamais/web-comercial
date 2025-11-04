@@ -3,12 +3,13 @@
 import pandas as pd
 import numpy as np
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, jsonify
+    Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 )
 import database.tabloide_db as db_tabloide
 import database.tabloide_produtos_db as db_tabloide_produtos
 import database.common_db as db_common
 from utils import allowed_file, pad_barcode, clean_barcode, DELETE_PASSWORD
+import io # <-- ADICIONAR IMPORT
 
 tabloide_produtos_bp = Blueprint(
     'tabloide_produtos',
@@ -303,3 +304,58 @@ def validar_gtins_tabloide(tabloide_id):
 
     # 3. Retorna o set de GTINs válidos (que já estão no formato raw/cleaned)
     return jsonify({"valid_gtins": list(validos_raw_set)})
+
+# --- NOVA ROTA DE EXPORTAÇÃO ---
+@tabloide_produtos_bp.route('/<int:tabloide_id>/exportar')
+def exportar_produtos(tabloide_id):
+    try:
+        # 1. Buscar nome
+        tabloide = db_tabloide.get_tabloide_by_id(tabloide_id)
+        tabloide_nome = tabloide.nome if tabloide else f"tabloide_{tabloide_id}"
+        
+        # 2. Buscar dados
+        produtos_data = db_tabloide_produtos.get_products_by_tabloide_id(tabloide_id)
+        if not produtos_data:
+            flash('Nenhum produto encontrado para exportar.', 'warning')
+            return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
+        
+        # 3. DataFrame
+        produtos_list = [dict(row) for row in produtos_data]
+        df = pd.DataFrame(produtos_list)
+
+        # 4. Colunas (INCLUINDO CODIGO_INTERNO)
+        colunas_exportar = {
+            "codigo_interno": "Codigo Interno",
+            "codigo_barras": "Codigo Barras (Digitado)",
+            "codigo_barras_normalizado": "Codigo Barras (14 dig.)",
+            "descricao": "Descricao",
+            "laboratorio": "Laboratorio",
+            "tipo_preco": "Tipo Preco",
+            "preco_normal": "Preco Normal",
+            "preco_desconto": "Preco Geral",
+            "preco_desconto_cliente": "Preco Cliente+",
+            "preco_app": "Preco APP",
+            "tipo_regra": "Tipo Regra"
+        }
+        
+        # Filtra o DF para ter apenas as colunas que existem no DF e queremos
+        colunas_presentes = [col for col in colunas_exportar.keys() if col in df.columns]
+        df_final = df[colunas_presentes].rename(columns=colunas_exportar)
+
+
+        # 5. Criar arquivo em memória
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_final.to_excel(writer, index=False, sheet_name='Produtos Tabloide')
+        output.seek(0)
+        
+        # 6. Enviar arquivo
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=f"export_produtos_tabloide_{tabloide_nome}.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except Exception as e:
+        flash(f'Ocorreu um erro ao gerar o arquivo Excel: {e}', 'danger')
+        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))

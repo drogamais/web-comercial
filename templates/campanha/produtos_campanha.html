@@ -69,39 +69,28 @@
             </tbody>
         </table>
         
-        <div style="display: flex; gap: 15px; margin-top: 20px; align-items: flex-start;">
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button type="submit" formaction="{{ url_for('campanha_produtos.atualizar_produtos', campanha_id=campanha.id) }}" style="flex: 1;">Salvar Alterações</button>
             
-            <div class="button-wrapper">
-                <button type="submit" formaction="{{ url_for('campanha_produtos.atualizar_produtos', campanha_id=campanha.id) }}">Salvar Alterações</button>
-            </div>
-            
-            <div class="button-wrapper">
-                <p class="button-description-text">Valida se o desconto é menor que o preço normal</p>
-                <button type="button" id="btn-validar-formato" class="button-filter">
-                    Validar Formato (Local)
-                </button>
-            </div>
+            <button type="button" id="btn-validar-preco" class="button-filter has-tooltip" style="flex: 1;"
+                    data-tooltip="Valida se o desconto é menor que o preço normal">
+                Validar Preço
+            </button>
 
-            <div class="button-wrapper">
-                <p class="button-description-text">Valida se está cadastrado no plugpharma com GTIN principal</p>
-                <button type="button" id="btn-validar-gtins" class="button-filter" style="background-color: #f39c12;">
-                    Validar GTINs
-                </button>
-            </div>
+            <button type="button" id="btn-validar-gtins" class="button-filter has-tooltip" style="flex: 1; background-color: #f39c12;"
+                    data-tooltip="Valida se está cadastrado no plugpharma com GTIN principal">
+                Validar GTINs
+            </button>
+
+            <button type="button" id="btn-limpar-validacoes" class="button-filter" style="flex: 1; background-color: #312f2f;">
+                Limpar Validações
+            </button>
             
-            <div class="button-wrapper">
-                 <button type="button" id="btn-limpar-validacoes" class="button-filter" style="background-color: #312f2f;">
-                    Limpar Validações
-                </button>
-            </div>
-            
-            <div class="button-wrapper">
-                <button type="button" id="btn-show-delete-bulk-modal" class="button-danger" 
-                        disabled 
-                        data-delete-action="{{ url_for('campanha_produtos.deletar_produtos', campanha_id=campanha.id) }}">
-                    Deletar Selecionados
-                </button>
-            </div>
+            <button type="button" id="btn-show-delete-bulk-modal" class="button-danger" 
+                    style="flex: 1; margin: 0; max-width: none; min-width: 150px;" disabled 
+                    data-delete-action="{{ url_for('campanha_produtos.deletar_produtos', campanha_id=campanha.id) }}">
+                Deletar Selecionados
+            </button>
         </div>
     </form>
     {% else %}

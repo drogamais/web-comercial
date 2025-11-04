@@ -152,3 +152,58 @@ button:hover {
     background-color: #e9ecef;
     transition: background-color 0.2s ease-in-out;
 }
+
+/* --- NOVO: Estilos de Tooltip Personalizado --- */
+.has-tooltip {
+    position: relative; /* Necessário para posicionar o tooltip */
+    cursor: pointer; /* Muda o cursor para indicar ajuda */
+}
+
+/* O balão do tooltip */
+.has-tooltip::after {
+    content: attr(data-tooltip); /* Pega o texto do atributo */
+    position: absolute;
+    bottom: 100%; /* Posiciona acima do botão */
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px); /* Centraliza e adiciona espaço */
+    
+    background-color: #333;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap; /* Impede que quebre a linha */
+    z-index: 10;
+    
+    /* Escondido por padrão */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* A seta do balão */
+.has-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px); /* Posiciona entre o botão e o balão */
+    
+    border: 6px solid transparent;
+    border-top-color: #333; /* Cor da seta */
+    z-index: 11;
+
+    /* Escondido por padrão */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Mostra no hover */
+.has-tooltip:hover::after,
+.has-tooltip:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0); /* Move para a posição final */
+}

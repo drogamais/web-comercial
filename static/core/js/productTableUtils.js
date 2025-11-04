@@ -244,26 +244,23 @@ window.ProductTableUtils = (function() {
     }
 
     function initValidatePrecoButton(tableBody, config) {
-        // NOTA: Os templates HTML (produtos_campanha.html e produtos_tabloide.html)
-        // têm um botão com ID "btn-validar-formato". O código aqui procura por "btn-validar-preco".
-        // Isso é um bug no código que você me enviou.
-        // Vou corrigir para procurar o ID "btn-validar-formato" que existe no HTML.
-        
-        const validateBtn = document.getElementById('btn-validar-formato'); // CORRIGIDO de 'btn-validar-preco'
-        if (validateBtn) {
-            validateBtn.addEventListener('click', () => {
-                // Ao clicar em "Validar Formato", validamos ambos: códigos e preços.
+        // 1. Procura pelo ID 'btn-validar-preco'
+        const validatePrecoBtn = document.getElementById('btn-validar-preco');
+        if (validatePrecoBtn) {
+            validatePrecoBtn.addEventListener('click', () => {
+                // Valida apenas os preços
+                validarTodosPrecos(tableBody, config);
+            });
+        }
+
+        // 2. Procura também pelo ID antigo 'btn-validar-formato' (para segurança)
+        const validateFormatoBtn = document.getElementById('btn-validar-formato');
+        if (validateFormatoBtn) {
+            validateFormatoBtn.addEventListener('click', () => {
+                // Valida códigos e preços
                 validarTodosCodigos(tableBody);
                 validarTodosPrecos(tableBody, config);
             });
-        } else {
-            // Fallback se o botão 'btn-validar-preco' realmente existir em algum lugar
-            const validatePrecoBtn = document.getElementById('btn-validar-preco');
-             if (validatePrecoBtn) {
-                validatePrecoBtn.addEventListener('click', () => {
-                    validarTodosPrecos(tableBody, config);
-                });
-            }
         }
     }
 

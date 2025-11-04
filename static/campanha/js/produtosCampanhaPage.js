@@ -35,18 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
             exportFileName: 'produtos_campanha_export.xlsx'
         };
 
-        // CORREÇÃO: Inicializa as funcionalidades da tabela IMEDIATAMENTE
-        // Isso ativa os checkboxes, o popup de descrição e os botões de validação.
+        // Inicializa as funcionalidades da tabela IMEDIATAMENTE
         window.ProductTableUtils.init(config);
 
     } else {
         console.error("ProductTableUtils não foi carregado.");
     }    
     
-    // O listener 'click' do 'btn-export-excel' foi removido daqui,
-    // pois o 'productTableUtils.init()' já cuida de encontrar
-    // esse botão e adicionar o listener de clique nele.
-
 // --- LÓGICA PARA O MODAL DE DELEÇÃO EM MASSA (PRODUTOS) ---
     const deleteBulkModal = document.getElementById('delete-bulk-modal');
     const showDeleteBulkModalBtn = document.getElementById('btn-show-delete-bulk-modal');
@@ -59,8 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const confirmBulkDeleteBtn = document.getElementById('delete-bulk-modal-btn-confirm');
         const bulkDeleteCountSpan = document.getElementById('delete-bulk-modal-count');
 
-        // Senha hardcoded para validação no front-end
-        const REQUIRED_PASSWORD = '123'; 
+        // *** CORREÇÃO: Senha 'REQUIRED_PASSWORD' removida daqui ***
         
         const mainForm = document.getElementById('form-edit-delete');
 
@@ -75,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Limpa o estado anterior
             passwordInput.value = '';
-            confirmBulkDeleteBtn.disabled = true;
+            confirmBulkDeleteBtn.disabled = true; // Começa desabilitado
 
             bulkDeleteCountSpan.textContent = selectedCount;
 
@@ -88,18 +82,17 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmBulkDeleteBtn.disabled = true;
         };
 
+        // *** CORREÇÃO: Habilita o botão se o campo de senha NÃO estiver vazio ***
         const checkPassword = () => {
-            const isPasswordMatch = passwordInput.value === REQUIRED_PASSWORD;
-            confirmBulkDeleteBtn.disabled = !isPasswordMatch;
+            const isPasswordEntered = passwordInput.value.trim() !== '';
+            confirmBulkDeleteBtn.disabled = !isPasswordEntered;
         };
         
         const handleConfirmDeletion = (e) => {
             e.preventDefault(); 
             
-            if (passwordInput.value !== REQUIRED_PASSWORD) {
-                alert('Senha incorreta.');
-                return;
-            }
+            // *** CORREÇÃO: Validação de senha REMOVIDA do JavaScript ***
+            // O backend (Python) fará a validação.
             
             const deleteAction = showDeleteBulkModalBtn.getAttribute('data-delete-action'); 
             
@@ -140,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // O listener 'checkPassword' agora apenas verifica se o campo está preenchido
         passwordInput.addEventListener('input', checkPassword);
         confirmBulkDeleteBtn.addEventListener('click', handleConfirmDeletion);
         

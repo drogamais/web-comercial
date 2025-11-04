@@ -62,17 +62,16 @@ def exportar_parceiros():
         colunas_exportar = {
             "id": "ID Local",
             "api_user_id": "ID API (Embedded)",
-            "nome_ajustado": "Nome Ajustado",
             "nome_fantasia": "Nome Fantasia",
-            "razao_social": "Razão Social",
+            "tipo": "Tipo",
             "cnpj": "CNPJ",
-            "tipo": "Tipo (Canal)",
-            "gestor": "Gestor (Contato)",
-            "email_gestor": "Email Gestor",
+            "nome_ajustado": "Nome Ajustado",
+            "razao_social": "Razão Social",
+            "gestor": "Gestor",
             "telefone_gestor": "Telefone Gestor",
+            "email_gestor": "Email Gestor",
             "data_entrada": "Data Entrada",
             "data_saida": "Data Saída",
-            "status": "Status",
             "senha_definida": "Senha Definida",
             "data_atualizacao": "Última Atualização"
         }

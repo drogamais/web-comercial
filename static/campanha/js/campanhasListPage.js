@@ -1,7 +1,9 @@
 // MUDANÇAS EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/static/campanha/js/campanhasListPage.js
 
-document.addEventListener('DOMContentLoaded', () => {
+// Define a função de inicialização que o base.html espera
+window.initCampanhasListPage = () => {
     const editModal = document.getElementById('edit-modal');
+    // Se o modal não estiver nesta página, não faz nada
     if (!editModal) return;
 
     const modalBtnCancel = document.getElementById('modal-btn-cancel');
@@ -41,17 +43,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Adiciona os eventos
     editButtons.forEach(button => {
+        // Remove listener antigo para evitar duplicação
+        button.removeEventListener('click', showModal); 
         button.addEventListener('click', showModal);
     });
 
+    modalBtnCancel.removeEventListener('click', closeModal);
     modalBtnCancel.addEventListener('click', closeModal);
 
     // Fecha o modal se clicar fora da área de conteúdo
-    editModal.addEventListener('click', function(event) {
+    editModal.removeEventListener('click', closeModalOutside);
+    editModal.addEventListener('click', closeModalOutside);
+    
+    function closeModalOutside(event) {
         if (event.target === this) {
             closeModal();
         }
-    });
+    }
 
     // --- LÓGICA PARA O MODAL DE DELEÇÃO ---
     const deleteModal = document.getElementById('delete-modal');
@@ -99,20 +107,26 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // ALTERAÇÃO: Listener apenas no input do NOME
+        deleteInput.removeEventListener('input', checkConfirmationStatus);
         deleteInput.addEventListener('input', checkConfirmationStatus);
         
         // O listener de senha foi removido daqui
 
         deleteButtons.forEach(button => {
+            button.removeEventListener('click', showDeleteModal);
             button.addEventListener('click', showDeleteModal);
         });
 
+        deleteModalBtnCancel.removeEventListener('click', closeDeleteModal);
         deleteModalBtnCancel.addEventListener('click', closeDeleteModal);
 
-        deleteModal.addEventListener('click', function(event) {
+        deleteModal.removeEventListener('click', closeDeleteModalOutside);
+        deleteModal.addEventListener('click', closeDeleteModalOutside);
+        
+        function closeDeleteModalOutside(event) {
             if (event.target === this) {
                 closeDeleteModal();
             }
-        });
+        }
     }
-});
+};

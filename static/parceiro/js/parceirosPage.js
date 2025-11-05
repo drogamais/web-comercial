@@ -1,13 +1,17 @@
 // MUDANÇAS EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/static/parceiro/js/parceirosPage.js
 
-document.addEventListener('DOMContentLoaded', () => {
+// Define a função de inicialização que o base.html espera
+window.initParceirosPage = () => {
 
     // --- LÓGICA MODAL DE CRIAÇÃO (NOVO) ---
     const createConfirmModal = document.getElementById('create-confirm-modal');
     const showCreateModalBtn = document.getElementById('btn-show-create-modal');
     const createForm = document.getElementById('create-parceiro-form');
     
-    if (createConfirmModal && showCreateModalBtn && createForm) {
+    // Se não estiver na página de parceiros, não faz nada
+    if (!createForm) return;
+
+    if (createConfirmModal && showCreateModalBtn) {
         const createModalBtnCancel = document.getElementById('create-modal-btn-cancel');
         const createModalBtnConfirm = document.getElementById('create-modal-btn-confirm');
         const createModalEmailSpan = document.getElementById('create-modal-email');
@@ -50,16 +54,27 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Listeners
+        showCreateModalBtn.removeEventListener('click', showCreateModal);
         showCreateModalBtn.addEventListener('click', showCreateModal);
+        
+        createModalBtnCancel.removeEventListener('click', closeCreateModal);
         createModalBtnCancel.addEventListener('click', closeCreateModal);
-        createConfirmModal.querySelector('.close-button').addEventListener('click', closeCreateModal);
-        // Listener de input da senha REMOVIDO
-        // createModalPassword.addEventListener('input', checkCreatePassword);
+        
+        const closeButton = createConfirmModal.querySelector('.close-button');
+        if(closeButton) {
+            closeButton.removeEventListener('click', closeCreateModal);
+            closeButton.addEventListener('click', closeCreateModal);
+        }
+
+        createModalBtnConfirm.removeEventListener('click', handleConfirmCreation);
         createModalBtnConfirm.addEventListener('click', handleConfirmCreation);
         
-        createConfirmModal.addEventListener('click', (event) => {
+        createConfirmModal.removeEventListener('click', closeCreateModalOutside);
+        createConfirmModal.addEventListener('click', closeCreateModalOutside);
+        
+        function closeCreateModalOutside(event) {
             if (event.target === createConfirmModal) closeCreateModal();
-        });
+        }
     }
 
     // --- LÓGICA MODAL EDIÇÃO ---
@@ -107,11 +122,20 @@ document.addEventListener('DOMContentLoaded', () => {
             editModal.classList.remove('show-modal');
         };
 
-        editButtons.forEach(button => button.addEventListener('click', showEditModal));
-        modalBtnCancel.addEventListener('click', closeEditModal);
-        editModal.addEventListener('click', (event) => {
-            if (event.target === editModal) closeEditModal();
+        editButtons.forEach(button => {
+            button.removeEventListener('click', showEditModal);
+            button.addEventListener('click', showEditModal);
         });
+        
+        modalBtnCancel.removeEventListener('click', closeEditModal);
+        modalBtnCancel.addEventListener('click', closeEditModal);
+        
+        editModal.removeEventListener('click', closeEditModalOutside);
+        editModal.addEventListener('click', closeEditModalOutside);
+        
+        function closeEditModalOutside(event) {
+            if (event.target === editModal) closeEditModal();
+        }
     }
 
     // --- LÓGICA MODAL DELEÇÃO (Implementação de Senha) ---
@@ -152,13 +176,23 @@ document.addEventListener('DOMContentLoaded', () => {
             correctParceiroName = '';
         };
 
+        nameInput.removeEventListener('input', checkConfirmationStatus);
         nameInput.addEventListener('input', checkConfirmationStatus);
         
-        deleteButtons.forEach(button => button.addEventListener('click', showDeleteModal));
-        deleteModalBtnCancel.addEventListener('click', closeDeleteModal);
-        deleteModal.addEventListener('click', (event) => {
-            if (event.target === deleteModal) closeDeleteModal();
+        deleteButtons.forEach(button => {
+            button.removeEventListener('click', showDeleteModal);
+            button.addEventListener('click', showDeleteModal);
         });
+        
+        deleteModalBtnCancel.removeEventListener('click', closeDeleteModal);
+        deleteModalBtnCancel.addEventListener('click', closeDeleteModal);
+        
+        deleteModal.removeEventListener('click', closeDeleteModalOutside);
+        deleteModal.addEventListener('click', closeDeleteModalOutside);
+        
+        function closeDeleteModalOutside(event) {
+            if (event.target === deleteModal) closeDeleteModal();
+        }
     }
 
     // --- LÓGICA MODAL DEFINIR SENHA ---
@@ -193,12 +227,22 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmarSenhaInput.value = '';
         };
 
-        senhaButtons.forEach(button => button.addEventListener('click', showSenhaModal));
+        senhaButtons.forEach(button => {
+            button.removeEventListener('click', showSenhaModal);
+            button.addEventListener('click', showSenhaModal);
+        });
+        
+        senhaModalBtnClose.removeEventListener('click', closeSenhaModal);
         senhaModalBtnClose.addEventListener('click', closeSenhaModal);
+        
+        senhaModalBtnCancel.removeEventListener('click', closeSenhaModal);
         senhaModalBtnCancel.addEventListener('click', closeSenhaModal);
         
-        senhaModal.addEventListener('click', (event) => {
+        senhaModal.removeEventListener('click', closeSenhaModalOutside);
+        senhaModal.addEventListener('click', closeSenhaModalOutside);
+        
+        function closeSenhaModalOutside(event) {
             if (event.target === senhaModal) closeSenhaModal();
-        });
+        }
     }
-});
+};

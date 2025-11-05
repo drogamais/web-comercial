@@ -1,5 +1,3 @@
-# CORREÇÃO EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/database/campanha_db.py
-
 # database/campanha_db.py
 
 from sqlalchemy.sql import text

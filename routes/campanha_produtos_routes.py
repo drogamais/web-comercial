@@ -1,4 +1,3 @@
-[file: web-comercial/routes/campanha_produtos_routes.py]
 # routes/campanha_produtos_routes.py
 
 import pandas as pd

@@ -1,8 +1,18 @@
 // aplicacao_web_campanhas/static/js/drag_and_drop.js
 
-document.addEventListener("DOMContentLoaded", () => {
+// Define a função de inicialização que o base.html espera
+window.initDragAndDrop = () => {
     document.querySelectorAll(".drop-zone__input").forEach((inputElement) => {
         const dropZoneElement = inputElement.closest(".drop-zone");
+        // Se o elemento drop-zone não existir (ex: em outra página), para.
+        if (!dropZoneElement) return;
+
+        // Verifica se os listeners já foram adicionados para evitar duplicatas
+        if (dropZoneElement.dataset.listenersAdded === 'true') {
+            return;
+        }
+        dropZoneElement.dataset.listenersAdded = 'true';
+
         const promptElement = dropZoneElement.querySelector(".drop-zone__prompt");
 
         // Ao clicar na área, aciona o input de arquivo
@@ -85,4 +95,4 @@ document.addEventListener("DOMContentLoaded", () => {
             thumbnailElement.style.backgroundImage = `url('https://e-z.tools/img/icon/ico-excel.svg')`;
         }
     });
-});
+};

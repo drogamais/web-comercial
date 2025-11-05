@@ -1,22 +1,28 @@
-document.addEventListener('DOMContentLoaded', function() {
+// Define a função de inicialização que o base.html espera
+window.initSelectAll = () => {
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
-    // Encontra todos os checkboxes de linha pela classe que já usam
+    // Se não houver checkbox "select-all" nesta página, não faz nada
+    if (!selectAllCheckbox) return;
+
     const rowCheckboxes = document.querySelectorAll('.edit-checkbox'); 
 
-    if (selectAllCheckbox && rowCheckboxes.length > 0) {
-        selectAllCheckbox.addEventListener('change', function() {
-            const isChecked = this.checked;
+    const handleSelectAll = (e) => {
+        const isChecked = e.currentTarget.checked;
+        
+        rowCheckboxes.forEach(checkbox => {
+            // Define o estado do checkbox da linha
+            checkbox.checked = isChecked;
             
-            rowCheckboxes.forEach(checkbox => {
-                // Define o estado do checkbox da linha
-                checkbox.checked = isChecked;
-                
-                // Dispara o evento 'change' no checkbox da linha
-                // Isso é crucial para que o script 'produtosPage.js' 
-                // seja acionado e habilite/desabilite os inputs da linha.
-                const changeEvent = new Event('change');
-                checkbox.dispatchEvent(changeEvent);
-            });
+            // Dispara o evento 'change' no checkbox da linha
+            // Isso é crucial para que o script 'produtosPage.js' 
+            // seja acionado e habilite/desabilite os inputs da linha.
+            const changeEvent = new Event('change');
+            checkbox.dispatchEvent(changeEvent);
         });
+    };
+
+    if (rowCheckboxes.length > 0) {
+        selectAllCheckbox.removeEventListener('change', handleSelectAll); // Evita duplicatas
+        selectAllCheckbox.addEventListener('change', handleSelectAll);
     }
-});
+};

@@ -1,4 +1,3 @@
-[file: web-comercial/routes/tabloide_produtos_routes.py]
 # routes/tabloide_produtos_routes.py
 
 import pandas as pd

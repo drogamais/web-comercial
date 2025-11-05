@@ -1,4 +1,3 @@
-[file: web-comercial/routes/parceiro_routes.py]
 # routes/parceiro_routes.py
 
 import io

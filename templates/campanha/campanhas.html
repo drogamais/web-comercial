@@ -1,4 +1,4 @@
-{% extends "campanha/base_campanha.html" %}
+{% extends "base.html" %}
 
 {% block title %}Gerenciar Campanhas{% endblock %}
 
@@ -26,7 +26,14 @@
 
     <div class="filter-container">
         <h2>Nova Campanha</h2>
-        <form action="{{ url_for('campanha.gestao_campanhas') }}" method="post" class="filter-form" style="align-items: flex-end;">
+        
+        <form hx-post="{{ url_for('campanha.gestao_campanhas') }}" 
+              hx-target="#main-content" 
+              hx-swap-oob="outerHTML:#sidebar" 
+              hx-indicator=".htmx-indicator" 
+              class="filter-form" 
+              style="align-items: flex-end;">
+            
             <div class="form-group"><label for="nome">Nome:</label><input type="text" name="nome" required></div>
             <div class="form-group"><label for="data_inicio">Início:</label><input type="date" name="data_inicio" required></div>
             <div class="form-group"><label for="data_fim">Fim:</label><input type="date" name="data_fim" required></div>
@@ -64,7 +71,13 @@
                 <td>{{ c.data_fim.strftime('%d/%m/%Y') }}</td>
                 <td>{{ c.parceiro_nome or 'N/A' }}</td> <td>
                     <div class="action-buttons-container">
-                        <a href="{{ url_for('campanha_produtos.produtos_por_campanha', campanha_id=c.id) }}" class="button-filter btn-ver-produtos">
+                        <a href="{{ url_for('campanha_produtos.produtos_por_campanha', campanha_id=c.id) }}" 
+                           class="button-filter btn-ver-produtos"
+                           hx-get="{{ url_for('campanha_produtos.produtos_por_campanha', campanha_id=c.id) }}"
+                           hx-target="#main-content"
+                           hx-push-url="true"
+                           hx-indicator=".htmx-indicator"
+                           hx-swap-oob="outerHTML:#sidebar">
                            Ver Produtos
                         </a>
                         
@@ -95,7 +108,12 @@
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Editar Campanha</h2>
-            <form id="edit-form" method="post">
+            
+            <form id="edit-form"
+                  hx-post="" hx-target="#main-content" 
+                  hx-swap-oob="outerHTML:#sidebar"
+                  hx-indicator=".htmx-indicator">
+                
                 <div class="form-group">
                     <label for="nome_edit">Nome da Campanha:</label>
                     <input type="text" id="nome_edit" name="nome_edit" required>
@@ -135,7 +153,10 @@
             
             <p class="delete-modal-campaign-name-label">Nome: <strong id="delete-modal-campaign-name"></strong></p>
             
-            <form id="delete-form" method="post" action="">
+            <form id="delete-form" 
+                  hx-post="" hx-target="#main-content" 
+                  hx-swap-oob="outerHTML:#sidebar"
+                  hx-indicator=".htmx-indicator">
 
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
                     <label for="delete-modal-input">Digite o nome para confirmar:</label>
@@ -147,7 +168,7 @@
                     <input type="password" id="delete-modal-password" name="confirmation_password" autocomplete="off">
                 </div>
 
-                <p class="delete-modal-info-text">(Isso irá excluir permanentemente a campanha e todos os produtos vinculados a ela.)</p> <form id="delete-form" method="post" action="">
+                <p class="delete-modal-info-text">(Isso irá excluir permanentemente a campanha e todos os produtos vinculados a ela.)</p>
             
                 <div class="modal-actions" style="margin-top: 25px;">
                     <button id="delete-modal-btn-cancel" type="button" class="modal-button-cancel">Cancelar</button>

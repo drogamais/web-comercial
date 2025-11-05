@@ -48,14 +48,23 @@ def gestao_campanhas():
             error = db_campanha.add_campaign(nome, data_inicio, data_fim, parceiro_id)
             if error: flash(f'Erro ao criar campanha: {error}', 'danger')
             else: flash('Campanha criada com sucesso!', 'success')
-        return redirect(url_for('campanha.gestao_campanhas'))
+        
+        # --- MUDANÇA HTMX ---
+        # Em vez de redirecionar, buscamos os dados atualizados e
+        # renderizamos o template novamente. O HTMX cuidará de 
+        # atualizar o #main-content e a #sidebar.
+        # 
+        # REMOVIDO: return redirect(url_for('campanha.gestao_campanhas'))
     
-    # GET
+    # GET (ou continuação do POST)
     campanhas = db_campanha.get_all_campaigns()
     parceiros = db_parceiro.get_all_parceiros() # <-- ADICIONADO
+    
+    # Esta renderização agora serve para o GET inicial E
+    # para a resposta da requisição POST do HTMX.
     return render_template(
         'campanha/campanhas.html', 
-        active_page='campanhas', 
+        active_page='campanhas', # Importante manter
         campanhas=campanhas,
         parceiros=parceiros # <-- ADICIONADO
     )
@@ -74,7 +83,20 @@ def editar_campanha(campaign_id):
         _, error = db_campanha.update_campaign(campaign_id, nome, data_inicio, data_fim, parceiro_id)
         if error: flash(f'Erro ao atualizar campanha: {error}', 'danger')
         else: flash('Campanha atualizada com sucesso!', 'success')
-    return redirect(url_for('campanha.gestao_campanhas'))
+    
+    # --- MUDANÇA HTMX ---
+    # Também renderizamos o template em vez de redirecionar.
+    # Note que esta rota de "edição" vem de um modal. O HTMX
+    # vai simplesmente recarregar o #main-content, o que
+    # fechará o modal e mostrará a lista atualizada com o flash.
+    campanhas = db_campanha.get_all_campaigns()
+    parceiros = db_parceiro.get_all_parceiros() 
+    return render_template(
+        'campanha/campanhas.html', 
+        active_page='campanhas',
+        campanhas=campanhas,
+        parceiros=parceiros
+    )
 
 
 @campanha_bp.route('/deletar/<int:campaign_id>', methods=['POST'])
@@ -83,10 +105,21 @@ def deletar_campanha(campaign_id):
     confirmation_password = request.form.get('confirmation_password')
     if confirmation_password != DELETE_PASSWORD:
         flash(f'Senha de confirmação incorreta.', 'danger')
-        return redirect(url_for('campanha.gestao_campanhas'))
-    # --- FIM NOVO ---
-    
-    _, error = db_campanha.delete_campaign(campaign_id)
-    if error: flash(f'Erro ao deletar campanha: {error}', 'danger')
-    else: flash('Campanha deletada permanentemente com sucesso!', 'success')
-    return redirect(url_for('campanha.gestao_campanhas'))
+        # --- MUDANÇA HTMX ---
+        # Se a senha falhar, também re-renderizamos
+    else:
+        # --- FIM NOVO ---
+        _, error = db_campanha.delete_campaign(campaign_id)
+        if error: flash(f'Erro ao deletar campanha: {error}', 'danger')
+        else: flash('Campanha deletada permanentemente com sucesso!', 'success')
+
+    # --- MUDANÇA HTMX ---
+    # Sempre re-renderizamos após a ação
+    campanhas = db_campanha.get_all_campaigns()
+    parceiros = db_parceiro.get_all_parceiros() 
+    return render_template(
+        'campanha/campanhas.html', 
+        active_page='campanhas',
+        campanhas=campanhas,
+        parceiros=parceiros
+    )

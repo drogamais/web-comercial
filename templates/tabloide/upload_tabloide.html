@@ -17,7 +17,12 @@
         {% endif %}
     {% endwith %}
 
-    <form method="post" enctype="multipart/form-data">
+    <form hx-post="{{ url_for('tabloide_produtos.upload_page') }}"
+          hx-encoding="multipart/form-data"
+          hx-target="#main-content"
+          hx-swap-oob="outerHTML:#sidebar"
+          hx-indicator=".htmx-indicator">
+        
         <div class="filter-container" style="padding-bottom: 30px;">
             <div class="filter-form">
                 <div class="form-group" style="flex: 1;">

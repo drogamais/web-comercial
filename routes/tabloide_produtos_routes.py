@@ -1,3 +1,4 @@
+[file: web-comercial/routes/tabloide_produtos_routes.py]
 # routes/tabloide_produtos_routes.py
 
 import pandas as pd
@@ -28,14 +29,16 @@ def upload_page():
         tabloide_id = request.form.get('tabloide')
         if not tabloide_id:
             flash('Por favor, selecione um tabloide.', 'danger')
-            return redirect(url_for('tabloide_produtos.upload_page'))
-
+            # --- MUDANÇA HTMX ---
+            # REMOVIDO: return redirect(url_for('tabloide_produtos.upload_page'))
+        
         file = request.files.get('file')
         if not file or file.filename == '':
             flash('Nenhum arquivo selecionado.', 'danger')
-            return redirect(url_for('tabloide_produtos.upload_page'))
+            # --- MUDANÇA HTMX ---
+            # REMOVIDO: return redirect(url_for('tabloide_produtos.upload_page'))
 
-        if file and allowed_file(file.filename):
+        elif file and allowed_file(file.filename):
             try:
                 # ---------------------------------------------------------
                 # PASSO 1: DELETAR PRODUTOS EXISTENTES PARA ESTE TABLOIDE
@@ -43,7 +46,8 @@ def upload_page():
                 deleted_count, delete_error = db_tabloide_produtos.delete_products_by_tabloide_id(tabloide_id)
                 if delete_error:
                     flash(f'Erro ao limpar produtos antigos do tabloide: {delete_error}', 'danger')
-                    return redirect(url_for('tabloide_produtos.upload_page'))
+                    # --- MUDANÇA HTMX ---
+                    # REMOVIDO: return redirect(url_for('tabloide_produtos.upload_page'))
                 if deleted_count > 0:
                     flash(f'{deleted_count} produto(s) antigo(s) removido(s) do tabloide.', 'info')
                 # ---------------------------------------------------------
@@ -60,7 +64,17 @@ def upload_page():
                     df = pd.read_excel(file, sheet_name='Todos', dtype={'GTIN': str})
                 except Exception as e:
                     flash(f'Erro ao ler a planilha. Verifique se a aba "Todos" existe e se a coluna GTIN está presente. (Erro: {e})', 'danger')
-                    return redirect(url_for('tabloide_produtos.upload_page'))
+                    # --- MUDANÇA HTMX ---
+                    # REMOVIDO: return redirect(url_for('tabloide_produtos.upload_page'))
+                    
+                    # Adicionado para evitar erro de variável indefinida
+                    tabloides = db_tabloide.get_all_tabloide()
+                    return render_template(
+                        'tabloide/upload_tabloide.html',
+                        active_page='tabloide_upload',
+                        tabloides=tabloides
+                    )
+
 
                 df.columns = (
                     df.columns.astype(str)
@@ -74,81 +88,84 @@ def upload_page():
                 missing_cols = [col for col in required_source_cols if col not in df.columns]
                 if missing_cols:
                     flash(f'A planilha (aba "Todos") não contém todas as colunas esperadas. Faltando: {", ".join(missing_cols)}', 'danger')
-                    return redirect(url_for('tabloide_produtos.upload_page'))
-
-                df = df.rename(columns=column_map)
-                df = df.replace({np.nan: None})
-
-                cols_to_numeric = ['preco_normal', 'preco_desconto', 'preco_desconto_cliente', 'preco_app']
-                for col in cols_to_numeric:
-                    if col in df.columns:
-                        df[col] = pd.to_numeric(df[col], errors='coerce').replace({np.nan: None})
-
-                # --- LÓGICA DE BUSCA DO CODIGO_INTERNO E NORMALIZAÇÃO ---
-                gtins_raw_list = []
-                gtins_para_buscar_map = {} # Mapeia para garantir apenas códigos RAW únicos
+                    # --- MUDANÇA HTMX ---
+                    # REMOVIDO: return redirect(url_for('tabloide_produtos.upload_page'))
                 
-                for g in df['codigo_barras'].tolist():
-                    g_str = str(g) if g is not None else None
-                    if g_str and g_str.strip():
-                        gtins_raw_list.append(g_str)
-                        cleaned = clean_barcode(g_str) # <-- AGORA USA CLEAN_BARCODE
-                        if cleaned:
-                            gtins_para_buscar_map[cleaned] = cleaned 
-
-                gtins_para_buscar_raw = list(gtins_para_buscar_map.keys()) # Lista de GTINs RAW únicos para buscar
-
-                if gtins_para_buscar_raw:
-                    # FIX: Passa a lista RAW para o common_db
-                    ci_map_raw, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar_raw)
-                    if err:
-                        flash(f'Erro ao buscar códigos internos: {err}', 'warning')
-                        ci_map_raw = {}
                 else:
-                    ci_map_raw = {}
-                # --- FIM DA LÓGICA ---
+                    df = df.rename(columns=column_map)
+                    df = df.replace({np.nan: None})
 
-                produtos_para_inserir = []
-                for _, row in df.iterrows():
-                    cb_raw = row.get('codigo_barras')
-                    cb_raw_str = str(cb_raw) if cb_raw is not None else None
-                    cb_normalizado = pad_barcode(cb_raw_str)
+                    cols_to_numeric = ['preco_normal', 'preco_desconto', 'preco_desconto_cliente', 'preco_app']
+                    for col in cols_to_numeric:
+                        if col in df.columns:
+                            df[col] = pd.to_numeric(df[col], errors='coerce').replace({np.nan: None})
+
+                    # --- LÓGICA DE BUSCA DO CODIGO_INTERNO E NORMALIZAÇÃO ---
+                    gtins_raw_list = []
+                    gtins_para_buscar_map = {} # Mapeia para garantir apenas códigos RAW únicos
                     
-                    # FIX: Usa o GTIN LIMPO como chave para buscar o CI
-                    cb_cleaned = clean_barcode(cb_raw_str) 
-                    ci = ci_map_raw.get(cb_cleaned) if cb_cleaned else None
+                    for g in df['codigo_barras'].tolist():
+                        g_str = str(g) if g is not None else None
+                        if g_str and g_str.strip():
+                            gtins_raw_list.append(g_str)
+                            cleaned = clean_barcode(g_str) # <-- AGORA USA CLEAN_BARCODE
+                            if cleaned:
+                                gtins_para_buscar_map[cleaned] = cleaned 
 
-                    produtos_para_inserir.append((
-                        tabloide_id,
-                        cb_raw_str,
-                        cb_normalizado,
-                        ci,
-                        row.get('descricao'),
-                        row.get('laboratorio'),
-                        row.get('tipo_preco'),
-                        row.get('preco_normal'),
-                        row.get('preco_desconto'),
-                        row.get('preco_desconto_cliente'),
-                        row.get('preco_app'),
-                        row.get('tipo_regra')
-                    ))
+                    gtins_para_buscar_raw = list(gtins_para_buscar_map.keys()) # Lista de GTINs RAW únicos para buscar
 
-                # PASSO 3: Inserir os novos produtos
-                if produtos_para_inserir:
-                    rowcount, error = db_tabloide_produtos.add_products_bulk(produtos_para_inserir)
-                    if error:
-                        flash(f'Erro ao salvar novos produtos: {error}', 'danger')
+                    if gtins_para_buscar_raw:
+                        # FIX: Passa a lista RAW para o common_db
+                        ci_map_raw, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar_raw)
+                        if err:
+                            flash(f'Erro ao buscar códigos internos: {err}', 'warning')
+                            ci_map_raw = {}
                     else:
-                        flash(f'{rowcount} novo(s) produto(s) processado(s) e salvo(s) com sucesso!', 'success')
-                else:
-                    flash('Nenhum produto encontrado na nova planilha para inserir.', 'warning')
+                        ci_map_raw = {}
+                    # --- FIM DA LÓGICA ---
+
+                    produtos_para_inserir = []
+                    for _, row in df.iterrows():
+                        cb_raw = row.get('codigo_barras')
+                        cb_raw_str = str(cb_raw) if cb_raw is not None else None
+                        cb_normalizado = pad_barcode(cb_raw_str)
+                        
+                        # FIX: Usa o GTIN LIMPO como chave para buscar o CI
+                        cb_cleaned = clean_barcode(cb_raw_str) 
+                        ci = ci_map_raw.get(cb_cleaned) if cb_cleaned else None
+
+                        produtos_para_inserir.append((
+                            tabloide_id,
+                            cb_raw_str,
+                            cb_normalizado,
+                            ci,
+                            row.get('descricao'),
+                            row.get('laboratorio'),
+                            row.get('tipo_preco'),
+                            row.get('preco_normal'),
+                            row.get('preco_desconto'),
+                            row.get('preco_desconto_cliente'),
+                            row.get('preco_app'),
+                            row.get('tipo_regra')
+                        ))
+
+                    # PASSO 3: Inserir os novos produtos
+                    if produtos_para_inserir:
+                        rowcount, error = db_tabloide_produtos.add_products_bulk(produtos_para_inserir)
+                        if error:
+                            flash(f'Erro ao salvar novos produtos: {error}', 'danger')
+                        else:
+                            flash(f'{rowcount} novo(s) produto(s) processado(s) e salvo(s) com sucesso!', 'success')
+                    else:
+                        flash('Nenhum produto encontrado na nova planilha para inserir.', 'warning')
 
             except Exception as e:
                 flash(f'Ocorreu um erro inesperado ao processar o arquivo: {e}', 'danger')
 
-            return redirect(url_for('tabloide_produtos.upload_page'))
+            # --- MUDANÇA HTMX ---
+            # REMOVIDO: return redirect(url_for('tabloide_produtos.upload_page'))
 
-    # GET
+    # GET (ou continuação do POST)
     tabloides = db_tabloide.get_all_tabloide()
     return render_template(
         'tabloide/upload_tabloide.html',
@@ -209,7 +226,16 @@ def adicionar_produto(tabloide_id):
             flash('Novo produto adicionado com sucesso!', 'success')
     except Exception as e:
         flash(f'Ocorreu um erro inesperado: {e}', 'danger')
-    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
+
+    # --- MUDANÇA HTMX ---
+    tabloide = db_tabloide.get_tabloide_by_id(tabloide_id)
+    produtos = db_tabloide_produtos.get_products_by_tabloide_id(tabloide_id)
+    return render_template(
+        'tabloide/produtos_tabloide.html', 
+        active_page='tabloides_gestao', 
+        tabloide=tabloide, 
+        produtos=produtos
+    )
 
 
 @tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/atualizar', methods=['POST'])
@@ -217,55 +243,63 @@ def atualizar_produtos(tabloide_id):
     selecionados = request.form.getlist('selecionado')
     if not selecionados:
         flash('Nenhum produto selecionado para atualizar.', 'warning')
-        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
+    else:
+        gtins_raw_dict = {pid: request.form.get(f'codigo_barras_{pid}') for pid in selecionados}
+        # FIX: Calcula GTINs RAW para pesquisa
+        gtins_cleaned_map = {pid: clean_barcode(gtins_raw_dict.get(pid)) for pid in selecionados}
+        gtins_para_buscar_raw = [cleaned for cleaned in gtins_cleaned_map.values() if cleaned] # Apenas RAW válidos
 
-    gtins_raw_dict = {pid: request.form.get(f'codigo_barras_{pid}') for pid in selecionados}
-    # FIX: Calcula GTINs RAW para pesquisa
-    gtins_cleaned_map = {pid: clean_barcode(gtins_raw_dict.get(pid)) for pid in selecionados}
-    gtins_para_buscar_raw = [cleaned for cleaned in gtins_cleaned_map.values() if cleaned] # Apenas RAW válidos
-
-    if gtins_para_buscar_raw:
-        # Busca CIs usando os códigos RAW
-        ci_map_raw, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar_raw)
-        if err:
-            flash(f'Erro ao buscar códigos internos: {err}', 'warning')
+        if gtins_para_buscar_raw:
+            # Busca CIs usando os códigos RAW
+            ci_map_raw, err = db_common.get_codigo_interno_map_from_gtins(gtins_para_buscar_raw)
+            if err:
+                flash(f'Erro ao buscar códigos internos: {err}', 'warning')
+                ci_map_raw = {}
+        else:
             ci_map_raw = {}
-    else:
-        ci_map_raw = {}
 
-    produtos_para_atualizar = []
-    for pid in selecionados:
-        cb_raw = gtins_raw_dict.get(pid)
-        cb_normalizado = pad_barcode(cb_raw) # Recalcula o normalizado (para salvar)
-        
-        # FIX: Pega o RAW GTIN para lookup
-        cb_cleaned = gtins_cleaned_map.get(pid) 
-        
-        # FIX: Busca o CI correspondente ao código RAW
-        ci = ci_map_raw.get(cb_cleaned) if cb_cleaned else None
+        produtos_para_atualizar = []
+        for pid in selecionados:
+            cb_raw = gtins_raw_dict.get(pid)
+            cb_normalizado = pad_barcode(cb_raw) # Recalcula o normalizado (para salvar)
+            
+            # FIX: Pega o RAW GTIN para lookup
+            cb_cleaned = gtins_cleaned_map.get(pid) 
+            
+            # FIX: Busca o CI correspondente ao código RAW
+            ci = ci_map_raw.get(cb_cleaned) if cb_cleaned else None
 
-        # Adiciona cb_normalizado à tupla para o UPDATE
-        produtos_para_atualizar.append((
-            cb_raw,
-            cb_normalizado, # <-- CÓDIGO NORMALIZADO (salva no DB)
-            ci, # Código interno
-            request.form.get(f'descricao_{pid}'),
-            request.form.get(f'laboratorio_{pid}') or None,
-            request.form.get(f'tipo_preco_{pid}') or None,
-            request.form.get(f'preco_normal_{pid}') or None,
-            request.form.get(f'preco_desconto_{pid}') or None,
-            request.form.get(f'preco_desconto_cliente_{pid}') or None,
-            request.form.get(f'preco_app_{pid}') or None,
-            request.form.get(f'tipo_regra_{pid}') or None,
-            pid # ID do produto no final para o WHERE
-        ))
+            # Adiciona cb_normalizado à tupla para o UPDATE
+            produtos_para_atualizar.append((
+                cb_raw,
+                cb_normalizado, # <-- CÓDIGO NORMALIZADO (salva no DB)
+                ci, # Código interno
+                request.form.get(f'descricao_{pid}'),
+                request.form.get(f'laboratorio_{pid}') or None,
+                request.form.get(f'tipo_preco_{pid}') or None,
+                request.form.get(f'preco_normal_{pid}') or None,
+                request.form.get(f'preco_desconto_{pid}') or None,
+                request.form.get(f'preco_desconto_cliente_{pid}') or None,
+                request.form.get(f'preco_app_{pid}') or None,
+                request.form.get(f'tipo_regra_{pid}') or None,
+                pid # ID do produto no final para o WHERE
+            ))
 
-    rowcount, error = db_tabloide_produtos.update_products_in_bulk(produtos_para_atualizar)
-    if error:
-        flash(f'Erro ao atualizar produtos: {error}', 'danger')
-    else:
-        flash(f'{rowcount} produto(s) atualizado(s) com sucesso!', 'success')
-    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
+        rowcount, error = db_tabloide_produtos.update_products_in_bulk(produtos_para_atualizar)
+        if error:
+            flash(f'Erro ao atualizar produtos: {error}', 'danger')
+        else:
+            flash(f'{rowcount} produto(s) atualizado(s) com sucesso!', 'success')
+            
+    # --- MUDANÇA HTMX ---
+    tabloide = db_tabloide.get_tabloide_by_id(tabloide_id)
+    produtos = db_tabloide_produtos.get_products_by_tabloide_id(tabloide_id)
+    return render_template(
+        'tabloide/produtos_tabloide.html', 
+        active_page='tabloides_gestao', 
+        tabloide=tabloide, 
+        produtos=produtos
+    )
 
 
 @tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/deletar', methods=['POST'])
@@ -274,20 +308,26 @@ def deletar_produtos(tabloide_id):
     confirmation_password = request.form.get('confirmation_password_bulk')
     if confirmation_password != DELETE_PASSWORD:
         flash('Senha de confirmação incorreta para deleção em massa.', 'danger')
-        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
-    # --- FIM NOVO ---
-    
-    selecionados = request.form.getlist('selecionado')
-    if not selecionados:
-        flash('Nenhum produto selecionado para deletar.', 'warning')
-        return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
-
-    rowcount, error = db_tabloide_produtos.delete_products_in_bulk(selecionados)
-    if error:
-        flash(f'Erro ao deletar produtos: {error}', 'danger')
     else:
-        flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
-    return redirect(url_for('tabloide_produtos.produtos_por_tabloide', tabloide_id=tabloide_id))
+        selecionados = request.form.getlist('selecionado')
+        if not selecionados:
+            flash('Nenhum produto selecionado para deletar.', 'warning')
+        else:
+            rowcount, error = db_tabloide_produtos.delete_products_in_bulk(selecionados)
+            if error:
+                flash(f'Erro ao deletar produtos: {error}', 'danger')
+            else:
+                flash(f'{rowcount} produto(s) deletado(s) com sucesso!', 'success')
+                
+    # --- MUDANÇA HTMX ---
+    tabloide = db_tabloide.get_tabloide_by_id(tabloide_id)
+    produtos = db_tabloide_produtos.get_products_by_tabloide_id(tabloide_id)
+    return render_template(
+        'tabloide/produtos_tabloide.html', 
+        active_page='tabloides_gestao', 
+        tabloide=tabloide, 
+        produtos=produtos
+    )
 
 @tabloide_produtos_bp.route('/<int:tabloide_id>/produtos/validar_gtins', methods=['POST'])
 def validar_gtins_tabloide(tabloide_id):

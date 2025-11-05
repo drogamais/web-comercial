@@ -34,7 +34,13 @@
 
     <div class="filter-container" style="margin-top: 20px;">
         <h2>Novo Parceiro</h2>
-        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;" id="create-parceiro-form">
+        <form hx-post="{{ url_for('parceiro.gestao_parceiros') }}" 
+              hx-target="#main-content" 
+              hx-swap-oob="outerHTML:#sidebar" 
+              hx-indicator=".htmx-indicator"
+              class="filter-form" 
+              style="align-items: flex-start;" 
+              id="create-parceiro-form">
             
             <div class="form-group" style="flex: 1.5 1 300px;">
                 <label for="nome_fantasia">Nome Fantasia: <span style="color: red;">*</span></label>
@@ -98,7 +104,13 @@
     
     <div class="filter-container">
         <h2>Filtrar Parceiros</h2>
-        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="get" class="filter-form" style="align-items: flex-end; gap: 10px;" autocomplete="off">
+        <form hx-get="{{ url_for('parceiro.gestao_parceiros') }}" 
+              hx-target="#main-content" 
+              hx-push-url="true" 
+              hx-indicator=".htmx-indicator"
+              class="filter-form" 
+              style="align-items: flex-end; gap: 10px;" 
+              autocomplete="off">
             
             <div class="form-group" style="flex: 1.2; min-width: 180px;">
                 <label for="nome_fantasia_filtro">Nome Fantasia:</label>
@@ -139,6 +151,10 @@
             <div class="form-group" style="flex: 0.8; min-width: 120px; height: 38px">
                 <a href="{{ url_for('parceiro.gestao_parceiros') }}" 
                    class="button-filter" 
+                   hx-get="{{ url_for('parceiro.gestao_parceiros') }}"
+                   hx-target="#main-content"
+                   hx-push-url="true"
+                   hx-indicator=".htmx-indicator"
                    style="height: 38px; background-color: #7f8c8d; text-decoration: none; display: flex; align-items: center; justify-content: center;">
                    Limpar Filtros
                 </a>
@@ -216,7 +232,13 @@
 
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 800px;"> <h2>Editar Parceiro</h2>
-            <form id="edit-form" method="post" class="filter-form" style="align-items: flex-start;">
+            <form id="edit-form" 
+                  hx-post="" 
+                  hx-target="#main-content" 
+                  hx-swap-oob="outerHTML:#sidebar" 
+                  hx-indicator=".htmx-indicator"
+                  class="filter-form" 
+                  style="align-items: flex-start;">
 
                 <div class="form-group" style="flex: 1.5;">
                     <label for="nome_ajustado_edit">Nome Ajustado: <span style="color: red;">*</span></label>
@@ -296,7 +318,12 @@
                 <li>Um Caracter especial (@#$.%)</li>
             </ul> 
 
-            <form id="senha-form" method="post" action="">
+            <form id="senha-form" 
+                  hx-post="" 
+                  hx-target="#main-content" 
+                  hx-swap-oob="outerHTML:#sidebar" 
+                  hx-indicator=".htmx-indicator">
+
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
                     <label for="nova_senha">Nova Senha:</label>
                     <input type="password" id="nova_senha" name="nova_senha" required>
@@ -323,7 +350,12 @@
 
             <p class="delete-modal-parceiro-name-label">Nome Ajustado: <strong id="delete-modal-parceiro-name"></strong></p>
 
-            <form id="delete-form" method="post" action="">
+            <form id="delete-form" 
+                  hx-post="" 
+                  hx-target="#main-content" 
+                  hx-swap-oob="outerHTML:#sidebar" 
+                  hx-indicator=".htmx-indicator">
+
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
                     <label for="delete-modal-input">Digite o nome para confirmar:</label>
                     <input type="text" id="delete-modal-input" name="confirmation_text" autocomplete="off">

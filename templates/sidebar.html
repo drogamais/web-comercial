@@ -1,7 +1,11 @@
-<nav class="sidebar">
+<nav class="sidebar" id="sidebar">
     <i class="fas fa-chevron-right sidebar-expand-icon"></i>
     <div class="sidebar-header">
-        <a href="{{ url_for('index') }}" class="sidebar-header-link">
+        <a hx-get="{{ url_for('index') }}" 
+           hx-target="#main-content" 
+           hx-push-url="true" 
+           hx-indicator=".htmx-indicator"
+           class="sidebar-header-link">
             <p class="title-line-1"><span>Drogamais</span></p>
             <p class="title-line-2"><span>Web Comercial</span></p>
         </a>
@@ -13,8 +17,20 @@
                 <span>Campanha</span>
             </button>
             <div class="sidebar-submenu">
-                <a href="{{ url_for('campanha_produtos.upload_page') }}" class="{{ 'active' if active_page == 'campanha_upload' else '' }}"><span>Upload de Planilha</span></a>
-                <a href="{{ url_for('campanha.gestao_campanhas') }}" class="{{ 'active' if active_page == 'campanha_gestao' else '' }}"><span>Gerenciar Campanhas</span></a>
+                <a hx-get="{{ url_for('campanha_produtos.upload_page') }}" 
+                   hx-target="#main-content" 
+                   hx-push-url="true" 
+                   hx-indicator=".htmx-indicator"
+                   hx-swap-oob="outerHTML:#sidebar"
+                   class="{{ 'active' if active_page == 'campanha_upload' else '' }}"><span>Upload de Planilha</span></a>
+                
+                <a hx-get="{{ url_for('campanha.gestao_campanhas') }}" 
+                   hx-target="#main-content" 
+                   hx-push-url="true" 
+                   hx-indicator=".htmx-indicator"
+                   hx-swap-oob="outerHTML:#sidebar"
+                   class="{{ 'active' if active_page == 'campanha_gestao' else '' }}"><span>Gerenciar Campanhas</span></a>
+                
                 <a href="{{ url_for('campanha.download_modelo') }}" class="sidebar-link-modelo-interno"><span>&#x2B07; Baixar Modelo</span></a>
             </div>
         </div>
@@ -24,8 +40,20 @@
                 <span>Tabloide</span>
             </button>
             <div class="sidebar-submenu">
-                <a href="{{ url_for('tabloide_produtos.upload_page') }}" class="{{ 'active' if active_page == 'tabloide_upload' else '' }}"><span>Upload de Planilha</span></a>
-                <a href="{{ url_for('tabloide.gestao_tabloides') }}" class="{{ 'active' if active_page == 'tabloide_gestao' else '' }}"><span>Gerenciar Tabloides</span></a>
+                <a hx-get="{{ url_for('tabloide_produtos.upload_page') }}" 
+                   hx-target="#main-content" 
+                   hx-push-url="true" 
+                   hx-indicator=".htmx-indicator"
+                   hx-swap-oob="outerHTML:#sidebar"
+                   class="{{ 'active' if active_page == 'tabloide_upload' else '' }}"><span>Upload de Planilha</span></a>
+                
+                <a hx-get="{{ url_for('tabloide.gestao_tabloides') }}" 
+                   hx-target="#main-content" 
+                   hx-push-url="true" 
+                   hx-indicator=".htmx-indicator"
+                   hx-swap-oob="outerHTML:#sidebar"
+                   class="{{ 'active' if active_page == 'tabloide_gestao' else '' }}"><span>Gerenciar Tabloides</span></a>
+                
                 <a href="{{ url_for('tabloide.download_modelo') }}" class="sidebar-link-modelo-interno"><span>&#x2B07; Baixar Modelo</span></a>
             </div>
         </div>
@@ -35,12 +63,22 @@
                 <span>Parceiros</span>
             </button>
             <div class="sidebar-submenu">
-                <a href="{{ url_for('parceiro.gestao_parceiros') }}" class="{{ 'active' if active_page == 'parceiro_gestao' else '' }}"><span>Gerenciar Parceiros</span></a>
+                <a hx-get="{{ url_for('parceiro.gestao_parceiros') }}" 
+                   hx-target="#main-content" 
+                   hx-push-url="true" 
+                   hx-indicator=".htmx-indicator"
+                   hx-swap-oob="outerHTML:#sidebar"
+                   class="{{ 'active' if active_page == 'parceiro_gestao' else '' }}"><span>Gerenciar Parceiros</span></a>
             </div>
         </div>
 
         <div class="sidebar-nav-group" style="margin-top: 20px; border-top: 1px solid #3a5068; padding-top: 10px;">
-             <a href="{{ url_for('index') }}" class="{{ 'active' if active_page == 'index' else '' }}" style="border-left-color: transparent;"><span>&larr; Menu Principal</span></a>
+             <a hx-get="{{ url_for('index') }}" 
+                hx-target="#main-content" 
+                hx-push-url="true" 
+                hx-indicator=".htmx-indicator"
+                hx-swap-oob="outerHTML:#sidebar"
+                class="{{ 'active' if active_page == 'index' else '' }}" style="border-left-color: transparent;"><span>&larr; Menu Principal</span></a>
         </div>
     </div>
 </nav>

@@ -1,3 +1,4 @@
+[file: web-comercial/routes/tabloide_routes.py]
 # routes/tabloide_routes.py
 
 import pandas as pd
@@ -50,8 +51,11 @@ def gestao_tabloides():
                 flash(f'Erro ao criar tabloide: {error}', 'danger')
             else:
                 flash('Tabloide criado com sucesso!', 'success')
-        return redirect(url_for('tabloide.gestao_tabloides'))
-
+        
+        # --- MUDANÇA HTMX ---
+        # REMOVIDO: return redirect(url_for('tabloide.gestao_tabloides'))
+    
+    # GET (ou continuação do POST)
     tabloides = db_tabloide.get_all_tabloide()
     return render_template(
         'tabloide/tabloides.html', 
@@ -74,7 +78,14 @@ def editar_tabloide(tabloide_id):
             flash(f'Erro ao atualizar tabloide: {error}', 'danger')
         else:
             flash('Tabloide atualizado com sucesso!', 'success')
-    return redirect(url_for('tabloide.gestao_tabloides'))
+            
+    # --- MUDANÇA HTMX ---
+    tabloides = db_tabloide.get_all_tabloide()
+    return render_template(
+        'tabloide/tabloides.html', 
+        active_page='tabloides_gestao', 
+        tabloides=tabloides
+    )
 
 
 @tabloide_bp.route('/deletar/<int:tabloide_id>', methods=['POST'])
@@ -83,13 +94,20 @@ def deletar_tabloide(tabloide_id):
     confirmation_password = request.form.get('confirmation_password')
     if confirmation_password != DELETE_PASSWORD:
         flash(f'Senha de confirmação incorreta.', 'danger')
-        return redirect(url_for('tabloide.gestao_tabloides'))
+        # --- MUDANÇA HTMX ---
+        # (continua para re-renderizar)
     # --- FIM NOVO ---
-    
-    _, error = db_tabloide.delete_tabloide(tabloide_id)
-    if error:
-        flash(f'Erro ao deletar tabloide: {error}', 'danger')
-    # MUDANÇA: Mensagem de exclusão permanente
     else:
-        flash('Tabloide deletado permanentemente com sucesso!', 'success')
-    return redirect(url_for('tabloide.gestao_tabloides'))
+        _, error = db_tabloide.delete_tabloide(tabloide_id)
+        if error:
+            flash(f'Erro ao deletar tabloide: {error}', 'danger')
+        else:
+            flash('Tabloide deletado permanentemente com sucesso!', 'success')
+
+    # --- MUDANÇA HTMX ---
+    tabloides = db_tabloide.get_all_tabloide()
+    return render_template(
+        'tabloide/tabloides.html', 
+        active_page='tabloides_gestao', 
+        tabloides=tabloides
+    )

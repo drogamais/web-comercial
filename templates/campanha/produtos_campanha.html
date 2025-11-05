@@ -1,3 +1,4 @@
+[file: web-comercial/templates/campanha/produtos_campanha.html]
 {% extends "campanha/base_campanha.html" %}
 
 {% block title %}Produtos da Campanha{% endblock %}
@@ -25,7 +26,12 @@
             </a>   
         </div>
     </div>
-    <a href="{{ url_for('campanha.gestao_campanhas') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Campanhas</a>
+    <a hx-get="{{ url_for('campanha.gestao_campanhas') }}"
+       hx-target="#main-content"
+       hx-push-url="true"
+       hx-indicator=".htmx-indicator"
+       hx-swap-oob="outerHTML:#sidebar"
+       style="display: inline-block; margin-bottom: 20px; cursor: pointer;">&larr; Voltar para Campanhas</a>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -37,7 +43,11 @@
 
     <h2>Produtos Cadastrados</h2>
     {% if produtos %}
-    <form method="post" id="form-edit-delete">
+    <form method="post" id="form-edit-delete"
+          hx-post="" 
+          hx-target="#main-content"
+          hx-swap-oob="outerHTML:#sidebar"
+          hx-indicator=".htmx-indicator">
         <table>
             <thead>
                 <tr>
@@ -103,7 +113,11 @@
 
     <h2>Adicionar Novo Produto</h2>
     <div class="filter-container">
-        <form action="{{ url_for('campanha_produtos.adicionar_produto', campanha_id=campanha.id) }}" method="post" class="filter-form">
+        <form hx-post="{{ url_for('campanha_produtos.adicionar_produto', campanha_id=campanha.id) }}"
+              hx-target="#main-content"
+              hx-swap-oob="outerHTML:#sidebar"
+              hx-indicator=".htmx-indicator"
+              class="filter-form">
             <div class="form-group" style="flex: 1.5 1 200px;">
                 <label>Cód. Barras:</label>
                 <input type="text" name="codigo_barras">

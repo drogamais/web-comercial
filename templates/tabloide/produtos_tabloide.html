@@ -1,3 +1,4 @@
+[file: web-comercial/templates/tabloide/produtos_tabloide.html]
 {% extends "tabloide/base_tabloide.html" %}
 
 {% block title %}Produtos do Tabloide{% endblock %}
@@ -26,7 +27,12 @@
         </div>
     </div>
     
-    <a href="{{ url_for('tabloide.gestao_tabloides') }}" style="display: inline-block; margin-bottom: 20px;">&larr; Voltar para Tabloides</a>
+    <a hx-get="{{ url_for('tabloide.gestao_tabloides') }}" 
+       hx-target="#main-content"
+       hx-push-url="true"
+       hx-indicator=".htmx-indicator"
+       hx-swap-oob="outerHTML:#sidebar"
+       style="display: inline-block; margin-bottom: 20px; cursor: pointer;">&larr; Voltar para Tabloides</a>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -38,7 +44,11 @@
 
     <h2>Produtos Cadastrados</h2>
     {% if produtos %}
-    <form method="post" id="form-edit-delete">
+    <form method="post" id="form-edit-delete"
+          hx-post="" 
+          hx-target="#main-content"
+          hx-swap-oob="outerHTML:#sidebar"
+          hx-indicator=".htmx-indicator">
         <table>
             <thead>
                 <tr>
@@ -106,7 +116,11 @@
 
     <h2>Adicionar Novo Produto</h2>
     <div class="filter-container">
-        <form action="{{ url_for('tabloide_produtos.adicionar_produto', tabloide_id=tabloide.id) }}" method="post" class="filter-form">
+        <form hx-post="{{ url_for('tabloide_produtos.adicionar_produto', tabloide_id=tabloide.id) }}" 
+              hx-target="#main-content"
+              hx-swap-oob="outerHTML:#sidebar"
+              hx-indicator=".htmx-indicator"
+              class="filter-form">
             <div class="form-group" style="flex: 1.5 1 180px;">
                 <label>Cód. Barras:</label>
                 <input type="text" name="codigo_barras">

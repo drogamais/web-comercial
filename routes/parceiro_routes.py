@@ -1,3 +1,4 @@
+[file: web-comercial/routes/parceiro_routes.py]
 # routes/parceiro_routes.py
 
 import io
@@ -116,35 +117,36 @@ def gestao_parceiros():
 
         if not data["nome_ajustado"]:
             flash('O campo "Nome Ajustado" é obrigatório.', 'danger')
-            return redirect(url_for('parceiro.gestao_parceiros'))
-
-        try:
-            # 1. Chama o serviço para fazer todo o processo da API
-            api_id, erro_api = api_service.criar_parceiro_completo(data)
+            # --- MUDANÇA HTMX ---
+            # (continua para re-renderizar)
+        else:
+            try:
+                # 1. Chama o serviço para fazer todo o processo da API
+                api_id, erro_api = api_service.criar_parceiro_completo(data)
+                
+                if erro_api:
+                    flash(f'Erro ao cadastrar parceiro na API Embedded: {erro_api}', 'danger')
+                else:
+                    # 2. Se a API funcionou, salva no banco local
+                    data['api_user_id'] = api_id 
+                    error_db = db.add_parceiro(**data)
+                    
+                    if error_db:
+                        # Se falhar no banco, desfaz a criação do usuário na API
+                        api_service.rollback_criacao_usuario(user_email_para_api)
+                        flash(f'Parceiro salvo na API, mas falhou ao salvar localmente: {error_db}. O cadastro na API foi revertido.', 'danger')
+                    else:
+                        flash('Parceiro criado e vinculado ao grupo com sucesso!', 'success')
             
-            if erro_api:
-                flash(f'Erro ao cadastrar parceiro na API Embedded: {erro_api}', 'danger')
-                return redirect(url_for('parceiro.gestao_parceiros'))
-
-            # 2. Se a API funcionou, salva no banco local
-            data['api_user_id'] = api_id 
-            error_db = db.add_parceiro(**data)
-            
-            if error_db:
-                # Se falhar no banco, desfaz a criação do usuário na API
+            except Exception as e:
+                # Se algo inesperado acontecer, tenta reverter
                 api_service.rollback_criacao_usuario(user_email_para_api)
-                flash(f'Parceiro salvo na API, mas falhou ao salvar localmente: {error_db}. O cadastro na API foi revertido.', 'danger')
-            else:
-                flash('Parceiro criado e vinculado ao grupo com sucesso!', 'success')
-        
-        except Exception as e:
-            # Se algo inesperado acontecer, tenta reverter
-            api_service.rollback_criacao_usuario(user_email_para_api)
-            flash(f'Um erro inesperado ocorreu: {e}. O cadastro foi revertido.', 'danger')
+                flash(f'Um erro inesperado ocorreu: {e}. O cadastro foi revertido.', 'danger')
             
-        return redirect(url_for('parceiro.gestao_parceiros'))
+        # --- MUDANÇA HTMX ---
+        # REMOVIDO: return redirect(url_for('parceiro.gestao_parceiros'))
 
-    # --- LÓGICA GET (exibição) ---
+    # --- LÓGICA GET (ou continuação do POST) ---
     (parceiros, tipo_filtro, nome_fantasia_filtro, 
      data_entrada_min_filtro, data_saida_max_filtro,
      sort_expiring_filtro, expiring_ids_set) = _get_parceiros_filtrados(request)
@@ -193,37 +195,50 @@ def editar_parceiro(parceiro_id):
 
     if not data["nome_ajustado"]:
         flash('O campo "Nome Ajustado" é obrigatório para a edição.', 'danger')
-        return redirect(url_for('parceiro.gestao_parceiros'))
+    else:
+        parceiro_atual = db.get_parceiro_by_id(parceiro_id)
+        email_antigo = parceiro_atual.get('email_gestor')
+        api_user_id = parceiro_atual.get('api_user_id') # Pega o ID da API
+        email_novo = data.get('email_gestor')
         
-    parceiro_atual = db.get_parceiro_by_id(parceiro_id)
-    email_antigo = parceiro_atual.get('email_gestor')
-    api_user_id = parceiro_atual.get('api_user_id') # Pega o ID da API
-    email_novo = data.get('email_gestor')
+        if email_antigo != email_novo:
+            flash('Não é permitido alterar o "E-mail Gestor". A alteração do email foi ignorada.', 'warning')
+            data['email_gestor'] = email_antigo
+
+        try:
+            # Chama o serviço de atualização
+            sucesso_api, erro_api = api_service.atualizar_usuario(api_user_id, data)
+
+            if not sucesso_api:
+                flash(f'Erro ao atualizar parceiro na API Embedded: {erro_api}', 'danger')
+            else:
+                # Atualiza o banco local
+                _, error_db = db.update_parceiro(parceiro_id, **data)
+                
+                if error_db:
+                    flash(f'Parceiro atualizado na API, mas falhou ao salvar localmente: {error_db}', 'danger')
+                else:
+                    flash('Parceiro atualizado com sucesso (Sincronizado com Embedded)!', 'success')
+
+        except Exception as e:
+            flash(f'Um erro inesperado ocorreu ao editar: {e}', 'danger')
+
+    # --- MUDANÇA HTMX ---
+    (parceiros, tipo_filtro, nome_fantasia_filtro, 
+     data_entrada_min_filtro, data_saida_max_filtro,
+     sort_expiring_filtro, expiring_ids_set) = _get_parceiros_filtrados(request)
     
-    if email_antigo != email_novo:
-        flash('Não é permitido alterar o "E-mail Gestor". A alteração do email foi ignorada.', 'warning')
-        data['email_gestor'] = email_antigo
-
-    try:
-        # Chama o serviço de atualização
-        sucesso_api, erro_api = api_service.atualizar_usuario(api_user_id, data)
-
-        if not sucesso_api:
-            flash(f'Erro ao atualizar parceiro na API Embedded: {erro_api}', 'danger')
-            return redirect(url_for('parceiro.gestao_parceiros'))
-
-        # Atualiza o banco local
-        _, error_db = db.update_parceiro(parceiro_id, **data)
-        
-        if error_db:
-            flash(f'Parceiro atualizado na API, mas falhou ao salvar localmente: {error_db}', 'danger')
-        else:
-            flash('Parceiro atualizado com sucesso (Sincronizado com Embedded)!', 'success')
-
-    except Exception as e:
-        flash(f'Um erro inesperado ocorreu ao editar: {e}', 'danger')
-
-    return redirect(url_for('parceiro.gestao_parceiros'))
+    return render_template(
+        'parceiro/parceiros.html',
+        active_page='parceiros_gestao',
+        parceiros=parceiros,
+        tipo_filtro=tipo_filtro,
+        nome_fantasia_filtro=nome_fantasia_filtro, 
+        data_entrada_min_filtro=data_entrada_min_filtro,
+        data_saida_max_filtro=data_saida_max_filtro,
+        sort_expiring_filtro=sort_expiring_filtro, 
+        expiring_ids_set=expiring_ids_set          
+    )
 
 
 # --- ROTA DE DELEÇÃO (DELETE) ---
@@ -233,32 +248,45 @@ def deletar_parceiro(parceiro_id):
     confirmation_password = request.form.get('confirmation_password')
     if confirmation_password != DELETE_PASSWORD:
         flash('Senha de confirmação incorreta.', 'danger')
-        return redirect(url_for('parceiro.gestao_parceiros'))
-    
-    # Pega o email ANTES de deletar o parceiro do banco
-    parceiro = db.get_parceiro_by_id(parceiro_id)
-    email_para_deletar = parceiro.get('email_gestor') if parceiro else None
+    else:
+        # Pega o email ANTES de deletar o parceiro do banco
+        parceiro = db.get_parceiro_by_id(parceiro_id)
+        email_para_deletar = parceiro.get('email_gestor') if parceiro else None
 
-    try:
-        # Tenta deletar da API primeiro
-        sucesso_api, erro_api = api_service.deletar_usuario(email_para_deletar)
-        
-        if not sucesso_api:
-            flash(f'Erro ao deletar parceiro na API Embedded: {erro_api}', 'danger')
-            return redirect(url_for('parceiro.gestao_parceiros'))
-
-        # Se a API funcionou, deleta do banco local
-        _, error_db = db.delete_parceiro(parceiro_id)
-        
-        if error_db:
-            flash(f'Parceiro deletado da API, mas falhou ao deletar localmente: {error_db}', 'danger')
-        else:
-            flash('Parceiro deletado permanentemente com sucesso (Sincronizado com Embedded)!', 'success')
+        try:
+            # Tenta deletar da API primeiro
+            sucesso_api, erro_api = api_service.deletar_usuario(email_para_deletar)
             
-    except Exception as e:
-        flash(f'Um erro inesperado ocorreu ao deletar: {e}', 'danger')
+            if not sucesso_api:
+                flash(f'Erro ao deletar parceiro na API Embedded: {erro_api}', 'danger')
+            else:
+                # Se a API funcionou, deleta do banco local
+                _, error_db = db.delete_parceiro(parceiro_id)
+                
+                if error_db:
+                    flash(f'Parceiro deletado da API, mas falhou ao deletar localmente: {error_db}', 'danger')
+                else:
+                    flash('Parceiro deletado permanentemente com sucesso (Sincronizado com Embedded)!', 'success')
+                
+        except Exception as e:
+            flash(f'Um erro inesperado ocorreu ao deletar: {e}', 'danger')
 
-    return redirect(url_for('parceiro.gestao_parceiros'))
+    # --- MUDANÇA HTMX ---
+    (parceiros, tipo_filtro, nome_fantasia_filtro, 
+     data_entrada_min_filtro, data_saida_max_filtro,
+     sort_expiring_filtro, expiring_ids_set) = _get_parceiros_filtrados(request)
+    
+    return render_template(
+        'parceiro/parceiros.html',
+        active_page='parceiros_gestao',
+        parceiros=parceiros,
+        tipo_filtro=tipo_filtro,
+        nome_fantasia_filtro=nome_fantasia_filtro, 
+        data_entrada_min_filtro=data_entrada_min_filtro,
+        data_saida_max_filtro=data_saida_max_filtro,
+        sort_expiring_filtro=sort_expiring_filtro, 
+        expiring_ids_set=expiring_ids_set          
+    )
 
 # --- ROTA DE DEFINIR SENHA (MODIFICADA) ---
 @parceiro_bp.route('/definir-senha/<int:parceiro_id>', methods=['POST'])
@@ -269,35 +297,45 @@ def definir_senha(parceiro_id):
 
     if not nova_senha or not confirmar_senha:
         flash('Por favor, preencha os dois campos de senha.', 'danger')
-        return redirect(url_for('parceiro.gestao_parceiros'))
-
-    if nova_senha != confirmar_senha:
+    elif nova_senha != confirmar_senha:
         flash('As senhas não conferem.', 'danger')
-        return redirect(url_for('parceiro.gestao_parceiros'))
-
-    parceiro = db.get_parceiro_by_id(parceiro_id)
-    if not parceiro or not parceiro.get('email_gestor'):
-        flash('Parceiro não encontrado ou sem email cadastrado.', 'danger')
-        return redirect(url_for('parceiro.gestao_parceiros'))
-        
-    email_do_parceiro = parceiro.get('email_gestor')
-
-    try:
-        # 1. Chama o serviço para definir a senha na API
-        sucesso_api, erro_api = api_service.definir_senha_usuario(email_do_parceiro, nova_senha)
-
-        if not sucesso_api:
-            flash(f'Erro ao definir senha na API Embedded: {erro_api}', 'danger')
+    else:
+        parceiro = db.get_parceiro_by_id(parceiro_id)
+        if not parceiro or not parceiro.get('email_gestor'):
+            flash('Parceiro não encontrado ou sem email cadastrado.', 'danger')
         else:
-            # 2. Se a API funcionou, marca a flag no banco local
-            error_db = db.set_senha_definida_flag(parceiro_id)
-            
-            if error_db:
-                 flash(f'Senha atualizada na API, mas falhou ao marcar status no banco local: {error_db}', 'warning')
-            else:
-                 flash(f'Senha do usuário {email_do_parceiro} atualizada com sucesso!', 'success')
+            email_do_parceiro = parceiro.get('email_gestor')
+            try:
+                # 1. Chama o serviço para definir a senha na API
+                sucesso_api, erro_api = api_service.definir_senha_usuario(email_do_parceiro, nova_senha)
 
-    except Exception as e:
-        flash(f'Um erro inesperado ocorreu ao definir a senha: {e}', 'danger')
+                if not sucesso_api:
+                    flash(f'Erro ao definir senha na API Embedded: {erro_api}', 'danger')
+                else:
+                    # 2. Se a API funcionou, marca a flag no banco local
+                    error_db = db.set_senha_definida_flag(parceiro_id)
+                    
+                    if error_db:
+                         flash(f'Senha atualizada na API, mas falhou ao marcar status no banco local: {error_db}', 'warning')
+                    else:
+                         flash(f'Senha do usuário {email_do_parceiro} atualizada com sucesso!', 'success')
 
-    return redirect(url_for('parceiro.gestao_parceiros'))
+            except Exception as e:
+                flash(f'Um erro inesperado ocorreu ao definir a senha: {e}', 'danger')
+
+    # --- MUDANÇA HTMX ---
+    (parceiros, tipo_filtro, nome_fantasia_filtro, 
+     data_entrada_min_filtro, data_saida_max_filtro,
+     sort_expiring_filtro, expiring_ids_set) = _get_parceiros_filtrados(request)
+    
+    return render_template(
+        'parceiro/parceiros.html',
+        active_page='parceiros_gestao',
+        parceiros=parceiros,
+        tipo_filtro=tipo_filtro,
+        nome_fantasia_filtro=nome_fantasia_filtro, 
+        data_entrada_min_filtro=data_entrada_min_filtro,
+        data_saida_max_filtro=data_saida_max_filtro,
+        sort_expiring_filtro=sort_expiring_filtro, 
+        expiring_ids_set=expiring_ids_set          
+    )

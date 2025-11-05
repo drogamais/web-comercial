@@ -1,7 +1,8 @@
 # app.py
 
 import os
-from flask import Flask, render_template
+# ADICIONE ESTE IMPORT
+from flask import Flask, render_template, send_from_directory
 from config import SECRET_KEY
 
 # Importa os módulos de banco de dados
@@ -35,6 +36,15 @@ app.register_blueprint(parceiro_bp)
 # --- REGISTRO DOS NOVOS BLUEPRINTS ---
 app.register_blueprint(campanha_produtos_bp)
 app.register_blueprint(tabloide_produtos_bp)
+
+
+# --- ADICIONE ESTA ROTA ---
+@app.route('/htmx.min.js')
+def serve_htmx():
+    """Serve o arquivo htmx.min.js a partir da pasta 'templates'."""
+    # Embora não seja ideal, isso faz seu setup atual funcionar
+    return send_from_directory('templates', 'htmx.min.js')
+# --- FIM DA ADIÇÃO ---
 
 
 # --- Rota Principal (Home Page) ---

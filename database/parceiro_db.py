@@ -29,7 +29,8 @@ def create_tables():
                 data_saida DATE DEFAULT NULL,
                 status TINYINT DEFAULT 1,
                 `senha_definida` TINYINT(1) NOT NULL DEFAULT '0',
-                data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP 
+                contrato_arquivo VARCHAR(255) DEFAULT NULL,
+                data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP
                     ON UPDATE CURRENT_TIMESTAMP,
                 INDEX idx_api_user_id (api_user_id) 
             )

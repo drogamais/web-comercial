@@ -34,7 +34,7 @@
 
     <div class="filter-container" style="margin-top: 20px;">
         <h2>Novo Parceiro</h2>
-        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;" id="create-parceiro-form">
+        <form action="{{ url_for('parceiro.gestao_parceiros') }}" method="post" class="filter-form" style="align-items: flex-start;" id="create-parceiro-form" enctype="multipart/form-data">
             
             <div class="form-group" style="flex: 1.5 1 300px;">
                 <label for="nome_fantasia">Nome Fantasia: <span style="color: red;">*</span></label>
@@ -88,7 +88,12 @@
             <div class="form-group" style="flex: 1;">
                 <label for="data_saida">Data Saída: </label>
                 <input type="date" id="data_saida" name="data_saida">
-            </div> 
+            </div>
+
+            <div class="form-group" style="flex: 1 1 200px;">
+                <label for="contrato_arquivo">Contrato (PDF):</label>
+                <input type="file" id="contrato_arquivo" name="contrato_arquivo" accept=".pdf">
+            </div>
             
             <div class="form-group" style="flex: 1; justify-content: flex-end; align-self: flex-end;">
                 <button type="button" id="btn-show-create-modal" style="height: 38px;">Criar Parceiro</button>
@@ -158,6 +163,7 @@
                 <th style="width: 6%; text-align: center;">Senha Definida?</th>
 
                 <th style="width: 20%;" class="th-parceiro-acoes">Ações</th>
+                <th style="width: 5%; text-align: center;">Contrato</th>
             </tr>
         </thead>
         <tbody>
@@ -188,7 +194,8 @@
                                 data-telefone-gestor="{{ p.telefone_gestor or '' }}"
                                 data-email-gestor="{{ p.email_gestor or '' }}"
                                 data-data-entrada="{{ p.data_entrada.strftime('%Y-%m-%d') if p.data_entrada else '' }}"
-                                data-data-saida="{{ p.data_saida.strftime('%Y-%m-%d') if p.data_saida else '' }}">
+                                data-data-saida="{{ p.data_saida.strftime('%Y-%m-%d') if p.data_saida else '' }}"
+                                data-contrato-arquivo="{{ p.contrato_arquivo or '' }}">
                             Editar
                         </button>
 
@@ -206,6 +213,17 @@
                         </button>
                     </div>
                 </td>
+
+                <td style="text-align: center;">
+                    {% if p.contrato_arquivo %}
+                        <a href="{{ url_for('parceiro.baixar_contrato', filename=p.contrato_arquivo) }}" 
+                        target="_blank" title="Visualizar Contrato" style="color: #c0392b; font-size: 1.2em;">
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+                    {% else %}
+                        <span style="color: #ccc;">-</span>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -216,7 +234,7 @@
 
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 800px;"> <h2>Editar Parceiro</h2>
-            <form id="edit-form" method="post" class="filter-form" style="align-items: flex-start;">
+            <form id="edit-form" method="post" class="filter-form" style="align-items: flex-start;" enctype="multipart/form-data">
 
                 <div class="form-group" style="flex: 1.5;">
                     <label for="nome_ajustado_edit">Nome Ajustado: <span style="color: red;">*</span></label>
@@ -269,6 +287,22 @@
                 <div class="form-group" style="flex: 1;">
                     <label for="data_saida_edit">Data Saída: </span></label>
                     <input type="date" id="data_saida_edit" name="data_saida_edit">
+                </div>
+
+                <div class="form-group" style="flex: 100%;">
+                    <label for="contrato_arquivo_edit">Alterar Contrato (PDF):</label>
+                    <input type="file" id="contrato_arquivo_edit" name="contrato_arquivo_edit" accept=".pdf">
+
+                    <p style="font-size: 12px; margin-top: 5px;">
+                        Atual: <span id="contrato_atual_nome" style="font-weight: bold;">Nenhum</span>
+                    </p>
+                </div>
+
+                <div id="container-remover-contrato" style="display: none; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="remover_contrato" name="remover_contrato" style="width: auto;">
+                    <label for="remover_contrato" style="font-size: 13px; color: #c0392b; cursor: pointer;">
+                        Remover contrato atual (deixar sem arquivo)
+                    </label>
                 </div>
                 
                 <div class="modal-actions" style="flex-basis: 100%; margin-top: 25px;">

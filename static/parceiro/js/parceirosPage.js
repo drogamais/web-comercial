@@ -79,13 +79,22 @@ document.addEventListener('DOMContentLoaded', () => {
             emailGestor: document.getElementById('email_gestor_edit'), 
             telefoneGestor: document.getElementById('telefone_gestor_edit'), 
             dataEntrada: document.getElementById('data_entrada_edit'),
-            dataSaida: document.getElementById('data_saida_edit')
+            dataSaida: document.getElementById('data_saida_edit'),
+            contratoLabel: document.getElementById('contrato_atual_nome'),
+            removerContratoDiv: document.getElementById('container-remover-contrato'),
+            removerContratoCheck: document.getElementById('remover_contrato')
         };
 
         const showEditModal = (e) => {
             const button = e.currentTarget;
+            const temContrato = button.dataset.contratoArquivo && button.dataset.contratoArquivo !== 'None';
             const data = button.dataset;
             const parceiroId = data.id;
+
+            const fileInput = document.getElementById('contrato_arquivo_edit');
+            if(fileInput) fileInput.value = '';
+
+            if (inputs.removerContratoCheck) inputs.removerContratoCheck.checked = false;
 
             editForm.action = `/parceiro/editar/${parceiroId}`; 
 
@@ -98,7 +107,22 @@ document.addEventListener('DOMContentLoaded', () => {
             inputs.dataSaida.value = data.dataSaida || '';
             inputs.gestor.value = data.gestor || ''; 
             inputs.telefoneGestor.value = data.telefoneGestor || ''; 
-            inputs.emailGestor.value = data.emailGestor || ''; 
+            inputs.emailGestor.value = data.emailGestor || '';
+
+            // Lógica visual
+            if (temContrato) {
+                inputs.contratoLabel.textContent = "Arquivo Anexado (envie outro para substituir)";
+                inputs.contratoLabel.style.color = "#27ae60"; // Verde
+                
+                // MOSTRA a opção de remover
+                if(inputs.removerContratoDiv) inputs.removerContratoDiv.style.display = 'flex';
+            } else {
+                inputs.contratoLabel.textContent = "Nenhum arquivo anexado";
+                inputs.contratoLabel.style.color = "#555";
+                
+                // ESCONDE a opção de remover
+                if(inputs.removerContratoDiv) inputs.removerContratoDiv.style.display = 'none';
+            }
 
             editModal.classList.add('show-modal');
         };

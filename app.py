@@ -26,7 +26,7 @@ app = Flask(__name__)
 # Configurações principais
 app.secret_key = SECRET_KEY
 
-app.config['UPLOAD_FOLDER'] = r'\\10.48.12.2\Arquivos$\APF\Inteligencia de Mercado\Contratos Parceiros\contratos'
+app.config['UPLOAD_FOLDER'] = r'\\10.48.12.2\Arquivos$\APF\Inteligencia de Mercado\Contratos Parceiros'
 
 try:
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

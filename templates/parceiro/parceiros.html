@@ -57,7 +57,14 @@
             
             <div class="form-group" style="flex: 1.5 1 350px;">
                 <label for="nome_ajustado">Nome Ajustado: <span style="color: red;">*</span></label>
-                <input type="text" id="nome_ajustado" name="nome_ajustado" required>
+                
+                <input type="text" id="nome_ajustado" name="nome_ajustado" list="list_nomes_ajustados" required autocomplete="off" placeholder="Digite para pesquisar...">
+                
+                <datalist id="list_nomes_ajustados">
+                    {% for nome in lista_nomes_ajustados %}
+                        <option value="{{ nome }}">
+                    {% endfor %}
+                </datalist>
             </div>
             
             <div class="form-group" style="flex: 1.5 1 300px;">
@@ -238,7 +245,7 @@
 
                 <div class="form-group" style="flex: 1.5;">
                     <label for="nome_ajustado_edit">Nome Ajustado: <span style="color: red;">*</span></label>
-                    <input type="text" id="nome_ajustado_edit" name="nome_ajustado_edit" required>
+                    <input type="text" id="nome_ajustado_edit" name="nome_ajustado_edit" list="list_nomes_ajustados" required autocomplete="off">
                 </div>
 
                 <div class="form-group" style="flex: 1;">

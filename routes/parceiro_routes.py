@@ -198,10 +198,13 @@ def gestao_parceiros():
             
         return redirect(url_for('parceiro.gestao_parceiros'))
 
-    #(A lógica do GET igual)
+    # --- Lógica do GET ---
     (parceiros, tipo_filtro, nome_fantasia_filtro, 
      data_entrada_min_filtro, data_saida_max_filtro,
      sort_expiring_filtro, expiring_ids_set) = _get_parceiros_filtrados(request)
+    
+    # [NOVO] Busca a lista para o dropdown
+    lista_nomes_ajustados = db.get_lista_nomes_ajustados()
     
     return render_template(
         'parceiro/parceiros.html',
@@ -212,7 +215,8 @@ def gestao_parceiros():
         data_entrada_min_filtro=data_entrada_min_filtro,
         data_saida_max_filtro=data_saida_max_filtro,
         sort_expiring_filtro=sort_expiring_filtro, 
-        expiring_ids_set=expiring_ids_set          
+        expiring_ids_set=expiring_ids_set,
+        lista_nomes_ajustados=lista_nomes_ajustados
     )
 
 

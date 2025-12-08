@@ -165,6 +165,28 @@ def get_parceiro_by_id(parceiro_id):
         print(f"Erro ao buscar parceiro por id: {e}")
         return None
 
+def get_lista_nomes_ajustados():
+    """Busca a lista unificada de Fornecedores e Fabricantes para o autocomplete."""
+    conn = get_db_connection()
+    if conn is None: return []
+
+    # A query exata que você solicitou, com um ORDER BY para facilitar a busca
+    sql = text("""
+        SELECT DISTINCT Fornecedor as nome FROM drogamais.dw_tb_acode_temp
+        UNION
+        SELECT DISTINCT Fabricante as nome FROM drogamais.dw_tb_acode_temp
+        ORDER BY nome ASC
+    """)
+    
+    try:
+        cursor = conn.execute(sql)
+        # Retorna uma lista de strings, ignorando valores nulos
+        results = [row['nome'] for row in cursor.mappings().fetchall() if row['nome']]
+        cursor.close()
+        return results
+    except SQLAlchemyError as e:
+        print(f"Erro ao buscar nomes ajustados: {e}")
+        return []
 
 def update_parceiro(parceiro_id, **data):
     """

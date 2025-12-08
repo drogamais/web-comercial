@@ -1,8 +1,16 @@
-// MUDANÇAS EM: drogamais/web-comercial/web-comercial-52b1f30afe463afa8ea727b0006a204b245c30d4/static/parceiro/js/parceirosPage.js
-
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- LÓGICA MODAL DE CRIAÇÃO (NOVO) ---
+    // --- FUNÇÃO AUXILIAR DE VALIDAÇÃO ---
+    // Verifica se o valor do input existe dentro das opções do datalist
+    const isValueInDatalist = (inputValue, datalistId) => {
+        const datalist = document.getElementById(datalistId);
+        if (!datalist) return true; // Se não achar lista (fallback), deixa passar
+        
+        const options = Array.from(datalist.options).map(opt => opt.value);
+        return options.includes(inputValue);
+    };
+
+    // --- LÓGICA MODAL DE CRIAÇÃO ---
     const createConfirmModal = document.getElementById('create-confirm-modal');
     const showCreateModalBtn = document.getElementById('btn-show-create-modal');
     const createForm = document.getElementById('create-parceiro-form');
@@ -11,8 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const createModalBtnCancel = document.getElementById('create-modal-btn-cancel');
         const createModalBtnConfirm = document.getElementById('create-modal-btn-confirm');
         const createModalEmailSpan = document.getElementById('create-modal-email');
-        const emailGestorInput = document.getElementById('email_gestor'); // Input do formulário principal
-        const nomeFantasiaInput = document.getElementById('nome_fantasia'); // Outro campo obrigatório
+        const emailGestorInput = document.getElementById('email_gestor'); 
+        const nomeFantasiaInput = document.getElementById('nome_fantasia');
+        const nomeAjustadoInput = document.getElementById('nome_ajustado'); // Input do nome ajustado
 
         // Função para mostrar o modal
         const showCreateModal = (e) => {
@@ -20,17 +29,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const email = emailGestorInput.value.trim();
             const nome = nomeFantasiaInput.value.trim();
+            const nomeAjustado = nomeAjustadoInput ? nomeAjustadoInput.value.trim() : '';
 
-            // Validação simples de frontend
-            if (!email || !nome) {
-                alert('Por favor, preencha todo os campo com *');
+            // 1. Validação de campos vazios
+            if (!email || !nome || !nomeAjustado) {
+                alert('Por favor, preencha todos os campos obrigatórios (*).');
                 return;
+            }
+
+            // 2. Validação do Datalist (Nome Ajustado)
+            // Certifique-se de que o ID do datalist no HTML é 'datalist_nomes'
+            if (!isValueInDatalist(nomeAjustado, 'datalist_nomes')) { 
+                alert('O "Nome Ajustado" digitado não é válido. Selecione uma opção exata da lista.');
+                return; // Impede a abertura do modal
             }
 
             // Preenche os dados no modal
             createModalEmailSpan.textContent = email;
-            // createModalPassword.value = ''; // REMOVIDO
-            createModalBtnConfirm.disabled = false; // Botão começa HABILITADO
+            createModalBtnConfirm.disabled = false;
             
             createConfirmModal.classList.add('show-modal');
         };
@@ -38,23 +54,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Função para fechar o modal
         const closeCreateModal = () => {
             createConfirmModal.classList.remove('show-modal');
-            // createModalPassword.value = ''; // REMOVIDO
         };
         
         // Função para submeter o formulário
         const handleConfirmCreation = (e) => {
             e.preventDefault();
-
-            // Submete o formulário principal
             createForm.submit();
         };
 
         // Listeners
         showCreateModalBtn.addEventListener('click', showCreateModal);
         createModalBtnCancel.addEventListener('click', closeCreateModal);
-        createConfirmModal.querySelector('.close-button').addEventListener('click', closeCreateModal);
-        // Listener de input da senha REMOVIDO
-        // createModalPassword.addEventListener('input', checkCreatePassword);
+        
+        const closeBtn = createConfirmModal.querySelector('.close-button');
+        if (closeBtn) closeBtn.addEventListener('click', closeCreateModal);
+
         createModalBtnConfirm.addEventListener('click', handleConfirmCreation);
         
         createConfirmModal.addEventListener('click', (event) => {
@@ -69,6 +83,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const editButtons = document.querySelectorAll('.btn-edit');
         const editForm = document.getElementById('edit-form');
         
+        // 1. Validação no envio do formulário de edição
+        if (editForm) {
+            editForm.addEventListener('submit', (e) => {
+                const nomeAjustadoEditInput = document.getElementById('nome_ajustado_edit');
+                if (nomeAjustadoEditInput) {
+                    const nomeAjustadoEdit = nomeAjustadoEditInput.value.trim();
+                    
+                    if (!isValueInDatalist(nomeAjustadoEdit, 'datalist_nomes')) {
+                        e.preventDefault(); // Cancela o envio
+                        alert('O "Nome Ajustado" digitado na edição não é válido. Selecione uma opção exata da lista.');
+                    }
+                }
+            });
+        }
+
         const inputs = {
             nomeAjustado: document.getElementById('nome_ajustado_edit'),
             cnpj: document.getElementById('cnpj_edit'),
@@ -98,30 +127,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             editForm.action = `/parceiro/editar/${parceiroId}`; 
 
-            inputs.nomeAjustado.value = data.nomeAjustado || ''; 
-            inputs.cnpj.value = data.cnpj || '';
-            inputs.nomeFantasia.value = data.nomeFantasia || '';
-            inputs.razaoSocial.value = data.razaoSocial || '';
-            inputs.tipo.value = data.tipo || '';
-            inputs.dataEntrada.value = data.dataEntrada || '';
-            inputs.dataSaida.value = data.dataSaida || '';
-            inputs.gestor.value = data.gestor || ''; 
-            inputs.telefoneGestor.value = data.telefoneGestor || ''; 
-            inputs.emailGestor.value = data.emailGestor || '';
+            if (inputs.nomeAjustado) inputs.nomeAjustado.value = data.nomeAjustado || ''; 
+            if (inputs.cnpj) inputs.cnpj.value = data.cnpj || '';
+            if (inputs.nomeFantasia) inputs.nomeFantasia.value = data.nomeFantasia || '';
+            if (inputs.razaoSocial) inputs.razaoSocial.value = data.razaoSocial || '';
+            if (inputs.tipo) inputs.tipo.value = data.tipo || '';
+            if (inputs.dataEntrada) inputs.dataEntrada.value = data.dataEntrada || '';
+            if (inputs.dataSaida) inputs.dataSaida.value = data.dataSaida || '';
+            if (inputs.gestor) inputs.gestor.value = data.gestor || ''; 
+            if (inputs.telefoneGestor) inputs.telefoneGestor.value = data.telefoneGestor || ''; 
+            if (inputs.emailGestor) inputs.emailGestor.value = data.emailGestor || '';
 
-            // Lógica visual
-            if (temContrato) {
-                inputs.contratoLabel.textContent = "Arquivo Anexado (envie outro para substituir)";
-                inputs.contratoLabel.style.color = "#27ae60"; // Verde
-                
-                // MOSTRA a opção de remover
-                if(inputs.removerContratoDiv) inputs.removerContratoDiv.style.display = 'flex';
-            } else {
-                inputs.contratoLabel.textContent = "Nenhum arquivo anexado";
-                inputs.contratoLabel.style.color = "#555";
-                
-                // ESCONDE a opção de remover
-                if(inputs.removerContratoDiv) inputs.removerContratoDiv.style.display = 'none';
+            // Lógica visual do contrato
+            if (inputs.contratoLabel) {
+                if (temContrato) {
+                    inputs.contratoLabel.textContent = "Arquivo Anexado (envie outro para substituir)";
+                    inputs.contratoLabel.style.color = "#27ae60"; // Verde
+                    if(inputs.removerContratoDiv) inputs.removerContratoDiv.style.display = 'flex';
+                } else {
+                    inputs.contratoLabel.textContent = "Nenhum arquivo anexado";
+                    inputs.contratoLabel.style.color = "#555";
+                    if(inputs.removerContratoDiv) inputs.removerContratoDiv.style.display = 'none';
+                }
             }
 
             editModal.classList.add('show-modal');
@@ -132,13 +159,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         editButtons.forEach(button => button.addEventListener('click', showEditModal));
-        modalBtnCancel.addEventListener('click', closeEditModal);
+        if (modalBtnCancel) modalBtnCancel.addEventListener('click', closeEditModal);
+        
         editModal.addEventListener('click', (event) => {
             if (event.target === editModal) closeEditModal();
         });
     }
 
-    // --- LÓGICA MODAL DELEÇÃO (Implementação de Senha) ---
+    // --- LÓGICA MODAL DELEÇÃO ---
     const deleteModal = document.getElementById('delete-modal');
     if (deleteModal) {
         const deleteButtons = document.querySelectorAll('.btn-delete');
@@ -165,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             parceiroNameSpan.textContent = correctParceiroName;
             
             nameInput.value = '';
-            passwordInput.value = '';
+            if (passwordInput) passwordInput.value = '';
             
             deleteModalBtnConfirm.disabled = true;
             deleteModal.classList.add('show-modal');
@@ -179,7 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
         nameInput.addEventListener('input', checkConfirmationStatus);
         
         deleteButtons.forEach(button => button.addEventListener('click', showDeleteModal));
-        deleteModalBtnCancel.addEventListener('click', closeDeleteModal);
+        if (deleteModalBtnCancel) deleteModalBtnCancel.addEventListener('click', closeDeleteModal);
+        
         deleteModal.addEventListener('click', (event) => {
             if (event.target === deleteModal) closeDeleteModal();
         });
@@ -218,8 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         senhaButtons.forEach(button => button.addEventListener('click', showSenhaModal));
-        senhaModalBtnClose.addEventListener('click', closeSenhaModal);
-        senhaModalBtnCancel.addEventListener('click', closeSenhaModal);
+        if (senhaModalBtnClose) senhaModalBtnClose.addEventListener('click', closeSenhaModal);
+        if (senhaModalBtnCancel) senhaModalBtnCancel.addEventListener('click', closeSenhaModal);
         
         senhaModal.addEventListener('click', (event) => {
             if (event.target === senhaModal) closeSenhaModal();

@@ -154,10 +154,18 @@ def gestao_parceiros():
     if request.method == 'POST':
         data = _get_form_data(request.form)
 
-        # 1. VALIDAÇÃO PRIMEIRO!
+        # 1. VALIDAÇÃO BÁSICA
         if not data["nome_ajustado"]:
             flash('O campo "Nome Ajustado" é obrigatório.', 'danger')
             return redirect(url_for('parceiro.gestao_parceiros'))
+
+        lista_validos = db.get_lista_nomes_ajustados()
+
+        # Verifica se o que foi digitado está na lista
+        if data["nome_ajustado"] not in lista_validos:
+            flash(f'O Nome Ajustado "{data["nome_ajustado"]}" é inválido. Selecione uma opção exata da lista.', 'danger')
+            return redirect(url_for('parceiro.gestao_parceiros'))
+        
 
         # 2. LÓGICA DE UPLOAD (Agora usando Nome + Timestamp igual na edição)
         file = request.files.get('contrato_arquivo')
@@ -225,9 +233,15 @@ def gestao_parceiros():
 def editar_parceiro(parceiro_id):
     data = _get_form_data(request.form, sufixo="_edit")
 
-    # 1. VALIDAÇÕES PRIMEIRO (Antes de mexer em arquivos!)
+    # 1. VALIDAÇÃO
     if not data["nome_ajustado"]:
-        flash('O campo "Nome Ajustado" é obrigatório para a edição.', 'danger')
+        flash('O campo "Nome Ajustado" é obrigatório.', 'danger')
+        return redirect(url_for('parceiro.gestao_parceiros'))
+
+    # --- [NOVO] VALIDAÇÃO DA EDIÇÃO ---
+    lista_validos = db.get_lista_nomes_ajustados()
+    if data["nome_ajustado"] not in lista_validos:
+        flash(f'O Nome Ajustado "{data["nome_ajustado"]}" é inválido. Selecione uma opção exata da lista.', 'danger')
         return redirect(url_for('parceiro.gestao_parceiros'))
 
     parceiro_atual = db.get_parceiro_by_id(parceiro_id)

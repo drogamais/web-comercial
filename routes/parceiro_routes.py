@@ -1,8 +1,7 @@
 # routes/parceiro_routes.py
 
 import os
-import uuid
-import time
+from datetime import datetime
 from werkzeug.utils import secure_filename
 import io
 import pandas as pd
@@ -22,10 +21,12 @@ PARCEIRO_FIELDS = (
 
 # --- FUNÇÃO AUXILIAR PARA GERAR NOME DO ARQUIVO ---
 def gerar_nome_contrato(nome_fantasia, filename_original):
-    """Gera um nome seguro: contrato_NomeEmpresa_TIMESTAMP.pdf"""
+    """Gera um nome seguro: contrato_NomeEmpresa_DATALEGIVEL.pdf"""
     ext = filename_original.rsplit('.', 1)[1].lower()
     nome_limpo = secure_filename(nome_fantasia)
-    timestamp = int(time.time())
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") 
+    
     return f"contrato_{nome_limpo}_{timestamp}.{ext}"
 
 def _get_form_data(form, sufixo=""):

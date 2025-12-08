@@ -160,6 +160,7 @@ def gestao_parceiros():
 
         # 2. LÓGICA DE UPLOAD (Agora usando Nome + Timestamp igual na edição)
         file = request.files.get('contrato_arquivo')
+
         if file and file.filename != '' and allowed_file_pdf(file.filename):
             # Usa a função auxiliar para padronizar
             unique_filename = gerar_nome_contrato(data['nome_fantasia'], file.filename)
@@ -259,7 +260,7 @@ def editar_parceiro(parceiro_id):
     if tem_novo_arquivo:
         unique_filename = gerar_nome_contrato(data['nome_fantasia'], file.filename)
         
-        save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'contratos')
+        save_path = os.path.join(current_app.config['UPLOAD_FOLDER'])
         os.makedirs(save_path, exist_ok=True)
         
         file.save(os.path.join(save_path, unique_filename))

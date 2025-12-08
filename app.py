@@ -25,8 +25,13 @@ app = Flask(__name__)
 
 # Configurações principais
 app.secret_key = SECRET_KEY
-app.config['UPLOAD_FOLDER'] = 'uploads'
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+app.config['UPLOAD_FOLDER'] = r'T:\APF\Inteligencia de Mercado\Contratos Parceiros'
+
+try:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+except Exception as e:
+    print(f"Erro ao acessar pasta de rede: {e}")
 
 # Registra os blueprints (módulos) na aplicação principal
 app.register_blueprint(campanha_bp)

@@ -164,7 +164,7 @@ def gestao_parceiros():
             # Usa a função auxiliar para padronizar
             unique_filename = gerar_nome_contrato(data['nome_fantasia'], file.filename)
             
-            save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'contratos')
+            save_path = current_app.config['UPLOAD_FOLDER']
             os.makedirs(save_path, exist_ok=True)
             
             file.save(os.path.join(save_path, unique_filename))
@@ -248,7 +248,7 @@ def editar_parceiro(parceiro_id):
         arquivo_velho = parceiro_atual.get('contrato_arquivo')
         if arquivo_velho:
             try:
-                pasta_contratos = os.path.join(current_app.config['UPLOAD_FOLDER'], 'contratos')
+                pasta_contratos = current_app.config['UPLOAD_FOLDER']
                 caminho_completo_velho = os.path.join(pasta_contratos, arquivo_velho)
                 if os.path.exists(caminho_completo_velho):
                     os.remove(caminho_completo_velho)
@@ -371,5 +371,5 @@ def definir_senha(parceiro_id):
 # --- ROTA DE DOWNLOAD DO CONTRATO ---
 @parceiro_bp.route('/contrato/<filename>')
 def baixar_contrato(filename):
-    folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'contratos')
+    folder = current_app.config['UPLOAD_FOLDER']
     return send_from_directory(folder, filename)

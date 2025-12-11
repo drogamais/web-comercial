@@ -168,7 +168,7 @@
     <table style="table-layout: auto;">
         <thead>
             <tr>
-                <th style="width: 22%;">Nome Fantasia</th>
+                <th style="width: 22%;">Nome Ajustado</th>
                 <th style="width: 18%;">Email Gestor</th>
                 <th style="width: 12%;">Tipo</th>
 
@@ -181,7 +181,7 @@
         <tbody>
             {% for p in parceiros %}
             <tr {% if p.id in expiring_ids_set %}class="row-expiring"{% endif %}>
-                <td>{{ p.nome_fantasia }}</td>
+                <td>{{ p.nome_ajustado }}</td>
                 <td>{{ p.email_gestor }}</td>
                 <td>{{ p.tipo }}</td>
 

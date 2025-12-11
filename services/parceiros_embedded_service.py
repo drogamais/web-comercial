@@ -114,7 +114,7 @@ def _cadastrar_usuario_e_buscar_id(data):
     except requests.exceptions.RequestException as e:
         return None, f"Falha de conexão com a API: {e}"
 
-# --- FUNÇÃO PARA VINCULAR GRUPO (MODIFICADA) ---
+# --- FUNÇÃO PARA VINCULAR GRUPO (MANUTENÇÃO: TIPO DE PARCEIRO) ---
 def _linkar_usuario_ao_grupo(user_email, parceiro_tipo):
     """Tenta VINCULAR (PUT) um usuário a um grupo com base no tipo de parceiro."""
     
@@ -156,6 +156,73 @@ def _linkar_usuario_ao_grupo(user_email, parceiro_tipo):
     except requests.exceptions.RequestException as e:
         return False, f"Falha de conexão com a API (Link Group): {e}"
 
+# --- NOVO: FUNÇÃO PARA ADICIONAR USUÁRIO A UM GRUPO ESPECÍFICO (USADO EM CAMPANHAS) ---
+def adicionar_usuario_ao_grupo(user_email, group_id):
+    """Adiciona um usuário a um grupo específico (usado para Campanhas)."""
+    if not user_email or not group_id:
+        return False, "Email do usuário ou ID do Grupo não fornecido."
+        
+    api_url_link = f"{EMBEDDED_API_URL}/link-groups"
+    headers = _get_api_headers()
+    
+    payload = {
+        "userEmail": user_email,
+        "groups": [group_id]
+    }
+
+    try:
+        response = requests.put(api_url_link, headers=headers, json=payload, timeout=10)
+
+        if response.status_code == 200:
+            return True, None # Sucesso
+        elif response.status_code == 401:
+            return False, "API Erro 401 (Link Group): Não Autorizado."
+        else:
+            try:
+                error_details = response.json().get("message", response.text)
+            except json.JSONDecodeError:
+                error_details = response.text
+            # Se o usuário já está no grupo, retorna sucesso (Embedded API é idempotente)
+            if "already linked" in error_details.lower():
+                return True, None
+            return False, f"API Erro {response.status_code} (Link Group): {error_details}"
+    
+    except requests.exceptions.RequestException as e:
+        return False, f"Falha de conexão com a API (Link Group): {e}"
+
+# --- NOVO: FUNÇÃO PARA REMOVER USUÁRIO DE UM GRUPO ESPECÍFICO (USADO EM CAMPANHAS) ---
+def remover_usuario_do_grupo(user_email, group_id):
+    """Remove um usuário de um grupo específico (usado para Campanhas)."""
+    if not user_email or not group_id:
+        return False, "Email do usuário ou ID do Grupo não fornecido."
+
+    api_url_unlink = f"{EMBEDDED_API_URL}/unlink-groups" # Endpoint de remoção
+    headers = _get_api_headers()
+    
+    payload = {
+        "userEmail": user_email,
+        "groups": [group_id]
+    }
+
+    try:
+        response = requests.put(api_url_unlink, headers=headers, json=payload, timeout=10)
+
+        if response.status_code == 200:
+            return True, None # Sucesso
+        elif response.status_code == 401:
+            return False, "API Erro 401 (Unlink Group): Não Autorizado."
+        else:
+            try:
+                error_details = response.json().get("message", response.text)
+            except json.JSONDecodeError:
+                error_details = response.text
+            # Se o usuário já não está no grupo (404 ou 400 com erro de não encontrado/não vinculado), consideramos sucesso.
+            if "user not found" in error_details.lower() or "not linked" in error_details.lower():
+                 return True, None
+            return False, f"API Erro {response.status_code} (Unlink Group): {error_details}"
+    
+    except requests.exceptions.RequestException as e:
+        return False, f"Falha de conexão com a API (Unlink Group): {e}"
 
 # --- (UPDATE) FUNÇÃO DE ATUALIZAÇÃO NA API ---
 def atualizar_usuario(api_user_id, data):
@@ -264,7 +331,7 @@ def criar_parceiro_completo(data):
     Retorna (api_id, erro)
     """
     user_email = data.get('email_gestor')
-    parceiro_tipo = data.get('tipo') # <-- NOVO
+    parceiro_tipo = data.get('tipo') 
     
     # 1. Tenta salvar na API (com POST-then-GET)
     api_response, erro_api = _cadastrar_usuario_e_buscar_id(data)
@@ -273,7 +340,7 @@ def criar_parceiro_completo(data):
         return None, erro_api
 
     # 2. Tenta vincular ao grupo correto
-    sucesso_link, erro_link = _linkar_usuario_ao_grupo(user_email, parceiro_tipo) # <-- NOVO
+    sucesso_link, erro_link = _linkar_usuario_ao_grupo(user_email, parceiro_tipo) 
     
     if erro_link:
         # Se falhar ao vincular, desfaz a criação do usuário

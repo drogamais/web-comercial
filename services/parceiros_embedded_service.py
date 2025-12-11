@@ -7,7 +7,8 @@ from config import EMBEDDED_API_KEY
 # Todas as constantes da API ficam aqui
 EMBEDDED_API_URL = "https://api.powerembedded.com.br/api/user"
 PARCEIROS_INDUSTRIA_GROUP_ID = "3c4761f3-89ef-4642-92ee-b30d214b92d5" 
-PARCEIROS_DISTRIBUIDOR_GROUP_ID = "ca8a1c8d-4ac5-44eb-b594-0417ce882e12" 
+PARCEIROS_DISTRIBUIDOR_GROUP_ID = "ca8a1c8d-4ac5-44eb-b594-0417ce882e12"
+PARCEIROS_CAMPANHA_GROUP_ID = "ce4804e0-c090-4756-a00c-617b2f4e7f56"
 # -----------------------------
 
 def _get_api_headers():

@@ -6,7 +6,8 @@ from config import EMBEDDED_API_KEY
 # --- CONFIGURAÇÕES DA API ---
 # Todas as constantes da API ficam aqui
 EMBEDDED_API_URL = "https://api.powerembedded.com.br/api/user"
-PARCEIROS_GROUP_ID = "3c4761f3-89ef-4642-92ee-b30d214b92d5" 
+PARCEIROS_INDUSTRIA_GROUP_ID = "3c4761f3-89ef-4642-92ee-b30d214b92d5"
+PARCEIROS_DISTRIBUIDOR_GROUP_ID = "ca8a1c8d-4ac5-44eb-b594-0417ce882e12"
 # -----------------------------
 
 def _get_api_headers():
@@ -115,17 +116,17 @@ def _cadastrar_usuario_e_buscar_id(data):
 # --- FUNÇÃO PARA VINCULAR GRUPO ---
 def _linkar_usuario_ao_grupo(user_email):
     """Tenta VINCULAR (PUT) um usuário a um grupo."""
-    if not user_email or not PARCEIROS_GROUP_ID:
+    if not user_email or not PARCEIROS_INDUSTRIA_GROUP_ID:
         return False, "Email do usuário ou ID do Grupo não fornecido."
-    if "COLOQUE_O_ID_DO_GRUPO_AQUI" in PARCEIROS_GROUP_ID:
-        return False, 'ID do Grupo "Parceiros" não configurado no código (PARCEIROS_GROUP_ID).'
+    if "COLOQUE_O_ID_DO_GRUPO_AQUI" in PARCEIROS_INDUSTRIA_GROUP_ID:
+        return False, 'ID do Grupo "Parceiros" não configurado no código (PARCEIROS_INDUSTRIA_GROUP_ID).'
 
     api_url_link = f"{EMBEDDED_API_URL}/link-groups"
     headers = _get_api_headers()
     
     payload = {
         "userEmail": user_email,
-        "groups": [PARCEIROS_GROUP_ID]
+        "groups": [PARCEIROS_INDUSTRIA_GROUP_ID]
     }
 
     try:

@@ -393,3 +393,17 @@ def definir_senha(parceiro_id):
 def baixar_contrato(filename):
     folder = current_app.config['UPLOAD_FOLDER']
     return send_from_directory(folder, filename)
+
+# --- ROTA PARA EXECUTAR PROCEDURE ---
+@parceiro_bp.route('/executar_procedure_tipo', methods=['POST'])
+def executar_procedure_tipo():
+    # Chama a função do banco de dados
+    rowcount, error = db.call_proc_atualiza_silver_parceiros_tipo()
+
+    if error:
+        flash(f'Erro ao executar a procedure: {error}', 'danger')
+    else:
+        flash('Procedure proc_atualiza_silver_parceiros_tipo executada com sucesso!', 'success')
+        
+    # Redireciona de volta para a página de gestão
+    return redirect(url_for('parceiro.gestao_parceiros'))

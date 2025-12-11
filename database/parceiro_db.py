@@ -241,3 +241,20 @@ def delete_parceiro(parceiro_id):
     except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)
+    
+# --- FUNÇÃO PARA EXECUTAR PROCEDURE ---
+def call_proc_atualiza_silver_parceiros_tipo():
+    """Chama a stored procedure proc_atualiza_silver_parceiros_tipo."""
+    conn = get_db_connection()
+    if conn is None: return 0, "Falha na conexão com o banco"
+    
+    # Assumindo que a conexão padrão tem acesso à procedure no dbDrogamais
+    sql = text("CALL proc_atualiza_silver_parceiros_tipo()")
+
+    try:
+        conn.execute(sql) 
+        conn.commit()
+        return 1, None # Sucesso
+    except SQLAlchemyError as e:
+        conn.rollback()
+        return 0, str(e)

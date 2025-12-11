@@ -246,11 +246,13 @@
 
                 <div class="form-group" style="flex: 1;">
                     <label for="tipo_edit">Tipo: <span style="color: red;">*</span></label>
-                    <select id="tipo_edit" name="tipo_edit" required>
+                    <select id="tipo_edit" name="tipo_edit_disabled" required disabled
+                        style="background-color: #eee; cursor: not-allowed;">
                         <option value="" disabled>Selecione...</option>
                         <option value="INDUSTRIA">INDUSTRIA</option>
                         <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
                     </select>
+                    <input type="hidden" id="tipo_edit_hidden" name="tipo_edit">
                 </div>
 
                 <div class="form-group" style="flex: 1;">

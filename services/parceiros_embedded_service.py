@@ -3,11 +3,11 @@ import json
 from datetime import datetime
 from config import EMBEDDED_API_KEY
 
-# --- CONFIGURAÇÕES DA API ---
+# --- CONFIGURAÇÕES DA API (ATUALIZADAS) ---
 # Todas as constantes da API ficam aqui
 EMBEDDED_API_URL = "https://api.powerembedded.com.br/api/user"
-PARCEIROS_INDUSTRIA_GROUP_ID = "3c4761f3-89ef-4642-92ee-b30d214b92d5"
-PARCEIROS_DISTRIBUIDOR_GROUP_ID = "ca8a1c8d-4ac5-44eb-b594-0417ce882e12"
+PARCEIROS_INDUSTRIA_GROUP_ID = "3c4761f3-89ef-4642-92ee-b30d214b92d5" 
+PARCEIROS_DISTRIBUIDOR_GROUP_ID = "ca8a1c8d-4ac5-44eb-b594-0417ce882e12" 
 # -----------------------------
 
 def _get_api_headers():
@@ -113,20 +113,25 @@ def _cadastrar_usuario_e_buscar_id(data):
     except requests.exceptions.RequestException as e:
         return None, f"Falha de conexão com a API: {e}"
 
-# --- FUNÇÃO PARA VINCULAR GRUPO ---
-def _linkar_usuario_ao_grupo(user_email):
-    """Tenta VINCULAR (PUT) um usuário a um grupo."""
-    if not user_email or not PARCEIROS_INDUSTRIA_GROUP_ID:
-        return False, "Email do usuário ou ID do Grupo não fornecido."
-    if "COLOQUE_O_ID_DO_GRUPO_AQUI" in PARCEIROS_INDUSTRIA_GROUP_ID:
-        return False, 'ID do Grupo "Parceiros" não configurado no código (PARCEIROS_INDUSTRIA_GROUP_ID).'
+# --- FUNÇÃO PARA VINCULAR GRUPO (MODIFICADA) ---
+def _linkar_usuario_ao_grupo(user_email, parceiro_tipo):
+    """Tenta VINCULAR (PUT) um usuário a um grupo com base no tipo de parceiro."""
+    
+    group_id = None
+    if parceiro_tipo == "INDUSTRIA":
+        group_id = PARCEIROS_INDUSTRIA_GROUP_ID
+    elif parceiro_tipo == "DISTRIBUIDOR":
+        group_id = PARCEIROS_DISTRIBUIDOR_GROUP_ID
+        
+    if not user_email or not group_id:
+        return False, f"Email do usuário ou ID do Grupo para o tipo '{parceiro_tipo}' não fornecido/encontrado."
 
     api_url_link = f"{EMBEDDED_API_URL}/link-groups"
     headers = _get_api_headers()
     
     payload = {
         "userEmail": user_email,
-        "groups": [PARCEIROS_INDUSTRIA_GROUP_ID]
+        "groups": [group_id]
     }
 
     try:
@@ -248,16 +253,17 @@ def rollback_criacao_usuario(email):
         print(f"ROLLBACK: Exceção ao tentar deletar '{email}': {e}")
         return False
 
-# --- FUNÇÃO PÚBLICA PRINCIPAL ---
+# --- FUNÇÃO PÚBLICA PRINCIPAL (MODIFICADA) ---
 # Esta é a única função que a rota de cadastro precisará chamar
 def criar_parceiro_completo(data):
     """
     Executa o fluxo completo de cadastro:
     1. Cria usuário (POST) e busca ID (GET)
-    2. Vincula ao grupo (PUT)
+    2. Vincula ao grupo (PUT) com base no tipo do parceiro.
     Retorna (api_id, erro)
     """
     user_email = data.get('email_gestor')
+    parceiro_tipo = data.get('tipo') # <-- NOVO
     
     # 1. Tenta salvar na API (com POST-then-GET)
     api_response, erro_api = _cadastrar_usuario_e_buscar_id(data)
@@ -265,8 +271,8 @@ def criar_parceiro_completo(data):
     if erro_api:
         return None, erro_api
 
-    # 2. Tenta vincular ao grupo "Parceiros"
-    sucesso_link, erro_link = _linkar_usuario_ao_grupo(user_email)
+    # 2. Tenta vincular ao grupo correto
+    sucesso_link, erro_link = _linkar_usuario_ao_grupo(user_email, parceiro_tipo) # <-- NOVO
     
     if erro_link:
         # Se falhar ao vincular, desfaz a criação do usuário

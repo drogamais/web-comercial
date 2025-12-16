@@ -131,12 +131,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inputs.cnpj) inputs.cnpj.value = data.cnpj || '';
             if (inputs.nomeFantasia) inputs.nomeFantasia.value = data.nomeFantasia || '';
             if (inputs.razaoSocial) inputs.razaoSocial.value = data.razaoSocial || '';
-            if (inputs.tipo) inputs.tipo.value = data.tipo || '';
+            
+            if (inputs.tipo) {
+                inputs.tipo.value = data.tipo || '';
+                const tipoHidden = document.getElementById('tipo_edit_hidden');
+                if (tipoHidden) {
+                    tipoHidden.value = data.tipo || ''; // Define o valor que será enviado no POST
+                }
+            }
+
             if (inputs.dataEntrada) inputs.dataEntrada.value = data.dataEntrada || '';
             if (inputs.dataSaida) inputs.dataSaida.value = data.dataSaida || '';
             if (inputs.gestor) inputs.gestor.value = data.gestor || ''; 
             if (inputs.telefoneGestor) inputs.telefoneGestor.value = data.telefoneGestor || ''; 
             if (inputs.emailGestor) inputs.emailGestor.value = data.emailGestor || '';
+            
 
             // Lógica visual do contrato
             if (inputs.contratoLabel) {

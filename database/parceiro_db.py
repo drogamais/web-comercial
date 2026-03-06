@@ -170,11 +170,20 @@ def get_lista_nomes_ajustados():
     conn = get_db_connection()
     if conn is None: return []
 
-    # A query exata que você solicitou, com um ORDER BY para facilitar a busca
+    # Busca a lista curada nas tabelas gold, removendo nulos, vazios e duplicados.
     sql = text("""
-        SELECT DISTINCT Fornecedor as nome FROM drogamais.dw_tb_acode_temp
-        UNION
-        SELECT DISTINCT Fabricante as nome FROM drogamais.dw_tb_acode_temp
+        SELECT nome
+        FROM (
+            SELECT DISTINCT Fornecedor AS nome
+            FROM gold_dim_acode_fornecedor
+            WHERE Fornecedor IS NOT NULL AND TRIM(Fornecedor) <> ''
+
+            UNION
+
+            SELECT DISTINCT Fabricante AS nome
+            FROM gold_dim_acode_fabricante
+            WHERE Fabricante IS NOT NULL AND TRIM(Fabricante) <> ''
+        ) nomes
         ORDER BY nome ASC
     """)
     
@@ -242,19 +251,38 @@ def delete_parceiro(parceiro_id):
         conn.rollback()
         return 0, str(e)
     
-# --- FUNÇÃO PARA EXECUTAR PROCEDURE ---
+# --- FUNÇÃO PARA ATUALIZAR SILVER PARCEIROS TIPO ---
 def call_proc_atualiza_silver_parceiros_tipo():
-    """Chama a stored procedure proc_atualiza_silver_parceiros_tipo."""
+    """Recria os dados de silver_parceiros_tipo diretamente pela aplicação."""
     conn = get_db_connection()
     if conn is None: return 0, "Falha na conexão com o banco"
-    
-    # Assumindo que a conexão padrão tem acesso à procedure no dbDrogamais
-    sql = text("CALL proc_atualiza_silver_parceiros_tipo()")
 
     try:
-        conn.execute(sql) 
+        conn.execute(text("DELETE FROM silver_parceiros_tipo"))
+
+        sql_insert = text("""
+            INSERT INTO silver_parceiros_tipo (nome_parceiro, empresas, tipo, nome_corrigido)
+            SELECT 
+                bp.nome_ajustado,
+                e.empresa AS empresas,
+                bp.tipo,
+                CASE
+                    WHEN bp.nome_ajustado COLLATE utf8mb4_unicode_ci = e.empresa COLLATE utf8mb4_unicode_ci THEN e.empresa
+                    WHEN bp.nome_ajustado COLLATE utf8mb4_unicode_ci <> e.empresa COLLATE utf8mb4_unicode_ci
+                         AND e.empresa COLLATE utf8mb4_unicode_ci IN (
+                             SELECT nome_ajustado COLLATE utf8mb4_unicode_ci
+                             FROM bronze_parceiros
+                         )
+                        THEN 'PARCEIRO DROGAMAIS'
+                    ELSE e.empresa
+                END AS nome_corrigido
+            FROM bronze_parceiros bp
+            CROSS JOIN silver_acode_empresas e
+        """)
+
+        result = conn.execute(sql_insert)
         conn.commit()
-        return 1, None # Sucesso
+        return result.rowcount, None
     except SQLAlchemyError as e:
         conn.rollback()
         return 0, str(e)

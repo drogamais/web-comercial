@@ -394,16 +394,16 @@ def baixar_contrato(filename):
     folder = current_app.config['UPLOAD_FOLDER']
     return send_from_directory(folder, filename)
 
-# --- ROTA PARA EXECUTAR PROCEDURE ---
+# --- ROTA PARA ATUALIZAR SILVER PARCEIROS TIPO ---
 @parceiro_bp.route('/executar_procedure_tipo', methods=['POST'])
 def executar_procedure_tipo():
-    # Chama a função do banco de dados
+    # Executa a rotina SQL diretamente pelo módulo de banco de dados
     rowcount, error = db.call_proc_atualiza_silver_parceiros_tipo()
 
     if error:
-        flash(f'Erro ao executar a procedure: {error}', 'danger')
+        flash(f'Erro ao atualizar silver_parceiros_tipo: {error}', 'danger')
     else:
-        flash('Procedure proc_atualiza_silver_parceiros_tipo executada com sucesso!', 'success')
+        flash(f'silver_parceiros_tipo atualizado com sucesso! Registros inseridos: {rowcount}', 'success')
         
     # Redireciona de volta para a página de gestão
     return redirect(url_for('parceiro.gestao_parceiros'))

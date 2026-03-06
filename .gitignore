@@ -16,4 +16,5 @@ config.py
 .idea/
 
 # script de deploy automatico via WinRM
+deploy.ps1
 uploads

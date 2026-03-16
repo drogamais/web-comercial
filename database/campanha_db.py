@@ -9,7 +9,7 @@ import datetime
 
 DIM_CAMPANHA_TABLE = "dim_campanha"
 # Adicionado para fazer o JOIN
-DIM_PARCEIRO_TABLE = "bronze_parceiros" 
+DIM_PARCEIRO_TABLE = "dim_parceiros" 
 
 def create_tables():
     conn = get_db_connection()

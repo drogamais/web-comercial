@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from database.common_db import get_db_connection
 import datetime # <-- ADICIONADO
 
-DIM_PARCEIRO_TABLE = "bronze_parceiros"
+DIM_PARCEIRO_TABLE = "dim_parceiros"
 
 
 def create_tables():

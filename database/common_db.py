@@ -77,7 +77,7 @@ def validate_gtins_in_external_db(gtin_list):
         placeholders = [f":gtin_{i}" for i in range(len(gtin_list))]
         sql_text = text(f"""
             SELECT codigo_barras AS gtin
-            FROM bronze_plugpharma_produtos
+            FROM dim_plugpharma_produtos
             -- NOTA: Filtro ADICIONADO para alinhar com a regra de negócio
             WHERE `codigo_principal` = 1 
               AND `codigo_barras` IN ({",".join(placeholders)})
@@ -111,7 +111,7 @@ def get_codigo_interno_map_from_gtins(gtin_list):
         placeholders = [f":gtin_{i}" for i in range(len(gtin_list))]
         sql_text = text(f"""
             SELECT codigo_barras, codigo_interno
-            FROM bronze_plugpharma_produtos
+            FROM dim_plugpharma_produtos
             -- FIX: O filtro é mantido para garantir que o CI retornado seja o principal
             WHERE codigo_principal = 1 AND `codigo_barras` IN ({",".join(placeholders)})
         """)

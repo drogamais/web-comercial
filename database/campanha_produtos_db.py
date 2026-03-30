@@ -16,7 +16,8 @@ def create_product_table():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 campanha_id INT NOT NULL,
                 codigo_barras VARCHAR(14),
-                codigo_barras_normalizado VARCHAR(14) DEFAULT NULL,
+                -- Alterado para NOT NULL para garantir integridade
+                codigo_barras_normalizado VARCHAR(14) NOT NULL, 
                 codigo_interno VARCHAR(14) DEFAULT NULL,
                 descricao TEXT,
                 pontuacao INT,
@@ -30,10 +31,10 @@ def create_product_table():
         """)
         conn.execute(sql_create_fact)
         
+        # Garantir que a coluna existente também seja NOT NULL caso já tenha sido criada antes
         sql_alter = text(f"""
             ALTER TABLE {DIM_CAMPANHA_PRODUTO_TABLE}
-            ADD COLUMN IF NOT EXISTS codigo_barras_normalizado VARCHAR(14) DEFAULT NULL
-            AFTER codigo_barras;
+            MODIFY COLUMN codigo_barras_normalizado VARCHAR(14) NOT NULL;
         """)
         conn.execute(sql_alter)
         conn.commit()
@@ -106,15 +107,22 @@ def add_single_product(dados_produto):
 
 def update_products_in_bulk(produtos_para_atualizar):
     conn = get_db_connection()
+    # O SQL já contempla o cbn, garantimos aqui que ele seja obrigatório no mapeamento
     sql = text(f"""
         UPDATE {DIM_CAMPANHA_PRODUTO_TABLE} SET
-            codigo_barras = :cb, codigo_barras_normalizado = :cbn, codigo_interno = :ci, 
-            descricao = :desc, pontuacao = :pts, preco_normal = :pr_norm, 
-            preco_desconto = :pr_desc, rebaixe = :reb, qtd_limite = :qtd
+            codigo_barras = :cb, 
+            codigo_barras_normalizado = :cbn, 
+            codigo_interno = :ci, 
+            descricao = :desc, 
+            pontuacao = :pts, 
+            preco_normal = :pr_norm, 
+            preco_desconto = :pr_desc, 
+            rebaixe = :reb, 
+            qtd_limite = :qtd
         WHERE id = :id
     """)
     try:
-        # Mapeia a lista de tuplas para uma lista de dicionários
+        # Se p[1] (cbn) vier nulo do front/excel, o banco rejeitará o update
         produtos_dict = [
             {
                 "cb": p[0], "cbn": p[1], "ci": p[2], "desc": p[3], "pts": p[4],
